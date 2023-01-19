@@ -355,7 +355,7 @@ public class SwerveModule {
         public TalonFXInvertType kWheelDirectionType;
         public SwerveConstants.Gains kGAINS;
         public DriveMotor (int _talonID, TalonFXInvertType _direction, SwerveConstants.Gains _gains){
-            super(_talonID);
+            super(_talonID, "Swerve");
             kWheelDirectionType = _direction;
             kGAINS=_gains;
         }
