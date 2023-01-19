@@ -12,6 +12,7 @@ import com.pathplanner.lib.PathPlannerTrajectory;
 import com.pathplanner.lib.PathPoint;
 import com.pathplanner.lib.auto.PIDConstants;
 import com.pathplanner.lib.auto.SwerveAutoBuilder;
+import com.fasterxml.jackson.databind.ser.std.StdKeySerializers.Default;
 import com.pathplanner.lib.PathConstraints;
 
 import edu.wpi.first.math.controller.PIDController;
@@ -86,6 +87,7 @@ private final SwerveDrive s_SwerveDrive = new SwerveDrive();
     Preferences.initDouble("pKPRotationController", SwerveConstants.kPRotationController);
     Preferences.initDouble("pKIRotationController", SwerveConstants.kDRotationController);
     Preferences.initDouble("pKDRotationController", SwerveConstants.kIRotationController);
+    Preferences.initBoolean("pIntSteering", true);
 
     HashMap<String, Command> eventMap = new HashMap<>();
     eventMap.put("1stBallPickup", new WaitCommand(2));
@@ -128,7 +130,7 @@ private final SwerveDrive s_SwerveDrive = new SwerveDrive();
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
-    new Trigger(()->isIntegratedSteering)
+    new Trigger(()->Preferences.getBoolean("pIntSteering", true))
       .onFalse(s_SwerveDrive.switchToRemoteSteerCommand().ignoringDisable(true))
       .onTrue(s_SwerveDrive.switchToIntegratedSteerCommand().ignoringDisable(true));
     
