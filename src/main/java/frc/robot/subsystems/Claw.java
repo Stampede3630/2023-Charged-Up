@@ -18,4 +18,6 @@ public class Claw extends SubsystemBase {
   public void openClaw(){
     
   }
+
+  public void closeClaw(){}
 }

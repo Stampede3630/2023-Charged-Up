@@ -105,7 +105,9 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
       simNavx.update(robotPose, prevRobotPose, deltaTime);
     }
     robotPose = updateOdometry();
+    m_odometry.addVisionMeasurement(robotPose, deltaTime);
 
+    
     m_driveTrain.checkAndSetSwerveCANStatus();
     drawRobotOnField(m_field);
     updateRotationController();
@@ -125,7 +127,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
       () -> {
         double x = -_x.getAsDouble();
         double y = -_y.getAsDouble();
-        double rot = -_rot.getAsDouble();;
+        double rot = -_rot.getAsDouble();
         double joystickDriveGovernor = Preferences.getDouble("pDriveGovernor", Constants.driveGovernor);
         
         if (Preferences.getBoolean("pAccelInputs", Constants.acceleratedInputs)) {
@@ -261,9 +263,20 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
     return new InstantCommand(()->m_driveTrain.setToBrake());
   }
 
+  @Log
+  public double xMeters(){
+    return m_odometry.getEstimatedPosition().getX();
+  }
+
+  @Log
+  public double yMeters(){
+    return m_odometry.getEstimatedPosition().getY();
+  }
+
   /**
    * METHOD WILL NOT WORK UNLESS ADDED TO PERIODIC
    */
+
   public Command setToCoast(){
     return new RunCommand(()->m_driveTrain.setToCoast());
   }

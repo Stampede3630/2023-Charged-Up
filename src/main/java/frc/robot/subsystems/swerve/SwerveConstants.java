@@ -58,9 +58,9 @@ public final class SwerveConstants {
     //Switch this if it goes opposite the desired direction
     //Because of the gearing the convention could be reversed (GUESS AND CHECK)
     public static TalonFXInvertType FRInvertType = TalonFXInvertType.CounterClockwise;
-    public static TalonFXInvertType FLInvertType = TalonFXInvertType.CounterClockwise;
+    public static TalonFXInvertType FLInvertType = TalonFXInvertType.Clockwise;
     public static TalonFXInvertType BRInvertType = TalonFXInvertType.CounterClockwise;
-    public static TalonFXInvertType BLInvertType = TalonFXInvertType.CounterClockwise;
+    public static TalonFXInvertType BLInvertType = TalonFXInvertType.Clockwise;
 
     //Swerve Steering PIDs (kP, kI, kD)
     public static Gains FRSteerGains = new Gains(25, 0, 0);

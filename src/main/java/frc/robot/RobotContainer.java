@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -61,9 +62,6 @@ public class RobotContainer {
   SwerveAutoBuilder autoBuilder;
   ArrayList<PathPlannerTrajectory> autoPathGroup, leftPathGroup, rightPathGroup;
 
-
-     
-
   // This is just an example event map. It would be better to have a constant, global event map
   // in your code that will be used by all path following commands.
 
@@ -73,7 +71,7 @@ public class RobotContainer {
 @Log
 private final SwerveDrive s_SwerveDrive = new SwerveDrive();
   // The robot's subsystems and commands are defined here...
-  private final Claw s_Claw = new Claw();
+private final Claw s_Claw = new Claw();
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -88,6 +86,11 @@ private final SwerveDrive s_SwerveDrive = new SwerveDrive();
     Preferences.initDouble("pKIRotationController", SwerveConstants.kDRotationController);
     Preferences.initDouble("pKDRotationController", SwerveConstants.kIRotationController);
     Preferences.initBoolean("pIntSteering", true);
+
+    autoPathGroup = (ArrayList<PathPlannerTrajectory>) PathPlanner.loadPathGroup("swerveTest", new PathConstraints(2, 2));
+
+    Shuffleboard.getTab("nodeSelector")
+      .add("node", "");
 
     HashMap<String, Command> eventMap = new HashMap<>();
     eventMap.put("1stBallPickup", new WaitCommand(2));
@@ -176,13 +179,16 @@ private final SwerveDrive s_SwerveDrive = new SwerveDrive();
           new InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(true)),
           new InstantCommand(()->s_SwerveDrive.setHoldHeadingAngle(-xBox.getHID().getPOV() + 90))
       ));
-    xBox.a().onTrue(new ProxyCommand(()->autoBuilder.followPathGroup(autoPathGroupOnTheFly()))
-    .beforeStarting(new InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
+    // xBox.a().onTrue(new ProxyCommand(()->autoBuilder.followPathGroup(autoPathGroupOnTheFly()))
+    // .beforeStarting(new InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
 
-    xBox.x().onTrue(new ProxyCommand(()->autoBuilder.followPathGroup(goToNearestGoal()))
-    .beforeStarting(new InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
+    // xBox.x().onTrue(new ProxyCommand(()->autoBuilder.followPathGroup(goToNearestGoal()))
+    // .beforeStarting(new InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
 
-    xBox.y().onTrue(new InstantCommand(s_Claw::openClaw));
+    // xBox.y().onTrue(new InstantCommand(s_Claw::openClaw)
+    //         .andThen(null)
+    //         .alongWith(null)
+    //         .until(null));
     }
 
 

@@ -1,0 +1,9 @@
+{
+  "NTProvider": {
+    "types": {
+      "/FMSInfo": "FMSInfo",
+      "/Shuffleboard/RobotContainer/s_SwerveDrive": "Subsystem",
+      "/Shuffleboard/SwerveDrive/m_field": "Field2d"
+    }
+  }
+}
