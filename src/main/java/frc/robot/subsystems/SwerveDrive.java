@@ -21,6 +21,8 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
@@ -41,6 +43,8 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
   QuadFalconSwerveDrive m_driveTrain;
   Pose2d prevRobotPose = new Pose2d();
   Pose2d robotPose = new Pose2d();
+  Pose2d visionPose = new Pose2d();
+  double visonLatency = 0;
   double deltaTime = 0;
   double prevTime = 0;
   AHRS gyro;
@@ -97,7 +101,10 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
         module.simModule.simulationPeriodic(deltaTime);
       }    
 
-    }
+    } 
+
+    System.out.println(visionPose);
+
     deltaTime = Timer.getFPGATimestamp() - prevTime;
     prevTime = Timer.getFPGATimestamp();
 
@@ -105,9 +112,10 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
       simNavx.update(robotPose, prevRobotPose, deltaTime);
     }
     robotPose = updateOdometry();
-    m_odometry.addVisionMeasurement(robotPose, deltaTime);
+    visionPose = limelightBotPose();
 
-    
+
+
     m_driveTrain.checkAndSetSwerveCANStatus();
     drawRobotOnField(m_field);
     updateRotationController();
@@ -296,6 +304,22 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
 
   public Command switchToIntegratedSteerCommand(){
     return new InstantCommand(() -> m_driveTrain.switchToIntegratedSteer(),this);
+  }
+
+
+  
+  public Pose2d limelightBotPose(){
+
+    double myArray[] = {0, 0, 0, 0, 0, 0};
+    
+    myArray = NetworkTableInstance.getDefault().getTable("limelight").getEntry("botpose").getDoubleArray(myArray);
+
+    double x = myArray[0]; //+ 8.2425
+    double y = myArray[1]; //- 4.0515
+    double rot = myArray[5];
+
+    return new Pose2d(x, y, Rotation2d.fromRadians(rot));
+
   }
 
 }

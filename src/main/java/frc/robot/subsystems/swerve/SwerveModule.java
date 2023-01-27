@@ -253,7 +253,7 @@ public class SwerveModule {
 
     public void switchToCANCoderSteer(){
         steeringSensor.setStatusFramePeriod(CANCoderStatusFrame.SensorData, 10, 1000);
-        steeringMotor.configSelectedFeedbackSensor(TalonFXFeedbackDevice.RemoteSensor0,0,255);
+        steeringMotor.configSelectedFeedbackSensor(TalonFXFeedbackDevice.RemoteSensor0,1,255);
         steerMode = "REMOTE";
     }
 

@@ -98,16 +98,16 @@ public class QuadFalconSwerveDrive {
     }
 
     public void activateDefensiveStop() {
-      FrontLeftSwerveModule.setSteeringAngle(45);
+      FrontLeftSwerveModule.setSteeringAngle(0); //45
       FrontLeftSwerveModule.driveMotor.set(ControlMode.PercentOutput, 0);
 
-      FrontRightSwerveModule.setSteeringAngle(135);
+      FrontRightSwerveModule.setSteeringAngle(0); //135
       FrontRightSwerveModule.driveMotor.set(ControlMode.PercentOutput, 0);
 
-      BackLeftSwerveModule.setSteeringAngle(135);
+      BackLeftSwerveModule.setSteeringAngle(0); //135
       BackLeftSwerveModule.driveMotor.set(ControlMode.PercentOutput, 0);
 
-      BackRightSwerveModule.setSteeringAngle(45);
+      BackRightSwerveModule.setSteeringAngle(0); //45
       BackRightSwerveModule.driveMotor.set(ControlMode.PercentOutput, 0);
     }
 
