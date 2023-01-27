@@ -44,7 +44,6 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
   Pose2d prevRobotPose = new Pose2d();
   Pose2d robotPose = new Pose2d();
   Pose2d visionPose = new Pose2d();
-  double visonLatency = 0;
   double deltaTime = 0;
   double prevTime = 0;
   AHRS gyro;
@@ -104,6 +103,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
     } 
 
     System.out.println(visionPose);
+    System.out.println(limelightLatency());
 
     deltaTime = Timer.getFPGATimestamp() - prevTime;
     prevTime = Timer.getFPGATimestamp();
@@ -113,6 +113,8 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
     }
     robotPose = updateOdometry();
     visionPose = limelightBotPose();
+
+    m_odometry.addVisionMeasurement(visionPose, limelightLatency());
 
 
 
@@ -320,6 +322,13 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
 
     return new Pose2d(x, y, Rotation2d.fromRadians(rot));
 
+  }
+
+  public double limelightLatency(){
+    double vLatency = 0;
+    vLatency = NetworkTableInstance.getDefault().getTable("limelight").getEntry("tl").getDouble(vLatency);
+   
+    return vLatency + 11;
   }
 
 }
