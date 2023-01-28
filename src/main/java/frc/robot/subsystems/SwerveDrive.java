@@ -102,8 +102,9 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
 
     } 
 
-    System.out.println(visionPose);
-    System.out.println(limelightLatency());
+    // System.out.println(visionPose);
+    // System.out.println(limelightLatency());
+    // System.out.println(m_odometry);
 
     deltaTime = Timer.getFPGATimestamp() - prevTime;
     prevTime = Timer.getFPGATimestamp();
