@@ -40,7 +40,7 @@ public final class SwerveConstants {
 
     //Swerve CANCoder Sensor IDs
     public static final int FRSensorID = 1;
-    public static final int FLSensorID = 14;
+    public static final int FLSensorID = 7;
     public static final int BRSensorID = 2;
     public static final int BLSensorID = 15;
 

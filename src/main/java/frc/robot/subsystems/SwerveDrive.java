@@ -317,8 +317,8 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
     
     myArray = NetworkTableInstance.getDefault().getTable("limelight").getEntry("botpose").getDoubleArray(myArray);
 
-    double x = myArray[0]; //+ 8.2425
-    double y = myArray[1]; //- 4.0515
+    double x = 8.2425 - myArray[0];
+    double y = 4.0515 + myArray[1];
     double rot = myArray[5];
 
     return new Pose2d(x, y, Rotation2d.fromRadians(rot));
