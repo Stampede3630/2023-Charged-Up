@@ -56,6 +56,8 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
   ProfiledPIDController rotationController;
   double rotationControllerOutput;
 
+  double aprilTagDetected = 0;
+
   @Log
   public Field2d m_field;
 
@@ -112,11 +114,19 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
     if(RobotBase.isSimulation()) {
       simNavx.update(robotPose, prevRobotPose, deltaTime);
     }
+
+    aprilTagDetected = NetworkTableInstance.getDefault().getTable("limelight").getEntry("tv").getDouble(aprilTagDetected);
+
+    // System.out.println(aprilTagDetected);
+
     robotPose = updateOdometry();
     visionPose = limelightBotPose();
 
-    m_odometry.addVisionMeasurement(visionPose, limelightLatency());
-
+    // if (aprilTagDetected == 1) {
+    //   m_odometry.addVisionMeasurement(visionPose, Timer.getFPGATimestamp() - limelightLatency());
+    // } else {
+    //   updateOdometry();
+    // }
 
 
     m_driveTrain.checkAndSetSwerveCANStatus();
@@ -321,7 +331,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
     double y = 4.0515 + myArray[1];
     double rot = myArray[5];
 
-    return new Pose2d(x, y, Rotation2d.fromRadians(rot));
+    return new Pose2d(x, y, Rotation2d.fromDegrees(rot));
 
   }
 
@@ -329,7 +339,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
     double vLatency = 0;
     vLatency = NetworkTableInstance.getDefault().getTable("limelight").getEntry("tl").getDouble(vLatency);
    
-    return vLatency + 11;
+    return (vLatency * 0.001) + (11 * 0.001);
   }
 
 }
