@@ -48,7 +48,7 @@ public final class SwerveConstants {
     //CHANGE TO 0 first, reset the sensor, 
     //PHYSICALLY zero out the motor 
     //place the OPPOSITE of the value
-    public static double FRSensorOffset =39.111; //-327.129;
+    public static double FRSensorOffset =39.287; //-327.129;
     public static double FLSensorOffset =-37.441;// -41.133;
     public static double BRSensorOffset =129.111;// 124.980;
     public static double BLSensorOffset =50.010 ;// -243.721;
@@ -57,10 +57,10 @@ public final class SwerveConstants {
     //Give a positive input on the joystick or phoenix tuner
     //Switch this if it goes opposite the desired direction
     //Because of the gearing the convention could be reversed (GUESS AND CHECK)
-    public static TalonFXInvertType FRInvertType = TalonFXInvertType.CounterClockwise;
-    public static TalonFXInvertType FLInvertType = TalonFXInvertType.Clockwise;
-    public static TalonFXInvertType BRInvertType = TalonFXInvertType.CounterClockwise;
-    public static TalonFXInvertType BLInvertType = TalonFXInvertType.Clockwise;
+    public static TalonFXInvertType FRInvertType = TalonFXInvertType.Clockwise;
+    public static TalonFXInvertType FLInvertType = TalonFXInvertType.CounterClockwise;
+    public static TalonFXInvertType BRInvertType = TalonFXInvertType.Clockwise;
+    public static TalonFXInvertType BLInvertType = TalonFXInvertType.CounterClockwise;
 
     //Swerve Steering PIDs (kP, kI, kD)
     public static Gains FRSteerGains = new Gains(25, 0, 0);

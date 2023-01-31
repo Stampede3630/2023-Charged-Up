@@ -56,7 +56,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
   ProfiledPIDController rotationController;
   double rotationControllerOutput;
 
-  double aprilTagDetected = 0;
+  boolean aprilTagDetected = false;
 
   @Log
   public Field2d m_field;
@@ -115,18 +115,19 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
       simNavx.update(robotPose, prevRobotPose, deltaTime);
     }
 
-    aprilTagDetected = NetworkTableInstance.getDefault().getTable("limelight").getEntry("tv").getDouble(aprilTagDetected);
+    aprilTagDetected = (NetworkTableInstance.getDefault().getTable("limelight").getEntry("tv").getDouble(0) == 1) ? true : false;
 
     // System.out.println(aprilTagDetected);
 
     robotPose = updateOdometry();
     visionPose = limelightBotPose();
 
-    // if (aprilTagDetected == 1) {
-    //   m_odometry.addVisionMeasurement(visionPose, Timer.getFPGATimestamp() - limelightLatency());
-    // } else {
-    //   updateOdometry();
-    // }
+    if (aprilTagDetected && limelightLatency() < 1.5) {
+      m_odometry.addVisionMeasurement(visionPose, Timer.getFPGATimestamp() - limelightLatency());
+      updateOdometry();
+    } else {
+      updateOdometry();
+    }
 
 
     m_driveTrain.checkAndSetSwerveCANStatus();
@@ -327,19 +328,28 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
     
     myArray = NetworkTableInstance.getDefault().getTable("limelight").getEntry("botpose").getDoubleArray(myArray);
 
-    double x = 8.2425 - myArray[0];
-    double y = 4.0515 + myArray[1];
-    double rot = myArray[5];
+    double x = 0;
+    double y = 0;
+    double rot = 0;
+    if (myArray.length > 0){
+      x = 8.2425 - myArray[0];
+      y = 4.0515 + myArray[1];
+      rot = myArray[5];
+
+    }
+    
 
     return new Pose2d(x, y, Rotation2d.fromDegrees(rot));
 
   }
-
+  @Log
   public double limelightLatency(){
     double vLatency = 0;
     vLatency = NetworkTableInstance.getDefault().getTable("limelight").getEntry("tl").getDouble(vLatency);
    
     return (vLatency * 0.001) + (11 * 0.001);
   }
+
+  
 
 }

@@ -196,7 +196,7 @@ private final Claw s_Claw = new Claw();
     return 
       autoBuilder.fullAuto(autoPathGroup).withName("autoTest");
   }
-  @Config
+  @Config(defaultValueBoolean = true)
   public void isIntegratedSteering(boolean input){
     isIntegratedSteering = input;
   }
