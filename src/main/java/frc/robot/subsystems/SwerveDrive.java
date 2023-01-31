@@ -77,7 +77,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
     //SwerveDrive Setup
     m_driveTrain = new QuadFalconSwerveDrive();
     m_driveTrain.checkAndSetSwerveCANStatus();
-    m_driveTrain.checkAndSeedALLSwerveAngles();
+    // m_driveTrain.checkAndSeedALLSwerveAngles();
     
     //helps visualize robot on virtual field
     m_field = new Field2d();
