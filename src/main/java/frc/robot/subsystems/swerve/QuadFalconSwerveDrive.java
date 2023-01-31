@@ -27,12 +27,7 @@ public class QuadFalconSwerveDrive {
       new SwerveModule.SteeringSensor(SwerveConstants.FLSensorID,SwerveConstants.FLSensorOffset),
       new Translation2d(SwerveConstants.WHEEL_BASE_METERS/2, SwerveConstants.TRACK_WIDE/2));
    
-    public SwerveModule FrontRightSwerveModule = new SwerveModule(
-      new SwerveModule.DriveMotor(SwerveConstants.FRDriveID, SwerveConstants.FRInvertType, SwerveConstants.FRDriveGains), 
-      new SwerveModule.SteeringMotor(SwerveConstants.FRSteerID, SwerveConstants.FRSteerGains), 
-      new SwerveModule.SteeringSensor(SwerveConstants.FRSensorID,SwerveConstants.FRSensorOffset),
-      new Translation2d(SwerveConstants.WHEEL_BASE_METERS/2, -SwerveConstants.TRACK_WIDE/2) );
-  
+      
     public SwerveModule BackLeftSwerveModule = new SwerveModule(
       new SwerveModule.DriveMotor(SwerveConstants.BLDriveID,SwerveConstants.BLInvertType, SwerveConstants.BLDriveGains), 
       new SwerveModule.SteeringMotor(SwerveConstants.BLSteerID, SwerveConstants.BLSteerGains), 
@@ -44,7 +39,12 @@ public class QuadFalconSwerveDrive {
       new SwerveModule.SteeringMotor(SwerveConstants.BRSteerID, SwerveConstants.BRSteerGains), 
       new SwerveModule.SteeringSensor(SwerveConstants.BRSensorID,SwerveConstants.BRSensorOffset),
       new Translation2d(-SwerveConstants.WHEEL_BASE_METERS/2, -SwerveConstants.TRACK_WIDE/2));
-
+      
+      public SwerveModule FrontRightSwerveModule = new SwerveModule(
+        new SwerveModule.DriveMotor(SwerveConstants.FRDriveID, SwerveConstants.FRInvertType, SwerveConstants.FRDriveGains), 
+        new SwerveModule.SteeringMotor(SwerveConstants.FRSteerID, SwerveConstants.FRSteerGains), 
+        new SwerveModule.SteeringSensor(SwerveConstants.FRSensorID,SwerveConstants.FRSensorOffset),
+        new Translation2d(SwerveConstants.WHEEL_BASE_METERS/2, -SwerveConstants.TRACK_WIDE/2) );
 
 
     public SwerveDriveKinematics m_kinematics = 
@@ -63,38 +63,38 @@ public class QuadFalconSwerveDrive {
 
     public void checkAndSetSwerveCANStatus(){
         FrontLeftSwerveModule.setSwerveModuleCANStatusFrames();
-        FrontRightSwerveModule.setSwerveModuleCANStatusFrames();
         BackLeftSwerveModule.setSwerveModuleCANStatusFrames();
         BackRightSwerveModule.setSwerveModuleCANStatusFrames();
+        FrontRightSwerveModule.setSwerveModuleCANStatusFrames();
     }
 
     public void checkAndSeedALLSwerveAngles() {
       FrontLeftSwerveModule.seedCANCoderAngleToMotorAngle();
       BackLeftSwerveModule.seedCANCoderAngleToMotorAngle();
-      FrontRightSwerveModule.seedCANCoderAngleToMotorAngle();
       BackRightSwerveModule.seedCANCoderAngleToMotorAngle();      
+      FrontRightSwerveModule.seedCANCoderAngleToMotorAngle();
     }
 
     public void switchToRemoteSteering() {
       FrontLeftSwerveModule.switchToCANCoderSteer();
       BackLeftSwerveModule.switchToCANCoderSteer();
-      FrontRightSwerveModule.switchToCANCoderSteer();
       BackRightSwerveModule.switchToCANCoderSteer();      
+      FrontRightSwerveModule.switchToCANCoderSteer();
     }
 
     public void switchToIntegratedSteer(){
       FrontLeftSwerveModule.switchToIntegratedSteer();
       BackLeftSwerveModule.switchToIntegratedSteer();
-      FrontRightSwerveModule.switchToIntegratedSteer();
       BackRightSwerveModule.switchToIntegratedSteer();    
+      FrontRightSwerveModule.switchToIntegratedSteer();
     }
 
     public String getSteerMethodStrings(){
       return 
         FrontLeftSwerveModule.steerMode +
         BackLeftSwerveModule.steerMode + 
-        FrontRightSwerveModule.steerMode +
-        BackRightSwerveModule.steerMode;
+        BackRightSwerveModule.steerMode +
+        FrontRightSwerveModule.steerMode ;
     }
 
     public void activateDefensiveStop() {
@@ -113,9 +113,9 @@ public class QuadFalconSwerveDrive {
 
     public void setModuleSpeeds (SwerveModuleState[] _swerveModuleStates) {
         FrontLeftSwerveModule.setDesiredState(_swerveModuleStates[0]);
-        FrontRightSwerveModule.setDesiredState(_swerveModuleStates[1]);
         BackLeftSwerveModule.setDesiredState(_swerveModuleStates[2]);
         BackRightSwerveModule.setDesiredState(_swerveModuleStates[3]);
+        FrontRightSwerveModule.setDesiredState(_swerveModuleStates[1]);
     }
 
   /**
