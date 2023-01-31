@@ -114,13 +114,14 @@ public class SwerveModule {
         myCanCoderConfig.unitString = "deg";
         myCanCoderConfig.sensorTimeBase= SensorTimeBase.PerSecond;
         myCanCoderConfig.absoluteSensorRange = AbsoluteSensorRange.Signed_PlusMinus180;
-        
-        
+
         if(steeringSensor.configAllSettings(myCanCoderConfig,1000)==ErrorCode.OK){
             System.out.println("CANCoder " + steeringSensor.getDeviceID() + " configured.");
         } else {
             System.out.println("WARNING! CANCoder " + steeringSensor.getDeviceID() + " NOT configured correctly! Error: " + steeringSensor.getLastError());
         }
+
+        switchToIntegratedSteer();
 
         //First Attempt at seeding
         if(steeringSensor.setPositionToAbsolute(1000)==ErrorCode.OK){
@@ -147,8 +148,10 @@ public class SwerveModule {
 
         steeringMotor.configStatorCurrentLimit(steerCurrentLimitConfigurationDisable, 1000);
         steeringMotor.setInverted(TalonFXInvertType.Clockwise);
-        steeringMotor.configSelectedFeedbackCoefficient(1.0/SwerveConstants.TICKSperTALONFX_STEERING_DEGREE,0,SwerveConstants.kDefaultTimeout);
+        steeringMotor.configSelectedFeedbackCoefficient(1.0/SwerveConstants.TICKSperTALONFX_STEERING_DEGREE,0,1000);
         steeringMotor.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor,0,SwerveConstants.kDefaultTimeout);
+        steeringMotor.configIntegratedSensorAbsoluteRange(AbsoluteSensorRange.Signed_PlusMinus180);
+
     }
 
     /**
@@ -220,20 +223,26 @@ public class SwerveModule {
      */
     public void seedCANCoderAngleToMotorAngle() {
 
+        double canCoderAngle = steeringSensor.getAbsolutePosition();
+
+
         // FIRST
         if(!hasSwerveSeedingOccurred && swerveSeedingRetryCount <=50 && !steerMode.equals("REMOTE")) {
-            if(!hasCANCoderBeenSetToAbs && steeringSensor.getAbsolutePosition() != steeringSensor.getPosition()){
+            if(!hasCANCoderBeenSetToAbs && steeringSensor.getAbsolutePosition() != canCoderAngle){
                 if(steeringSensor.setPositionToAbsolute(1000)==ErrorCode.OK) {
                     hasCANCoderBeenSetToAbs = true;
                 } else {
                     swerveSeedingRetryCount++;
                     System.out.println("ERROR: COULDN'T SET THE CANCODER POSITION TO ABSOLUTE ANGLE! CANCODER: " + steeringSensor.getDeviceID() + " ERROR: " + steeringSensor.getLastError());
                 }
-            } else if(steeringMotor.setSelectedSensorPosition(steeringSensor.getPosition(),0,1000) == ErrorCode.OK){
-                    System.out.println("Seeded Sensor values from " + steeringSensor.getDeviceID() + ": " + steeringSensor.getPosition() + " to " + steeringMotor.getDeviceID() + ": " + steeringMotor.getSelectedSensorPosition());
-                    steeringSensor.setStatusFramePeriod(CANCoderStatusFrame.SensorData, 255, 1000);
-                    if(steeringSensor.getPosition()- steeringMotor.getSelectedSensorPosition() < 2.0){
-                        hasSwerveSeedingOccurred=true;
+            } else if(steeringMotor.setSelectedSensorPosition(canCoderAngle,0,1000) == ErrorCode.OK){
+                    System.out.println("Seeded Sensor values from " + steeringSensor.getDeviceID() + ": " + canCoderAngle + " to " + steeringMotor.getDeviceID() + ": " + steeringMotor.getSelectedSensorPosition());
+                    if(Math.abs(canCoderAngle - steeringMotor.getSelectedSensorPosition()) < 2.0){
+                        steeringSensor.setStatusFramePeriod(CANCoderStatusFrame.SensorData, 255, 1000);
+                        hasSwerveSeedingOccurred = true;
+
+                    } else {
+                        System.out.println("ERROR: VALUE WAS WAY OFF: " + steeringSensor.getDeviceID());
                     }
             } else {
                 System.out.println("ERROR: COULDNT SEED VALUES FOR STEER MOTOR: " + steeringMotor.getDeviceID() + " RETRY COUNT: " + swerveSeedingRetryCount);
