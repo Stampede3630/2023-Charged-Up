@@ -26,6 +26,41 @@ public final class Constants {
   };
 
 
+public enum node{
+  highLeft(0, 0, 0, 0),
+  highMid(1, 1, 1, 1),
+  highRight(2, 2, 2, 2);
 
+  private double cannonAngle;
+  private double extension;
+  private double xCoord;
+  private double yCoord;
+
+  private node(double cannonAngle, double extension, double xCoord, double yCoord){
+    this.cannonAngle = cannonAngle;
+    this.extension = extension;
+    this.xCoord = xCoord;
+    this.yCoord = yCoord;
+  }
+
+  public double getCannonAngle(){
+    return cannonAngle;
+  }
+
+  public double getExtension(){
+    return extension;
+  }
+  public double getXCoord(){
+    return xCoord;
+  }
+  public double getYCoord(){
+    return yCoord;
+  }
+  
+
+
+
+
+}
 
 }

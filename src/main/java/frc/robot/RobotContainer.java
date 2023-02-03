@@ -39,6 +39,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.Claw;
 import frc.robot.subsystems.SwerveDrive;
+import frc.robot.subsystems.TheCannon;
 import frc.robot.subsystems.swerve.SwerveConstants;
 import io.github.oblarg.oblog.Logger;
 import io.github.oblarg.oblog.annotations.Config;
@@ -72,6 +73,8 @@ public class RobotContainer {
 private final SwerveDrive s_SwerveDrive = new SwerveDrive();
   // The robot's subsystems and commands are defined here...
 private final Claw s_Claw = new Claw();
+
+private final TheCannon s_Cannon = new TheCannon();
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -179,6 +182,16 @@ private final Claw s_Claw = new Claw();
           new InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(true)),
           new InstantCommand(()->s_SwerveDrive.setHoldHeadingAngle(-xBox.getHID().getPOV() + 90))
       ));
+      
+    xBox.povUp()
+        .onTrue(new InstantCommand(s_Cannon::manRotUp));
+    xBox.povDown()
+        .onTrue(new InstantCommand(s_Cannon::manRotDown));
+    xBox.povRight()
+        .onTrue(new InstantCommand(s_Cannon::manExtend));
+    xBox.povLeft()
+        .onTrue(new InstantCommand(s_Cannon::manRetract));
+
     // xBox.a().onTrue(new ProxyCommand(()->autoBuilder.followPathGroup(autoPathGroupOnTheFly()))
     // .beforeStarting(new InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
 
@@ -189,6 +202,8 @@ private final Claw s_Claw = new Claw();
     //         .andThen(null)
     //         .alongWith(null)
     //         .until(null));
+
+
     }
 
 
