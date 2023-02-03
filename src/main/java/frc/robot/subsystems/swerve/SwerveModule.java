@@ -222,9 +222,12 @@ public class SwerveModule {
      */
     public void seedCANCoderAngleToMotorAngle() {
 
-        double canCoderAngle = steeringSensor.getPosition();
-
-
+        
+        double canCoderAngle = steeringSensor.getAbsolutePosition();
+        
+        ErrorCode lastError = steeringSensor.getLastError();
+        
+       
         // FIRST Check that we want INTEGRATED mode, we haven't tried too many times and that we weren't successfull already
         if(!hasSwerveSeedingOccurred && swerveSeedingRetryCount <=50 && !steerMode.equals("REMOTE")) {
             //SECOND Check that we've tried to get the absolute position of the sensor (not relative)
@@ -236,7 +239,8 @@ public class SwerveModule {
                     System.out.println("ERROR: COULDN'T SET THE CANCODER POSITION TO ABSOLUTE ANGLE! CANCODER: " + steeringSensor.getDeviceID() + " ERROR: " + steeringSensor.getLastError());
                 }
             //THIRD Attempt to seed the position from CANCoder to actual motor
-            } else if(steeringMotor.setSelectedSensorPosition(canCoderAngle,0,1000) == ErrorCode.OK){
+            } else if (lastError == ErrorCode.OK){
+             if (steeringMotor.setSelectedSensorPosition(canCoderAngle,0,1000) == ErrorCode.OK){
                     System.out.println("Seeded Sensor values from " + steeringSensor.getDeviceID() + ": " + canCoderAngle + " to " + steeringMotor.getDeviceID() + ": " + steeringMotor.getSelectedSensorPosition());
                     //FOURTH Check if the difference between steering motor and CANcoder is less than 2 degrees
                     if(Math.abs(canCoderAngle - steeringMotor.getSelectedSensorPosition()) < 2.0){
@@ -244,9 +248,12 @@ public class SwerveModule {
                         hasSwerveSeedingOccurred = true;
 
                     } else {
-                        System.out.println("ERROR: VALUE WAS WAY OFF SENSOR ID: " + steeringSensor.getDeviceID());
-                        swerveSeedingRetryCount++;
+                        System.out.println("ERROR: VALUE WAS WAY OFF SENSOR ID or : " + steeringSensor.getDeviceID());
                     }
+                } else {
+                    System.out.println("LAST ERROR: " + lastError);
+                    swerveSeedingRetryCount++;
+                }
             } else {
                 System.out.println("ERROR: COULDNT SEED VALUES FOR STEER MOTOR: " + steeringMotor.getDeviceID() + " RETRY COUNT: " + swerveSeedingRetryCount);
                 swerveSeedingRetryCount++;
