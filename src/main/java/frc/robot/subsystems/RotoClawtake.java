@@ -6,9 +6,9 @@ package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class Claw extends SubsystemBase {
+public class RotoClawtake extends SubsystemBase {
   /** Creates a new Claw. */
-  public Claw() {}
+  public RotoClawtake() {}
 
   @Override
   public void periodic() {
@@ -16,8 +16,21 @@ public class Claw extends SubsystemBase {
   }
 
   public void openClaw(){
-    
+    //open piston
   }
 
-  public void closeClaw(){}
+  public void closeClaw(){
+    //close piston
+  }
+
+  public void runClawtake(){
+    //run the rotoclawtake/grab a game piece
+  }
+  public void reverseClawtake(){
+    //spit out a game piece/outtake rotoclawtake
+  }
+
+  public void rotoClaw(){
+    //twist the rotoclawtake
+  }
 }

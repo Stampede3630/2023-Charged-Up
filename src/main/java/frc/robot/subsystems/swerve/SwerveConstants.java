@@ -42,7 +42,7 @@ public final class SwerveConstants {
     public static final int FRSensorID = 1;
     public static final int FLSensorID = 7;
     public static final int BRSensorID = 2;
-    public static final int BLSensorID = 15;
+    public static final int BLSensorID = 4;
 
     //Swerve CANCoder Sensort offsets
     //CHANGE TO 0 first, reset the sensor, 

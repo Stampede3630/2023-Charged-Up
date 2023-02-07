@@ -37,7 +37,7 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.subsystems.Claw;
+import frc.robot.subsystems.RotoClawtake;
 import frc.robot.subsystems.SwerveDrive;
 import frc.robot.subsystems.TheCannon;
 import frc.robot.subsystems.swerve.SwerveConstants;
@@ -72,7 +72,7 @@ public class RobotContainer {
 @Log
 private final SwerveDrive s_SwerveDrive = new SwerveDrive();
   // The robot's subsystems and commands are defined here...
-private final Claw s_Claw = new Claw();
+private final RotoClawtake s_Claw = new RotoClawtake();
 
 private final TheCannon s_Cannon = new TheCannon();
 
@@ -117,6 +117,10 @@ private final TheCannon s_Cannon = new TheCannon();
           xBox::getLeftY,
           xBox::getLeftX,
           xBox::getRightX).withName("DefaultDrive"));
+
+    // // s_Cannon.setDefaultCommand(
+    // //   new InstantCommand(s_Cannon::stowMode)
+    // );
 
 
     // This will load the file "FullAuto.path" and generate it with a max velocity of 4 m/s and a max acceleration of 3 m/s^2
@@ -177,20 +181,20 @@ private final TheCannon s_Cannon = new TheCannon();
     xBox.b()
         .onTrue(new InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false)));
 
-    xBox.povCenter().negate().onTrue(
-        new SequentialCommandGroup(
-          new InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(true)),
-          new InstantCommand(()->s_SwerveDrive.setHoldHeadingAngle(-xBox.getHID().getPOV() + 90))
-      ));
+    // xBox.povCenter().negate().onTrue(
+    //     new SequentialCommandGroup(
+    //       new InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(true)),
+    //       new InstantCommand(()->s_SwerveDrive.setHoldHeadingAngle(-xBox.getHID().getPOV() + 90))
+    //   ));
       
-    xBox.povUp()
-        .onTrue(new InstantCommand(s_Cannon::manRotUp));
-    xBox.povDown()
-        .onTrue(new InstantCommand(s_Cannon::manRotDown));
-    xBox.povRight()
-        .onTrue(new InstantCommand(s_Cannon::manExtend));
-    xBox.povLeft()
-        .onTrue(new InstantCommand(s_Cannon::manRetract));
+    // xBox.povUp()
+    //     .whileTrue(new InstantCommand(s_Cannon::manRotUp));
+    // xBox.povDown()
+    //     .whileTrue(new InstantCommand(s_Cannon::manRotDown));
+    // xBox.povRight()
+    //     .whileTrue(new InstantCommand(s_Cannon::manExtend));
+    // xBox.povLeft()
+    //     .whileTrue(new InstantCommand(s_Cannon::manRetract));
 
     // xBox.a().onTrue(new ProxyCommand(()->autoBuilder.followPathGroup(autoPathGroupOnTheFly()))
     // .beforeStarting(new InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
