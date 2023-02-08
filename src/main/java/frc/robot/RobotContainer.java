@@ -206,25 +206,25 @@ private final TheCannon s_Cannon = new TheCannon();
     //       new InstantCommand(()->s_SwerveDrive.setHoldHeadingAngle(-xBox.getHID().getPOV() + 90))
     //   ));
       
-    // xBox.povUp()
-    //     .whileTrue(new InstantCommand(s_Cannon::manRotUp));
-    // xBox.povDown()
-    //     .whileTrue(new InstantCommand(s_Cannon::manRotDown));
-    // xBox.povRight()
-    //     .whileTrue(new InstantCommand(s_Cannon::manExtend));
-    // xBox.povLeft()
-    //     .whileTrue(new InstantCommand(s_Cannon::manRetract));
+    xBox.povUp()
+        .whileTrue(new InstantCommand(s_Cannon::manRotUp));
+    xBox.povDown()
+        .whileTrue(new InstantCommand(s_Cannon::manRotDown));
+    xBox.povRight()
+        .whileTrue(new InstantCommand(s_Cannon::manExtend));
+    xBox.povLeft()
+        .whileTrue(new InstantCommand(s_Cannon::manRetract));
 
-    // xBox.a().onTrue(new ProxyCommand(()->autoBuilder.followPathGroup(autoPathGroupOnTheFly()))
-    // .beforeStarting(new InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
+    xBox.a().onTrue(new ProxyCommand(()->autoBuilder.followPathGroup(autoPathGroupOnTheFly()))
+    .beforeStarting(new InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
 
-    // xBox.x().onTrue(new ProxyCommand(()->autoBuilder.followPathGroup(goToNearestGoal()))
-    // .beforeStarting(new InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
+    xBox.x().onTrue(new ProxyCommand(()->autoBuilder.followPathGroup(goToNearestGoal()))
+    .beforeStarting(new InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
 
-    // xBox.y().onTrue(new InstantCommand(s_Claw::openClaw)
-    //         .andThen(null)
-    //         .alongWith(null)
-    //         .until(null));
+    xBox.y().onTrue(new InstantCommand(s_Claw::openClaw)
+            .andThen(null)
+            .alongWith(null)
+            .until(null));
 
 
     }
