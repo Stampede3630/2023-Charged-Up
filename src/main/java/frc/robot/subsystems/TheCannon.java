@@ -12,6 +12,7 @@ import com.revrobotics.SparkMaxPIDController;
 import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
+import com.revrobotics.SparkMaxPIDController.ArbFFUnits;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -35,16 +36,17 @@ public class TheCannon extends SubsystemBase {
   // public DutyCycleEncoder cannonAbsolute = new DutyCycleEncoder(0);
 
   private RelativeEncoder cannonAbsolute = cannonRotLead.getAlternateEncoder(SparkMaxAlternateEncoder.Type.kQuadrature, 8192); //TODO FIX
+  private RelativeEncoder extensionEncoder = cannonExtension.getEncoder();
 
   private SparkMaxPIDController cannonRotLeadPID = cannonRotLead.getPIDController();
   private SparkMaxPIDController cannonExtensionPID = cannonExtension.getPIDController();
 
   private double kS = 0;
-  private double kG = 0;
-  private double kV = 0;
-  private double kA = 0;
+  private double kG = 0.73;
+  private double kV = 2.44;
+  private double kA = 0.06;
 
-  private final ArmFeedforward m_feedforward = 
+  private ArmFeedforward m_feedforward = 
 
   new ArmFeedforward(
       kS, kG,
@@ -62,6 +64,7 @@ public class TheCannon extends SubsystemBase {
     cannonExtensionPID.setD(0.1);
 
     cannonAbsolute.setPositionConversionFactor(1/360);
+    cannonAbsolute.setVelocityConversionFactor(1/360);
     
   }
 
@@ -73,10 +76,13 @@ public class TheCannon extends SubsystemBase {
   }
 
   public void setAdaptiveFeedForward(){
-    // kS = 
-    // kG = 
-    // kV = 
-    // kA = 
+    
+    kS = 0;
+    kA = (7.71E-3)* extensionEncoder.getPosition() - 0.133;
+    kG = (0.0289) * extensionEncoder.getPosition() + (8.57E-3);
+    kV = 2.44;
+    m_feedforward = new ArmFeedforward(kS, kG, kV, kA);    
+  
   }
 
   public void stowMode(){
@@ -111,14 +117,14 @@ public class TheCannon extends SubsystemBase {
   }
 
   public void extendToSetpoint(poi poi){
-
     cannonRotLeadPID.setReference(poi.getCannonAngle(), ControlType.kPosition);
 
   }
 
   public void rotateToSetpoint(poi poi){
-
-    cannonExtensionPID.setReference(poi.getExtension(), ControlType.kPosition);
+    setAdaptiveFeedForward();
+    double ff = m_feedforward.calculate(Math.toRadians(cannonAbsolute.getPosition()), Math.toRadians(cannonAbsolute.getVelocity()));
+    cannonExtensionPID.setReference(poi.getExtension(), ControlType.kPosition, 0, ff, ArbFFUnits.kVoltage);
 
   }
 }
