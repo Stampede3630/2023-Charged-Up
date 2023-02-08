@@ -156,6 +156,8 @@ public class SwerveModule {
         } else {
             System.out.println("WARNING! Steer Motor  " + steeringMotor.getDeviceID() + " NOT configured correctly!");
         }
+        //give modules time to "settle" before initializing
+        Timer.delay(1);
 
         steeringMotor.configStatorCurrentLimit(steerCurrentLimitConfigurationDisable, 1000);
         steeringMotor.setInverted(TalonFXInvertType.Clockwise);
@@ -234,24 +236,24 @@ public class SwerveModule {
     public void seedCANCoderAngleToMotorAngle() {
 
         
-        double canCoderAngle = steeringSensor.getAbsolutePosition();
         
-        ErrorCode lastError = steeringSensor.getLastError();
-
+        
         if(prepareForSeeding){
             System.out.println("PREPARING TO SEED"); 
+            double canCoderAngle = steeringSensor.getAbsolutePosition();
+            ErrorCode lastError = steeringSensor.getLastError();
             if (!canCoderAbsSuccessful){
-                canCoderAbsSuccessful = steeringSensor.setPositionToAbsolute(1000) == ErrorCode.OK ? true:false;
+                canCoderAbsSuccessful = steeringSensor.setPositionToAbsolute(1000) == ErrorCode.OK;
                 System.out.println("CANCODER ID: " + steeringSensor.getDeviceID() + " CANCODER SET TO ABSOLUTE: " + canCoderAbsSuccessful);
             }
-            if(canCoderAbsSuccessful && !seedingOccured){
-                seedingOccured = steeringMotor.setSelectedSensorPosition(canCoderAngle,0,1000) == ErrorCode.OK ? true:false;
+            if(canCoderAbsSuccessful && !seedingOccured && lastError == ErrorCode.OK){
+                seedingOccured = steeringMotor.setSelectedSensorPosition(canCoderAngle,0,1000) == ErrorCode.OK;
                 System.out.println("CANCODER ID: " + steeringSensor.getDeviceID() + " INITIAL SEED SUCCESSFUL: " + seedingOccured);
                 seedingTimer = Timer.getFPGATimestamp();
             }
             if(seedingOccured && !seedingSuccessful && Timer.getFPGATimestamp() - seedingTimer > 2){
-                seedingSuccessful = Math.abs(canCoderAngle - steeringMotor.getSelectedSensorPosition()) < 2.0 ? true:false;
-                guudder = seedingSuccessful ? true:false;
+                seedingSuccessful = Math.abs(canCoderAngle - steeringMotor.getSelectedSensorPosition()) < 2.0;
+                guudder = seedingSuccessful;
                 System.out.println("CANCODER ID: " + steeringSensor.getDeviceID() + " SEED SUCCESSFUL: " + seedingSuccessful);
             } else if(!guudder && seedingOccured && !seedingSuccessful && Timer.getFPGATimestamp() - seedingTimer > 2){
                 System.out.println("CANCODER ID: " + steeringSensor.getDeviceID() + " RETRYING SEEDING (wasn't guudder)");
@@ -261,6 +263,7 @@ public class SwerveModule {
             if(seedingSuccessful){
                 prepareForSeeding = false;
             }
+            
         }
         
         // if(lastError == ErrorCode.OK){

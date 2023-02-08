@@ -72,6 +72,13 @@ public class TheCannon extends SubsystemBase {
     
   }
 
+  public void setAdaptiveFeedForward(){
+    // kS = 
+    // kG = 
+    // kV = 
+    // kA = 
+  }
+
   public void stowMode(){
 
     cannonRotLeadPID.setReference(3, ControlType.kPosition);

@@ -24,7 +24,9 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -68,6 +70,7 @@ public class RobotContainer {
 
 
 // This is just an example event map. It would be better to have a constant, global event map
+
   
 @Log
 private final SwerveDrive s_SwerveDrive = new SwerveDrive();
@@ -94,6 +97,22 @@ private final TheCannon s_Cannon = new TheCannon();
 
     Shuffleboard.getTab("nodeSelector")
       .add("node", "");
+    SendableChooser<GamePieceOrientation> gamePieceOrientationChooser = new SendableChooser<>();
+      for (GamePieceOrientation orientation : GamePieceOrientation.values()) {
+        gamePieceOrientationChooser.addOption(orientation.friendlyName, orientation);
+      }
+
+    SendableChooser<NodeDriverStation> nodeDriverStation = new SendableChooser<>();
+      for (NodeDriverStation ds : NodeDriverStation.values()) {
+        nodeDriverStation.addOption(ds.dsFriendlyName, ds);
+      }
+      Shuffleboard.getTab("nodeSelector")
+        .add("orientation", gamePieceOrientationChooser)
+        .withWidget(BuiltInWidgets.kComboBoxChooser);
+
+      Shuffleboard.getTab("nodeSelector")
+        .add("Node Driver Station", nodeDriverStation)
+        .withWidget(BuiltInWidgets.kComboBoxChooser);
 
     HashMap<String, Command> eventMap = new HashMap<>();
     eventMap.put("1stBallPickup", new WaitCommand(2));
@@ -262,6 +281,31 @@ private final TheCannon s_Cannon = new TheCannon();
 
     return PGOTF;
   }
+  public enum GamePieceOrientation {
+    RIGHT("|>", 90),
+    LEFT("<|", -90), 
+    UPRIGHT("/\\", 0), 
+    CUBE("口", 0); 
+    private String friendlyName; 
+    private double rotOrientationAngle;
+    public double getRotOrientForRoto(){
+      return rotOrientationAngle;
+    
+  }
+  private GamePieceOrientation(String friendlyName, double rotOrientationAngle) {
+    this.friendlyName = friendlyName;
+    this.rotOrientationAngle = rotOrientationAngle;
+    
+  }
+  
+  }
 
+  public enum NodeDriverStation {
+    ONE("driver station one"), TWO("driver station two"), THREE("driver station three");
+    public final String dsFriendlyName;
+    private NodeDriverStation(String dsFriendlyName) {
+      this.dsFriendlyName = dsFriendlyName;
+    }
+  }
 }
 
