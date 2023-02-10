@@ -27,31 +27,31 @@ public final class SwerveConstants {
     public static final double kIRotationController = 0;
 
     //Swerve Drive Motor IDs
-    public static final int FRDriveID = 3;
-    public static final int FLDriveID = 0;
-    public static final int BRDriveID = 16;
-    public static final int BLDriveID = 14;
+    public static final int FRDriveID = 0;
+    public static final int FLDriveID = 10;
+    public static final int BRDriveID = 1;
+    public static final int BLDriveID = 15;
 
     //Swerve Steer Motor IDs
-    public static final int FRSteerID = 13;
-    public static final int FLSteerID = 8;
-    public static final int BRSteerID = 12;
-    public static final int BLSteerID = 15;
+    public static final int FRSteerID = 3;
+    public static final int FLSteerID = 12;
+    public static final int BRSteerID = 2;
+    public static final int BLSteerID = 16;
 
     //Swerve CANCoder Sensor IDs
-    public static final int FRSensorID = 1;
-    public static final int FLSensorID = 7;
-    public static final int BRSensorID = 2;
-    public static final int BLSensorID = 4;
+    public static final int FRSensorID = 2;
+    public static final int FLSensorID = 6;
+    public static final int BRSensorID = 4;
+    public static final int BLSensorID = 8;
 
     //Swerve CANCoder Sensort offsets
     //CHANGE TO 0 first, reset the sensor, 
     //PHYSICALLY zero out the motor 
     //place the OPPOSITE of the value
-    public static double FRSensorOffset =39.287; //-327.129;
-    public static double FLSensorOffset =-37.441;// -41.133;
-    public static double BRSensorOffset =129.111;// 124.980;
-    public static double BLSensorOffset =50.010 ;// -243.721;
+    public static double FRSensorOffset = 0; //39.287; C.H.A.D. values
+    public static double FLSensorOffset = 0;// -37.441;
+    public static double BRSensorOffset = 0;// 129.111;
+    public static double BLSensorOffset = 0;// 50.010;
 
 
     //Give a positive input on the joystick or phoenix tuner

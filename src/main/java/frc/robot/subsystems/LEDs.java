@@ -4,52 +4,42 @@
 
 package frc.robot.subsystems;
 
-import com.ctre.phoenix.led.RainbowAnimation;
-
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class LEDs extends SubsystemBase {
 
-public AddressableLED m_led = new AddressableLED(0);
-AddressableLEDBuffer m_LEDBuffer = new AddressableLEDBuffer(60);
-public int m_rainbowFirstPixelHue = 0;
+  public AddressableLED m_led = new AddressableLED(0);
+  public AddressableLEDBuffer m_LEDBuffer = new AddressableLEDBuffer(60);
+  public int m_rainbowFirstPixelHue = 0;
   /** Creates a new LEDs. */
-  public LEDs() {
-
-  }
+  public LEDs() {}
 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
   }
 
-  public void becomePurple () {
+  public void setEntireStrip(int r, int g, int b) {
     for (var i = 0; i < m_LEDBuffer.getLength(); i++) {
       // Sets the specified LED to the RGB values for red
-      m_LEDBuffer.setRGB(i, 162, 0, 255);
+      m_LEDBuffer.setRGB(i, r, g, r);
    }
    
    m_led.setData(m_LEDBuffer);
+  }
+
+  public void becomePurple () {
+    setEntireStrip(162, 0, 255);
   }
 
   public void becomeYellow () {
-    for (var i = 0; i < m_LEDBuffer.getLength(); i++) {
-      // Sets the specified LED to the RGB values for red
-      m_LEDBuffer.setRGB(i, 255, 243, 0);
-   }
-   
-   m_led.setData(m_LEDBuffer);
+    setEntireStrip(255, 243, 0);
   }
 
   public void becomeIndecisive () {
-    for (var i = 0; i < m_LEDBuffer.getLength(); i++) {
-      // Sets the specified LED to the RGB values for red
-      m_LEDBuffer.setRGB(i, 0, 255, 251);
-   }
-   
-   m_led.setData(m_LEDBuffer);
+   setEntireStrip(0, 255, 251);
   }
 
   public void becomeRainbow () {

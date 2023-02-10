@@ -128,13 +128,14 @@ public class QuadFalconSwerveDrive {
       Math.abs(FrontLeftSwerveModule.driveMotor.getSelectedSensorVelocity())  < 100 &&
       Math.abs(BackLeftSwerveModule.driveMotor.getSelectedSensorVelocity())   < 100 &&
       Math.abs(FrontRightSwerveModule.driveMotor.getSelectedSensorVelocity()) < 100 &&
-      Math.abs(BackRightSwerveModule.driveMotor.getSelectedSensorVelocity())  < 100) {
-        FrontRightSwerveModule.setModuleToCoast();
-        BackRightSwerveModule.setModuleToCoast();
-        FrontLeftSwerveModule.setModuleToCoast();
-        BackLeftSwerveModule.setModuleToCoast();
-        NeutralMode = "Coast";
-      }
+      Math.abs(BackRightSwerveModule.driveMotor.getSelectedSensorVelocity())  < 100) 
+    {
+      FrontRightSwerveModule.setModuleToCoast();
+      BackRightSwerveModule.setModuleToCoast();
+      FrontLeftSwerveModule.setModuleToCoast();
+      BackLeftSwerveModule.setModuleToCoast();
+      NeutralMode = "Coast";
+    }
   }
 
   public void setToBrake(){

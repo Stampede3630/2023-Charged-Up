@@ -124,11 +124,8 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
 
     if (aprilTagDetected && limelightLatency() < 1.5) {
       m_odometry.addVisionMeasurement(visionPose, Timer.getFPGATimestamp() - limelightLatency());
-      updateOdometry();
-    } else {
-      updateOdometry();
     }
-
+    updateOdometry();
 
     m_driveTrain.checkAndSetSwerveCANStatus();
     drawRobotOnField(m_field);
@@ -179,8 +176,8 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
   public void updateRotationController(){
     if(holdHeadingEnabled){
       rotationControllerOutput = rotationController.calculate(
-                  Math.IEEEremainder(getRobotAngleDegrees(), 360),
-                  new State(holdHeadingAngle, 0.0))/-Units.radiansToDegrees(SwerveConstants.MAX_SPEED_RADIANSperSECOND);
+          Math.IEEEremainder(getRobotAngleDegrees(), 360),
+          new State(holdHeadingAngle, 0.0))/-Units.radiansToDegrees(SwerveConstants.MAX_SPEED_RADIANSperSECOND);
     }
   }
 
@@ -335,9 +332,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
       x = 8.2425 - myArray[0];
       y = 4.0515 + myArray[1];
       rot = myArray[5];
-
     }
-    
 
     return new Pose2d(x, y, Rotation2d.fromDegrees(rot));
 

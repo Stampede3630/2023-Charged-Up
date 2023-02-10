@@ -20,6 +20,7 @@ import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Preferences;
@@ -97,15 +98,18 @@ private final TheCannon s_Cannon = new TheCannon();
 
     Shuffleboard.getTab("nodeSelector")
       .add("node", "");
+
+
     SendableChooser<GamePieceOrientation> gamePieceOrientationChooser = new SendableChooser<>();
-      for (GamePieceOrientation orientation : GamePieceOrientation.values()) {
-        gamePieceOrientationChooser.addOption(orientation.friendlyName, orientation);
-      }
+    for (GamePieceOrientation orientation : GamePieceOrientation.values()) {
+      gamePieceOrientationChooser.addOption(orientation.getFriendlyName(), orientation);
+    }
 
     SendableChooser<NodeDriverStation> nodeDriverStation = new SendableChooser<>();
       for (NodeDriverStation ds : NodeDriverStation.values()) {
         nodeDriverStation.addOption(ds.dsFriendlyName, ds);
       }
+
       Shuffleboard.getTab("nodeSelector")
         .add("orientation", gamePieceOrientationChooser)
         .withWidget(BuiltInWidgets.kComboBoxChooser);
@@ -150,6 +154,10 @@ private final TheCannon s_Cannon = new TheCannon();
     // Configure the button bindings
     configureButtonBindings();
     Logger.configureLoggingAndConfig(this, false);
+  }
+  @Config(defaultValueNumeric = 0)
+  private void setCannonPosition(double value){
+    s_Cannon.setReference(value);
   }
   
   /**
@@ -225,8 +233,6 @@ private final TheCannon s_Cannon = new TheCannon();
             .andThen(null)
             .alongWith(null)
             .until(null));
-
-
     }
 
 
@@ -286,17 +292,21 @@ private final TheCannon s_Cannon = new TheCannon();
     LEFT("<|", -90), 
     UPRIGHT("/\\", 0), 
     CUBE("口", 0); 
+
     private String friendlyName; 
     private double rotOrientationAngle;
+
+    public String getFriendlyName() {
+      return friendlyName;
+    }
     public double getRotOrientForRoto(){
-      return rotOrientationAngle;
-    
-  }
-  private GamePieceOrientation(String friendlyName, double rotOrientationAngle) {
-    this.friendlyName = friendlyName;
-    this.rotOrientationAngle = rotOrientationAngle;
-    
-  }
+      return rotOrientationAngle; 
+    }
+
+    private GamePieceOrientation(String friendlyName, double rotOrientationAngle) {
+      this.friendlyName = friendlyName;
+      this.rotOrientationAngle = rotOrientationAngle;
+    }
   
   }
 

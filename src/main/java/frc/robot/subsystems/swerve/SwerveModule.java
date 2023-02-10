@@ -1,9 +1,6 @@
 package frc.robot.subsystems.swerve;
 
-import java.sql.Time;
-
 import com.ctre.phoenix.ErrorCode;
-import com.ctre.phoenix.ParamEnum;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
@@ -49,10 +46,10 @@ public class SwerveModule {
     public boolean hasSwerveSeedingOccurred=false;
     public boolean hasCANCoderBeenSetToAbs = false;
     public double swerveSeedingRetryCount = 0;
-    public  StatorCurrentLimitConfiguration steerCurrentLimitConfigurationEnable;
-    public  StatorCurrentLimitConfiguration steerCurrentLimitConfigurationDisable;
-    public  StatorCurrentLimitConfiguration driveCurrentLimitConfigurationEnable;
-    public  StatorCurrentLimitConfiguration driveCurrentLimitConfigurationDisable;
+    public StatorCurrentLimitConfiguration steerCurrentLimitConfigurationEnable;
+    public StatorCurrentLimitConfiguration steerCurrentLimitConfigurationDisable;
+    public StatorCurrentLimitConfiguration driveCurrentLimitConfigurationEnable;
+    public StatorCurrentLimitConfiguration driveCurrentLimitConfigurationDisable;
     public SwerveModuleState mCurrentModuleState;
     public static SimpleMotorFeedforward driveMotorFeedforward = new SimpleMotorFeedforward(SwerveConstants.kS, SwerveConstants.kV, SwerveConstants.kA);
 
@@ -234,10 +231,6 @@ public class SwerveModule {
      * Integrated Sensor on the Steering Motor (cuz faster/snappier).  
      */
     public void seedCANCoderAngleToMotorAngle() {
-
-        
-        
-        
         if(prepareForSeeding){
             System.out.println("PREPARING TO SEED"); 
             double canCoderAngle = steeringSensor.getAbsolutePosition();

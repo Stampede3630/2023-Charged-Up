@@ -116,6 +116,11 @@ public class TheCannon extends SubsystemBase {
     setAdaptiveFeedForward();
     double ff = m_feedforward.calculate(Math.toRadians(cannonAbsolute.getPosition()), Math.toRadians(cannonAbsolute.getVelocity()));
     cannonExtensionPID.setReference(poi.getExtension(), ControlType.kPosition, 0, ff, ArbFFUnits.kVoltage);
+  }
 
+  public void setReference(double position) {
+    setAdaptiveFeedForward();
+    double ff = m_feedforward.calculate(Math.toRadians(cannonAbsolute.getPosition()), Math.toRadians(cannonAbsolute.getVelocity()));
+    cannonExtensionPID.setReference(position, ControlType.kPosition, 0, ff, ArbFFUnits.kVoltage);
   }
 }
