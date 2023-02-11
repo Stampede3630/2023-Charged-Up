@@ -97,8 +97,13 @@ public class RotoClawtake extends SubsystemBase {
   }
 
   public void actuateClaw(GamePieceOrientation gamePieceOrientation){
-    clawMotorPID.setReference(gamePieceOrientation.getCone(gamePieceOrientation), ControlType.kPosition);
-    
+
+    if (gamePieceOrientation.getGamePieceType().equals("cone")){
+      clawMotorPID.setReference(0, ControlType.kPosition);
+    } else {
+      clawMotorPID.setReference(4, ControlType.kPosition);
+    }
+
   }
   
 

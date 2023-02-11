@@ -240,7 +240,7 @@ private final TheCannon s_Cannon = new TheCannon();
     .onTrue(new InstantCommand(s_Cannon::manRetract, s_Cannon))
     .onFalse(new InstantCommand(s_Cannon::stowMode,s_Cannon));
     xBox.rightTrigger(.5)
-      .onTrue(new ParallelCommandGroup(new InstantCommand(s_Claw::runClawtake, s_Claw), new InstantCommand(s_Claw::actuateClaw)))
+      .onTrue(new ParallelCommandGroup(new InstantCommand(s_Claw::runClawtake, s_Claw), new InstantCommand(() -> s_Claw.actuateClaw(GamePieceOrientation.CUBE))))
       .onFalse(new ParallelCommandGroup(new InstantCommand(s_Claw::stopClawTake,s_Claw), new InstantCommand(s_Claw::openClaw)));
     // xBox.a().onTrue(new ProxyCommand(()->autoBuilder.followPathGroup(autoPathGroupOnTheFly()))
     // .beforeStarting(new InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
@@ -307,13 +307,14 @@ private final TheCannon s_Cannon = new TheCannon();
     return PGOTF;
   }
   public enum GamePieceOrientation {
-    RIGHT("|>", 90),
-    LEFT("<|", -90), 
-    UPRIGHT("/\\", 0), 
-    CUBE("口", 0); 
+    RIGHT("|>", 90, "cone"),
+    LEFT("<|", -90, "cone"), 
+    UPRIGHT("/\\", 0, "cone"), 
+    CUBE("口", 0, "cone"); 
 
     private String friendlyName; 
     private double rotOrientationAngle;
+    private String gamePieceType;
 
     public String getFriendlyName() {
       return friendlyName;
@@ -321,21 +322,26 @@ private final TheCannon s_Cannon = new TheCannon();
     public double getRotOrientForRoto(){
       return rotOrientationAngle; 
     }
-    
-    public double getCone(GamePieceOrientation gamePieceOrientation){
-      if (gamePieceOrientation.friendlyName != "口")
-      return 0;
-      else{
-        return 4;
-      }
-      
+
+    public String getGamePieceType(){
+      return gamePieceType;
     }
-    private GamePieceOrientation(String friendlyName, double rotOrientationAngle) {
+    
+    // public double getCone(String friendlyName){
+    //   this.friendlyName = friendlyName;
+    //   if (friendlyName != "口")
+    //   return 0;
+    //   else{
+    //     return 4;
+    //   }
+      
+    // }
+    private GamePieceOrientation(String friendlyName, double rotOrientationAngle, String gamePieceType) {
       this.friendlyName = friendlyName;
       this.rotOrientationAngle = rotOrientationAngle;
+      this.gamePieceType = gamePieceType;
+
     }
-
-
   
   }
 
