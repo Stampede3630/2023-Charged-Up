@@ -240,8 +240,8 @@ private final TheCannon s_Cannon = new TheCannon();
     .onTrue(new InstantCommand(s_Cannon::manRetract, s_Cannon))
     .onFalse(new InstantCommand(s_Cannon::stowMode,s_Cannon));
     xBox.rightTrigger(.5)
-      .onTrue(new ParallelCommandGroup(new InstantCommand(s_Claw::runClawtake, s_Claw), new InstantCommand(s_Claw::closeClaw)))
-      .onFalse(new InstantCommand(s_Claw::stopClawTake,s_Claw));
+      .onTrue(new ParallelCommandGroup(new InstantCommand(s_Claw::runClawtake, s_Claw), new InstantCommand(s_Claw::actuateClaw)))
+      .onFalse(new ParallelCommandGroup(new InstantCommand(s_Claw::stopClawTake,s_Claw), new InstantCommand(s_Claw::openClaw)));
     // xBox.a().onTrue(new ProxyCommand(()->autoBuilder.followPathGroup(autoPathGroupOnTheFly()))
     // .beforeStarting(new InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
 
@@ -321,13 +321,24 @@ private final TheCannon s_Cannon = new TheCannon();
     public double getRotOrientForRoto(){
       return rotOrientationAngle; 
     }
-
+    
+    public double getCone(GamePieceOrientation gamePieceOrientation){
+      if (gamePieceOrientation.friendlyName != "口")
+      return 0;
+      else{
+        return 4;
+      }
+      
+    }
     private GamePieceOrientation(String friendlyName, double rotOrientationAngle) {
       this.friendlyName = friendlyName;
       this.rotOrientationAngle = rotOrientationAngle;
     }
+
+
   
   }
+
 
   public enum NodeDriverStation {
     ONE("driver station one"), TWO("driver station two"), THREE("driver station three");
