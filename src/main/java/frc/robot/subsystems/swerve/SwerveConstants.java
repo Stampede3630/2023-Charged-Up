@@ -3,7 +3,7 @@ package frc.robot.subsystems.swerve;
 import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
 public final class SwerveConstants {
     public static final boolean OPTIMIZESTEERING = true;
-    public static final boolean BOT_IS_NOT_CHARACTERIZED = false;
+    public static final boolean BOT_IS_NOT_CHARACTERIZED = true;
     public static final boolean RUN_TRAJECTORY = true;
 
     //SWERVE MODULE CHARACTERISTICS
@@ -48,10 +48,10 @@ public final class SwerveConstants {
     //CHANGE TO 0 first, reset the sensor, 
     //PHYSICALLY zero out the motor 
     //place the OPPOSITE of the value
-    public static double FRSensorOffset = 0; //39.287; C.H.A.D. values
-    public static double FLSensorOffset = 0;// -37.441;
-    public static double BRSensorOffset = 0;// 129.111;
-    public static double BLSensorOffset = 0;// 50.010;
+    public static double FRSensorOffset = 118.564; //121.904; test? values
+    public static double FLSensorOffset = 34.629;// 40.869;
+    public static double BRSensorOffset = 50.537;// 179.561;
+    public static double BLSensorOffset = -23.818;// -24.873;
 
 
     //Give a positive input on the joystick or phoenix tuner
@@ -62,7 +62,7 @@ public final class SwerveConstants {
     public static TalonFXInvertType BRInvertType = TalonFXInvertType.Clockwise;
     public static TalonFXInvertType BLInvertType = TalonFXInvertType.CounterClockwise;
 
-    //Swerve Steering PIDs (kP, kI, kD)
+    //Swerve Steering PIDs (kP, kI, kD)    
     public static Gains FRSteerGains = new Gains(25, 0, 0);
     public static Gains FLSteerGains = new Gains(25, 0, 0);
     public static Gains BRSteerGains = new Gains(25, 0, 0);

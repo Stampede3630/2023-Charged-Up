@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import java.lang.module.ModuleDescriptor.Requires;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -17,6 +18,8 @@ import com.pathplanner.lib.PathConstraints;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.math.util.Units;
@@ -29,8 +32,11 @@ import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
+import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.ProfiledPIDCommand;
 import edu.wpi.first.wpilibj2.command.ProxyCommand;
@@ -141,8 +147,12 @@ private final TheCannon s_Cannon = new TheCannon();
           xBox::getLeftX,
           xBox::getRightX).withName("DefaultDrive"));
 
-    // // s_Cannon.setDefaultCommand(
-    // //   new InstantCommand(s_Cannon::stowMode)
+    // s_Cannon.setDefaultCommand(
+    //   new InstantCommand(s_Cannon::stowMode, s_Cannon)
+    // );
+
+    // s_Claw.setDefaultCommand(
+    //   new FunctionalCommand(() -> System.out.println("default"), () -> {}, interrupted -> {}, () -> true, s_Claw)
     // );
 
 
@@ -215,24 +225,33 @@ private final TheCannon s_Cannon = new TheCannon();
     //   ));
       
     xBox.povUp()
-        .whileTrue(new InstantCommand(s_Cannon::manRotUp));
+      .onTrue(new InstantCommand(s_Cannon::manRotUp, s_Cannon))
+      .onFalse(new InstantCommand(s_Cannon::stowMode,s_Cannon));
+              
+        
     xBox.povDown()
-        .whileTrue(new InstantCommand(s_Cannon::manRotDown));
+    .onTrue(new InstantCommand(s_Cannon::manRotDown, s_Cannon))
+    .onFalse(new InstantCommand(s_Cannon::stowMode,s_Cannon));
+
     xBox.povRight()
-        .whileTrue(new InstantCommand(s_Cannon::manExtend));
+    .onTrue(new InstantCommand(s_Cannon::manExtend, s_Cannon))
+    .onFalse(new InstantCommand(s_Cannon::stowMode,s_Cannon));
     xBox.povLeft()
-        .whileTrue(new InstantCommand(s_Cannon::manRetract));
+    .onTrue(new InstantCommand(s_Cannon::manRetract, s_Cannon))
+    .onFalse(new InstantCommand(s_Cannon::stowMode,s_Cannon));
+    xBox.rightTrigger(.5)
+      .onTrue(new ParallelCommandGroup(new InstantCommand(s_Claw::runClawtake, s_Claw), new InstantCommand(s_Claw::closeClaw)))
+      .onFalse(new InstantCommand(s_Claw::stopClawTake,s_Claw));
+    // xBox.a().onTrue(new ProxyCommand(()->autoBuilder.followPathGroup(autoPathGroupOnTheFly()))
+    // .beforeStarting(new InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
 
-    xBox.a().onTrue(new ProxyCommand(()->autoBuilder.followPathGroup(autoPathGroupOnTheFly()))
-    .beforeStarting(new InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
+    // xBox.x().onTrue(new ProxyCommand(()->autoBuilder.followPathGroup(goToNearestGoal()))
+    // .beforeStarting(new InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
 
-    xBox.x().onTrue(new ProxyCommand(()->autoBuilder.followPathGroup(goToNearestGoal()))
-    .beforeStarting(new InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
-
-    xBox.y().onTrue(new InstantCommand(s_Claw::openClaw)
-            .andThen(null)
-            .alongWith(null)
-            .until(null));
+    // xBox.y().onTrue(new InstantCommand(s_Claw::openClaw)
+    //         .andThen(null)
+    //         .alongWith(null)
+    //         .until(null));
     }
 
 

@@ -4,11 +4,13 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix.motorcontrol.InvertType;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxAlternateEncoder;
 import com.revrobotics.SparkMaxPIDController;
 import com.revrobotics.CANSparkMax.ControlType;
+import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.SparkMaxPIDController.ArbFFUnits;
 
@@ -19,12 +21,12 @@ import frc.robot.Constants.poi;
 public class TheCannon extends SubsystemBase {
   /** Creates a new TheCannon. */
   private CANSparkMax cannonRotLead = new CANSparkMax(4, MotorType.kBrushless);
-  private CANSparkMax cannonRotFollow = new CANSparkMax(2, MotorType.kBrushless);
-  private CANSparkMax cannonExtension = new CANSparkMax(3, MotorType.kBrushless);
+  private CANSparkMax cannonRotFollow = new CANSparkMax(11, MotorType.kBrushless);
+  private CANSparkMax cannonExtension = new CANSparkMax(17, MotorType.kBrushless);
 
   // public DutyCycleEncoder cannonAbsolute = new DutyCycleEncoder(0);
 
-  private RelativeEncoder cannonAbsolute = cannonRotLead.getAlternateEncoder(SparkMaxAlternateEncoder.Type.kQuadrature, 8192); //TODO FIX
+  private RelativeEncoder cannonAbsolute = cannonRotLead.getEncoder();
   private RelativeEncoder extensionEncoder = cannonExtension.getEncoder();
 
   private SparkMaxPIDController cannonRotLeadPID = cannonRotLead.getPIDController();
@@ -42,7 +44,11 @@ public class TheCannon extends SubsystemBase {
       kV, kA);
   
   public TheCannon() {
-    cannonRotFollow.follow(cannonRotLead);
+    cannonRotLead.setIdleMode(IdleMode.kBrake);
+    cannonRotFollow.setIdleMode(IdleMode.kBrake);
+    cannonExtension.setIdleMode(IdleMode.kBrake);
+
+    cannonRotFollow.follow(cannonRotLead, true);
 
     cannonRotLeadPID.setP(1);
     cannonRotLeadPID.setI(0);
@@ -52,8 +58,12 @@ public class TheCannon extends SubsystemBase {
     cannonExtensionPID.setI(0);
     cannonExtensionPID.setD(0.1);
 
-    cannonAbsolute.setPositionConversionFactor(1/360);
-    cannonAbsolute.setVelocityConversionFactor(1/360);
+    // cannonAbsolute.setPositionConversionFactor(1/360);
+    // cannonAbsolute.setVelocityConversionFactor(1/360);
+
+    cannonRotLead.burnFlash();
+    cannonRotFollow.burnFlash();
+    cannonExtension.burnFlash();
     
   }
 
@@ -75,33 +85,34 @@ public class TheCannon extends SubsystemBase {
   }
 
   public void stowMode(){
-
-    cannonRotLeadPID.setReference(3, ControlType.kPosition);
+    cannonRotLead.set(0);
+    cannonExtension.set(0);
+    // cannonRotLeadPID.setReference(3, ControlType.kPosition);
     // cannonAbsolute.setPosition(3);
 
   }
 
   public void manExtend(){
     //extension motor spins
-    cannonExtension.set(0.1);
+    cannonExtension.set(-0.4);
 
   }
 
   public void manRetract(){
     //extension motor spins the other way
-    cannonExtension.set(-0.1);
+    cannonExtension.set(0.4);
 
   }
 
   public void manRotUp(){
     //rotation motor spins
-    cannonRotLead.set(0.5);
+    cannonRotLead.set(0.4);
 
   }
 
   public void manRotDown(){
     //rotation motor spins the other way
-    cannonRotLead.set(-0.5);
+    cannonRotLead.set(-0.4);
 
   }
 
