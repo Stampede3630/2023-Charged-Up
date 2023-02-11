@@ -11,10 +11,8 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
-import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.RobotContainer;
 import frc.robot.RobotContainer.GamePieceOrientation;
 import frc.robot.RobotContainer.GamePieceType;
 
@@ -28,7 +26,7 @@ public class RotoClawtake extends SubsystemBase {
   public CANSparkMax rotoMotor = new CANSparkMax(6, MotorType.kBrushless);
 
   public SparkMaxPIDController rotoMotorPID = rotoMotor.getPIDController();
-
+  public SparkMaxPIDController clawMotorPID = clawTakeMotor.getPIDController();
   /** Creates a new Claw. */
   public RotoClawtake() {
     rotoMotorPID.setP(1);
@@ -52,6 +50,9 @@ public class RotoClawtake extends SubsystemBase {
     clawSolenoid.set(Value.kReverse);
   }
 
+  public void stopClawTake() {
+    clawTakeMotor.set(0);
+  }
   public void runClawtake(){
     //run the rotoclawtake/grab a game piece
     clawTakeMotor.set(1);
