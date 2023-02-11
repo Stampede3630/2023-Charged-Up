@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotContainer;
 import frc.robot.RobotContainer.GamePieceOrientation;
+import frc.robot.RobotContainer.GamePieceType;
 
 
 public class RotoClawtake extends SubsystemBase {
@@ -64,4 +65,16 @@ public class RotoClawtake extends SubsystemBase {
     //twist the rotoclawtake
     rotoMotorPID.setReference(gamePieceOrientation.getRotOrientForRoto(), ControlType.kPosition);
   }
+
+  public void actuateClaw(GamePieceOrientation gamePieceOrientation){
+
+    if (gamePieceOrientation.getGamePieceType() == GamePieceType.CONE){
+      clawMotorPID.setReference(0, ControlType.kPosition);
+    } else { // else is cube
+      clawMotorPID.setReference(4, ControlType.kPosition);
+    }
+
+  }
+  
+
 }

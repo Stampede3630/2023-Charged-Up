@@ -2,13 +2,13 @@
   "waypoints": [
     {
       "anchorPoint": {
-        "x": 1.9878869979962182,
-        "y": 4.8335054892332
+        "x": 8.574550956931096,
+        "y": 7.569323608398107
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.9878869979962182,
-        "y": 4.417678147426136
+        "x": 8.574550956931096,
+        "y": 7.153496266591042
       },
       "holonomicAngle": 0.0,
       "isReversal": false,
@@ -24,23 +24,46 @@
     },
     {
       "anchorPoint": {
-        "x": 1.99,
-        "y": 2.83
+        "x": 7.385900892798227,
+        "y": 7.483740803780541
       },
       "prevControl": {
-        "x": 1.99,
-        "y": 1.907202164142338
+        "x": 7.652158507163989,
+        "y": 7.174691787105996
       },
-      "nextControl": null,
-      "holonomicAngle": 0.0,
+      "nextControl": {
+        "x": 7.119643278432465,
+        "y": 7.792789820455086
+      },
+      "holonomicAngle": 0,
       "isReversal": false,
       "velOverride": null,
       "isLocked": false,
       "isStopPoint": false,
       "stopEvent": {
-        "names": [
-          "\"Run Claw\""
-        ],
+        "names": [],
+        "executionBehavior": "parallel",
+        "waitBehavior": "none",
+        "waitTime": 0
+      }
+    },
+    {
+      "anchorPoint": {
+        "x": 15.886751773503544,
+        "y": 6.648653297306595
+      },
+      "prevControl": {
+        "x": 12.257344514689027,
+        "y": 6.049012098024196
+      },
+      "nextControl": null,
+      "holonomicAngle": -116.44976807407224,
+      "isReversal": false,
+      "velOverride": null,
+      "isLocked": false,
+      "isStopPoint": false,
+      "stopEvent": {
+        "names": [],
         "executionBehavior": "parallel",
         "waitBehavior": "none",
         "waitTime": 0

@@ -64,6 +64,8 @@ public class RobotContainer {
   private boolean isIntegratedSteering = true;
   SwerveAutoBuilder autoBuilder;
   ArrayList<PathPlannerTrajectory> autoPathGroup, leftPathGroup, rightPathGroup;
+  SendableChooser<GamePieceOrientation> gamePieceOrientationChooser = new SendableChooser<>();
+
 
   // This is just an example event map. It would be better to have a constant, global event map
   // in your code that will be used by all path following commands.
@@ -97,10 +99,11 @@ private final TheCannon s_Cannon = new TheCannon();
 
     Shuffleboard.getTab("nodeSelector")
       .add("node", "");
-    SendableChooser<GamePieceOrientation> gamePieceOrientationChooser = new SendableChooser<>();
-      for (GamePieceOrientation orientation : GamePieceOrientation.values()) {
-        gamePieceOrientationChooser.addOption(orientation.friendlyName, orientation);
-      }
+
+
+    for (GamePieceOrientation orientation : GamePieceOrientation.values()) {
+      gamePieceOrientationChooser.addOption(orientation.getFriendlyName(), orientation);
+    }
 
     SendableChooser<NodeDriverStation> nodeDriverStation = new SendableChooser<>();
       for (NodeDriverStation ds : NodeDriverStation.values()) {
@@ -206,15 +209,24 @@ private final TheCannon s_Cannon = new TheCannon();
     //       new InstantCommand(()->s_SwerveDrive.setHoldHeadingAngle(-xBox.getHID().getPOV() + 90))
     //   ));
       
-    // xBox.povUp()
-    //     .whileTrue(new InstantCommand(s_Cannon::manRotUp));
-    // xBox.povDown()
-    //     .whileTrue(new InstantCommand(s_Cannon::manRotDown));
-    // xBox.povRight()
-    //     .whileTrue(new InstantCommand(s_Cannon::manExtend));
-    // xBox.povLeft()
-    //     .whileTrue(new InstantCommand(s_Cannon::manRetract));
+    xBox.povUp()
+      .onTrue(new InstantCommand(s_Cannon::manRotUp, s_Cannon))
+      .onFalse(new InstantCommand(s_Cannon::stowMode,s_Cannon));
+              
+        
+    xBox.povDown()
+    .onTrue(new InstantCommand(s_Cannon::manRotDown, s_Cannon))
+    .onFalse(new InstantCommand(s_Cannon::stowMode,s_Cannon));
 
+    xBox.povRight()
+    .onTrue(new InstantCommand(s_Cannon::manExtend, s_Cannon))
+    .onFalse(new InstantCommand(s_Cannon::stowMode,s_Cannon));
+    xBox.povLeft()
+    .onTrue(new InstantCommand(s_Cannon::manRetract, s_Cannon))
+    .onFalse(new InstantCommand(s_Cannon::stowMode,s_Cannon));
+    xBox.rightTrigger(.5)
+      .onTrue(new ParallelCommandGroup(new InstantCommand(s_Claw::runClawtake, s_Claw), new InstantCommand(() -> s_Claw.actuateClaw(gamePieceOrientationChooser.getSelected()))))
+      .onFalse(new ParallelCommandGroup(new InstantCommand(s_Claw::stopClawTake,s_Claw), new InstantCommand(s_Claw::openClaw)));
     // xBox.a().onTrue(new ProxyCommand(()->autoBuilder.followPathGroup(autoPathGroupOnTheFly()))
     // .beforeStarting(new InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
 
@@ -281,24 +293,38 @@ private final TheCannon s_Cannon = new TheCannon();
 
     return PGOTF;
   }
+
   public enum GamePieceOrientation {
-    RIGHT("|>", 90),
-    LEFT("<|", -90), 
-    UPRIGHT("/\\", 0), 
-    CUBE("口", 0); 
+    RIGHT("|>", 90, GamePieceType.CONE),
+    LEFT("<|", -90, GamePieceType.CONE), 
+    UPRIGHT("/\\", 0, GamePieceType.CONE), 
+    CUBE("口", 0, GamePieceType.CUBE); 
+
     private String friendlyName; 
     private double rotOrientationAngle;
+    private GamePieceType gamePieceType;
+
+    public String getFriendlyName() {
+      return friendlyName;
+    }
     public double getRotOrientForRoto(){
-      return rotOrientationAngle;
+      return rotOrientationAngle; 
+    }
+
+    public GamePieceType getGamePieceType(){
+      return gamePieceType;
+    }
     
-  }
-  private GamePieceOrientation(String friendlyName, double rotOrientationAngle) {
-    this.friendlyName = friendlyName;
-    this.rotOrientationAngle = rotOrientationAngle;
-    
-  }
+    private GamePieceOrientation(String friendlyName, double rotOrientationAngle, GamePieceType gamePieceType) {
+      this.friendlyName = friendlyName;
+      this.rotOrientationAngle = rotOrientationAngle;
+      this.gamePieceType = gamePieceType;
+    }
   
   }
+
+  public enum GamePieceType {CONE, CUBE}
+
 
   public enum NodeDriverStation {
     ONE("driver station one"), TWO("driver station two"), THREE("driver station three");

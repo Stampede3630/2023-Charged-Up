@@ -26,25 +26,21 @@ public final class Constants {
   };
 
 
-public enum poi{
-  highLeft(0, 0, 0, 0),
-  highMid(1, 1, 1, 1),
-  highRight(2, 2, 2, 2),
+public enum poiCannon{
+  high(0, 0),
+  mid(1, 1),
+  low(2, 2),
 
-  doubleSubstation(3, 3, 3, 3),
-  singleSubstation(4, 4, 4, 4),
-  groundPickup(5, 5, 5, 5);
+  doubleSubstation(3, 3),
+  singleSubstation(4, 4),
+  groundPickup(5, 5);
 
   private double cannonAngle;
   private double extension;
-  private double xCoord;
-  private double yCoord;
 
-  private poi(double cannonAngle, double extension, double xCoord, double yCoord){
+  private poiCannon(double cannonAngle, double extension){
     this.cannonAngle = cannonAngle;
     this.extension = extension;
-    this.xCoord = xCoord;
-    this.yCoord = yCoord;
   }
 
   public double getCannonAngle(){
@@ -54,14 +50,36 @@ public enum poi{
   public double getExtension(){
     return extension;
   }
-  public double getXCoord(){
-    return xCoord;
+}
+
+public enum poiDrive{
+  humanPlayerCubeNode(1.7, 4.41, 0),
+  coopertitionCubeNode(1.7, 2.73, 0),
+  wallCubeNode(1.7, 1.07, 0),
+
+  substationSingle(14.01, 7.62, 90),
+  substationDouble(15.89, 6.65, 0);
+
+  private double x;
+  private double y;
+  private double rot;
+
+  private poiDrive(double x, double y, double rot){
+    this.x = x;
+    this.y = y;
+    this.rot = rot;
   }
-  public double getYCoord(){
-    return yCoord;
+  public double getX(){
+    return x;
   }
 
+  public double getY(){
+    return y;
+  }
 
+  public double getRot(){
+    return rot;
+  }
 }
 
 }
