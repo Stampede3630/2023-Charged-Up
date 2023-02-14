@@ -17,10 +17,11 @@ import com.revrobotics.SparkMaxPIDController.ArbFFUnits;
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.poi;
+import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
 
-public class TheCannon extends SubsystemBase {
+public class TheCannon extends SubsystemBase implements Loggable {
   /** Creates a new TheCannon. */
   private CANSparkMax cannonRotLead = new CANSparkMax(4, MotorType.kBrushless);
   private CANSparkMax cannonRotFollow = new CANSparkMax(11, MotorType.kBrushless);
@@ -45,7 +46,7 @@ public class TheCannon extends SubsystemBase {
       kV, kA);
   
   public TheCannon() {
-    // cannonRelative.setPositionConversionFactor(number);
+    cannonRelative.setPositionConversionFactor(125 * (Math.PI * 2));
     
     cannonExtension.setInverted(true);
 
@@ -57,11 +58,11 @@ public class TheCannon extends SubsystemBase {
 
     cannonRotFollow.follow(cannonRotLead, true);
 
-    cannonRotLeadPID.setP(1);
+    cannonRotLeadPID.setP(6 / Math.PI);
     cannonRotLeadPID.setI(0);
     cannonRotLeadPID.setD(0.1);
 
-    cannonExtensionPID.setP(1);
+    cannonExtensionPID.setP(2.02444);
     cannonExtensionPID.setI(0);
     cannonExtensionPID.setD(0.1);
 
@@ -145,7 +146,7 @@ public class TheCannon extends SubsystemBase {
 
   @Log
     public double getCannonAngleEncoder(){
-      return cannonRelative.getPosition();
+      return cannonRelative.getPosition() / (2*Math.PI) * 360;
   }
 
   @Config(defaultValueBoolean = false)
