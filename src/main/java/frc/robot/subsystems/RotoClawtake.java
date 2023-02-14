@@ -19,9 +19,10 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
 import frc.robot.RobotContainer.GamePieceOrientation;
+import io.github.oblarg.oblog.Loggable;
 
 
-public class RotoClawtake extends SubsystemBase {
+public class RotoClawtake extends SubsystemBase implements Loggable{
 
   public double rotoMeasure;
 
