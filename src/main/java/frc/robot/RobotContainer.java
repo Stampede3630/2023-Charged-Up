@@ -211,8 +211,25 @@ private final TheCannon s_Cannon = new TheCannon();
     .onTrue(new InstantCommand(s_Cannon::manRetract, s_Cannon))
     .onFalse(new InstantCommand(s_Cannon::stowMode,s_Cannon));
     xBox.rightTrigger(.5)
-      .onTrue(new ParallelCommandGroup(new InstantCommand(s_Claw::runClawtake, s_Claw), new InstantCommand(() -> s_Claw.actuateClaw(gamePieceOrientationChooser.getSelected()))))
-      .onFalse(new ParallelCommandGroup(new InstantCommand(s_Claw::stopClawTake,s_Claw), new InstantCommand(s_Claw::openClaw)));
+      .onTrue((new InstantCommand(s_Claw::runClawtake, s_Claw)))
+      .onFalse((new InstantCommand(s_Claw::stopClawTake, s_Claw)));
+    xBox.leftTrigger(.5)
+      .onTrue(new InstantCommand(s_Claw::reverseClawtake, s_Claw))
+      .onFalse(new InstantCommand(s_Claw::stopClawTake, s_Claw));
+    xBox.rightBumper()
+      .onTrue(new InstantCommand(s_Claw::actuateClaw, s_Claw))
+      .onFalse(new InstantCommand(s_Claw::stopClawTake, s_Claw));  
+    xBox.leftBumper()
+      .onTrue(new InstantCommand(s_Claw::actuateClawReverse, s_Claw))
+      .onFalse(new InstantCommand(s_Claw::stopClawTake, s_Claw));
+    xBox.a()
+      .onTrue(new InstantCommand(s_Claw::rotoClaw))
+      .onFalse(new InstantCommand(s_Claw::stopClawTake));
+    xBox.x()
+      .onTrue(new InstantCommand(s_Claw::rotoClawReverse))
+      .onFalse(new InstantCommand(s_Claw::stopClawTake));
+
+    
     // xBox.a().onTrue(new ProxyCommand(()->autoBuilder.followPathGroup(autoPathGroupOnTheFly()))
     // .beforeStarting(new InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
 

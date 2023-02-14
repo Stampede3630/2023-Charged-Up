@@ -30,7 +30,7 @@ public class RotoClawtake extends SubsystemBase implements Loggable{
   public DoubleSolenoid clawSolenoid = new DoubleSolenoid(PneumaticsModuleType.REVPH, 6, 7);
   public CANSparkMax clawTakeMotor = new CANSparkMax(14, MotorType.kBrushless);
   public CANSparkMax rotoMotor = new CANSparkMax(13, MotorType.kBrushless);
-  public CANSparkMax clawMotor = new CANSparkMax(15, MotorType.kBrushless);
+  public CANSparkMax clawMotor = new CANSparkMax(19, MotorType.kBrushless);
 
   public DigitalInput clawSwitch = new DigitalInput(0);
 
@@ -67,6 +67,7 @@ public class RotoClawtake extends SubsystemBase implements Loggable{
   public void stopClawTake(){
     clawTakeMotor.set(0);
     rotoMotor.set(0);
+    clawMotor.set(0);
   }
 
   public void openClaw(){
@@ -91,20 +92,31 @@ public class RotoClawtake extends SubsystemBase implements Loggable{
     clawTakeMotor.set(1);
   }
 
-  public void rotoClaw(GamePieceOrientation gamePieceOrientation){
+  public void rotoClaw(){ //GamePieceOrientation gamePieceOrientation add this parameter later
     //twist the rotoclawtake
     // rotoMotorPID.setReference(gamePieceOrientation.getRotOrientForRoto(), ControlType.kPosition);
-    rotoMotor.set(0.2);
+    rotoMotor.set(0.7);
   }
 
-  public void actuateClaw(GamePieceOrientation gamePieceOrientation){
+  public void rotoClawReverse(){ // delete this method after testing
+    rotoMotor.set(-0.7);
 
-    if (gamePieceOrientation.getGamePieceType().equals("cone")){
-      clawMotorPID.setReference(0, ControlType.kPosition);
-    } else {
-      clawMotorPID.setReference(4, ControlType.kPosition);
-    }
+  }
 
+  public void actuateClaw(){ //add parameter GamePieceOrientation gamePieceOrientation?
+
+    clawMotor.set(0.2);
+
+    // if (gamePieceOrientation.getGamePieceType().equals("cone")){
+    //   clawMotorPID.setReference(0, ControlType.kPosition);
+    // } else {
+    //   clawMotorPID.setReference(4, ControlType.kPosition);
+    // }
+
+  }
+
+  public void actuateClawReverse(){
+    clawMotor.set(-0.2);    //delete this method after testing
   }
   
 
