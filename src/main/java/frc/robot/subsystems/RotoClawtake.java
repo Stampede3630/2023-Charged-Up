@@ -29,7 +29,7 @@ public class RotoClawtake extends SubsystemBase {
   public DoubleSolenoid clawSolenoid = new DoubleSolenoid(PneumaticsModuleType.REVPH, 6, 7);
   public CANSparkMax clawTakeMotor = new CANSparkMax(14, MotorType.kBrushless);
   public CANSparkMax rotoMotor = new CANSparkMax(13, MotorType.kBrushless);
-  public CANSparkMax clawMotor = new CANSparkMax(0, MotorType.kBrushless);
+  public CANSparkMax clawMotor = new CANSparkMax(15, MotorType.kBrushless);
 
   public DigitalInput clawSwitch = new DigitalInput(0);
 

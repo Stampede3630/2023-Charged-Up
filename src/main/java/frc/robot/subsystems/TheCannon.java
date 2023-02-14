@@ -4,19 +4,21 @@
 
 package frc.robot.subsystems;
 
-import com.ctre.phoenix.motorcontrol.InvertType;
+import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
-import com.revrobotics.SparkMaxAlternateEncoder;
 import com.revrobotics.SparkMaxPIDController;
 import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
 import com.revrobotics.SparkMaxPIDController.ArbFFUnits;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.poi;
+import io.github.oblarg.oblog.annotations.Config;
+import io.github.oblarg.oblog.annotations.Log;
 
 public class TheCannon extends SubsystemBase {
   /** Creates a new TheCannon. */
@@ -24,10 +26,9 @@ public class TheCannon extends SubsystemBase {
   private CANSparkMax cannonRotFollow = new CANSparkMax(11, MotorType.kBrushless);
   private CANSparkMax cannonExtension = new CANSparkMax(17, MotorType.kBrushless);
 
-  // public DutyCycleEncoder cannonAbsolute = new DutyCycleEncoder(0);
-
-  private RelativeEncoder cannonAbsolute = cannonRotLead.getEncoder();
+  private AbsoluteEncoder cannonAbsolute = cannonRotLead.getAbsoluteEncoder(Type.kDutyCycle);
   private RelativeEncoder extensionEncoder = cannonExtension.getEncoder();
+  private RelativeEncoder cannonRelative = cannonRotLead.getEncoder();
 
   private SparkMaxPIDController cannonRotLeadPID = cannonRotLead.getPIDController();
   private SparkMaxPIDController cannonExtensionPID = cannonExtension.getPIDController();
@@ -44,6 +45,12 @@ public class TheCannon extends SubsystemBase {
       kV, kA);
   
   public TheCannon() {
+    // cannonRelative.setPositionConversionFactor(number);
+    
+    cannonExtension.setInverted(true);
+
+    cannonRotLead.getEncoder();
+
     cannonRotLead.setIdleMode(IdleMode.kBrake);
     cannonRotFollow.setIdleMode(IdleMode.kBrake);
     cannonExtension.setIdleMode(IdleMode.kBrake);
@@ -65,14 +72,14 @@ public class TheCannon extends SubsystemBase {
     cannonRotFollow.burnFlash();
     cannonExtension.burnFlash();
     
+    cannonRotLeadPID.setFeedbackDevice(cannonAbsolute); // Caleb note: don't think this needs to be run periodically, only once
   }
 
   @Override
   public void periodic() {
-    // This method will be called once per scheduler run
-    cannonRotLeadPID.setFeedbackDevice(cannonAbsolute); // Caleb note: don't think this needs to be run periodically, only once
     
   }
+  // This method will be called once per scheduler run
 
   public void setAdaptiveFeedForward(){
     
@@ -84,6 +91,7 @@ public class TheCannon extends SubsystemBase {
   
   }
 
+
   public void stowMode(){
     cannonRotLead.set(0);
     cannonExtension.set(0);
@@ -94,13 +102,13 @@ public class TheCannon extends SubsystemBase {
 
   public void manExtend(){
     //extension motor spins
-    cannonExtension.set(-0.4);
+    cannonExtension.set(0.4);
 
   }
 
   public void manRetract(){
     //extension motor spins the other way
-    cannonExtension.set(0.4);
+    cannonExtension.set(-0.4);
 
   }
 
@@ -133,5 +141,17 @@ public class TheCannon extends SubsystemBase {
     setAdaptiveFeedForward();
     double ff = m_feedforward.calculate(Math.toRadians(cannonAbsolute.getPosition()), Math.toRadians(cannonAbsolute.getVelocity()));
     cannonExtensionPID.setReference(position, ControlType.kPosition, 0, ff, ArbFFUnits.kVoltage);
+  }
+
+  @Log
+    public double getCannonAngleEncoder(){
+      return cannonRelative.getPosition();
+  }
+
+  @Config(defaultValueBoolean = false)
+  public void zeroArm(boolean input){
+    if(input){
+      cannonRelative.setPosition(0);
+    }
   }
 }

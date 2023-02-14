@@ -4,26 +4,15 @@
 
 package frc.robot;
 
-import java.lang.module.ModuleDescriptor.Requires;
 import java.util.ArrayList;
 import java.util.HashMap;
-
 import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
 import com.pathplanner.lib.PathPoint;
 import com.pathplanner.lib.auto.PIDConstants;
 import com.pathplanner.lib.auto.SwerveAutoBuilder;
-import com.fasterxml.jackson.databind.ser.std.StdKeySerializers.Default;
 import com.pathplanner.lib.PathConstraints;
 
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.filter.Debouncer;
-import edu.wpi.first.math.filter.Debouncer.DebounceType;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Preferences;
@@ -32,17 +21,8 @@ import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.ConditionalCommand;
-import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
-import edu.wpi.first.wpilibj2.command.PrintCommand;
-import edu.wpi.first.wpilibj2.command.ProfiledPIDCommand;
-import edu.wpi.first.wpilibj2.command.ProxyCommand;
-import edu.wpi.first.wpilibj2.command.RepeatCommand;
-import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -53,7 +33,6 @@ import frc.robot.subsystems.swerve.SwerveConstants;
 import io.github.oblarg.oblog.Logger;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
-import io.github.oblarg.oblog.annotations.Config.PIDCommand;
 
 
 
@@ -71,6 +50,8 @@ public class RobotContainer {
   private boolean isIntegratedSteering = true;
   SwerveAutoBuilder autoBuilder;
   ArrayList<PathPlannerTrajectory> autoPathGroup, leftPathGroup, rightPathGroup;
+  SendableChooser<GamePieceOrientation> gamePieceOrientationChooser = new SendableChooser<>();
+
 
   // This is just an example event map. It would be better to have a constant, global event map
   // in your code that will be used by all path following commands.
@@ -106,7 +87,6 @@ private final TheCannon s_Cannon = new TheCannon();
       .add("node", "");
 
 
-    SendableChooser<GamePieceOrientation> gamePieceOrientationChooser = new SendableChooser<>();
     for (GamePieceOrientation orientation : GamePieceOrientation.values()) {
       gamePieceOrientationChooser.addOption(orientation.getFriendlyName(), orientation);
     }
@@ -115,7 +95,6 @@ private final TheCannon s_Cannon = new TheCannon();
       for (NodeDriverStation ds : NodeDriverStation.values()) {
         nodeDriverStation.addOption(ds.dsFriendlyName, ds);
       }
-
       Shuffleboard.getTab("nodeSelector")
         .add("orientation", gamePieceOrientationChooser)
         .withWidget(BuiltInWidgets.kComboBoxChooser);
@@ -147,12 +126,8 @@ private final TheCannon s_Cannon = new TheCannon();
           xBox::getLeftX,
           xBox::getRightX).withName("DefaultDrive"));
 
-    // s_Cannon.setDefaultCommand(
-    //   new InstantCommand(s_Cannon::stowMode, s_Cannon)
-    // );
-
-    // s_Claw.setDefaultCommand(
-    //   new FunctionalCommand(() -> System.out.println("default"), () -> {}, interrupted -> {}, () -> true, s_Claw)
+    // // s_Cannon.setDefaultCommand(
+    // //   new InstantCommand(s_Cannon::stowMode)
     // );
 
 
@@ -164,10 +139,6 @@ private final TheCannon s_Cannon = new TheCannon();
     // Configure the button bindings
     configureButtonBindings();
     Logger.configureLoggingAndConfig(this, false);
-  }
-  @Config(defaultValueNumeric = 0)
-  private void setCannonPosition(double value){
-    s_Cannon.setReference(value);
   }
   
   /**
@@ -240,7 +211,7 @@ private final TheCannon s_Cannon = new TheCannon();
     .onTrue(new InstantCommand(s_Cannon::manRetract, s_Cannon))
     .onFalse(new InstantCommand(s_Cannon::stowMode,s_Cannon));
     xBox.rightTrigger(.5)
-      .onTrue(new ParallelCommandGroup(new InstantCommand(s_Claw::runClawtake, s_Claw), new InstantCommand(() -> s_Claw.actuateClaw(GamePieceOrientation.CUBE))))
+      .onTrue(new ParallelCommandGroup(new InstantCommand(s_Claw::runClawtake, s_Claw), new InstantCommand(() -> s_Claw.actuateClaw(gamePieceOrientationChooser.getSelected()))))
       .onFalse(new ParallelCommandGroup(new InstantCommand(s_Claw::stopClawTake,s_Claw), new InstantCommand(s_Claw::openClaw)));
     // xBox.a().onTrue(new ProxyCommand(()->autoBuilder.followPathGroup(autoPathGroupOnTheFly()))
     // .beforeStarting(new InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
@@ -252,6 +223,8 @@ private final TheCannon s_Cannon = new TheCannon();
     //         .andThen(null)
     //         .alongWith(null)
     //         .until(null));
+
+
     }
 
 
@@ -306,15 +279,16 @@ private final TheCannon s_Cannon = new TheCannon();
 
     return PGOTF;
   }
+
   public enum GamePieceOrientation {
-    RIGHT("|>", 90, "cone"),
-    LEFT("<|", -90, "cone"), 
-    UPRIGHT("/\\", 0, "cone"), 
-    CUBE("口", 0, "cone"); 
+    RIGHT("|>", 90, GamePieceType.CONE),
+    LEFT("<|", -90, GamePieceType.CONE), 
+    UPRIGHT("/\\", 0, GamePieceType.CONE), 
+    CUBE("口", 0, GamePieceType.CUBE); 
 
     private String friendlyName; 
     private double rotOrientationAngle;
-    private String gamePieceType;
+    private GamePieceType gamePieceType;
 
     public String getFriendlyName() {
       return friendlyName;
@@ -323,27 +297,19 @@ private final TheCannon s_Cannon = new TheCannon();
       return rotOrientationAngle; 
     }
 
-    public String getGamePieceType(){
+    public GamePieceType getGamePieceType(){
       return gamePieceType;
     }
     
-    // public double getCone(String friendlyName){
-    //   this.friendlyName = friendlyName;
-    //   if (friendlyName != "口")
-    //   return 0;
-    //   else{
-    //     return 4;
-    //   }
-      
-    // }
-    private GamePieceOrientation(String friendlyName, double rotOrientationAngle, String gamePieceType) {
+    private GamePieceOrientation(String friendlyName, double rotOrientationAngle, GamePieceType gamePieceType) {
       this.friendlyName = friendlyName;
       this.rotOrientationAngle = rotOrientationAngle;
       this.gamePieceType = gamePieceType;
-
     }
   
   }
+
+  public enum GamePieceType {CONE, CUBE}
 
 
   public enum NodeDriverStation {
