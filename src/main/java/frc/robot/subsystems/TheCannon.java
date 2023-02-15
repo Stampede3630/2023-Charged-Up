@@ -201,7 +201,7 @@ new ArmFeedforward(
   public void setExtensionInches(double input){
     extensionInches = input;
   }
-  @Log
+  @Config
   public void setCannonAngle(double input){
     testCannonAngle = input;
     
