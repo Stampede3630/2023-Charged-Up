@@ -16,73 +16,87 @@ import com.revrobotics.SparkMaxPIDController.ArbFFUnits;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.wpilibj.Preferences;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.poi;
+import frc.robot.RobotContainer.ArmTestSetPoints;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
 
 public class TheCannon extends SubsystemBase implements Loggable {
   /** Creates a new TheCannon. */
-  private CANSparkMax cannonRotLead = new CANSparkMax(4, MotorType.kBrushless);
-  private CANSparkMax cannonRotFollow = new CANSparkMax(11, MotorType.kBrushless);
-  private CANSparkMax cannonExtension = new CANSparkMax(17, MotorType.kBrushless);
+public double extensionInches = 0;
+public double testCannonAngle = 0;
 
-  private AbsoluteEncoder cannonAbsolute = cannonRotLead.getAbsoluteEncoder(Type.kDutyCycle);
-  private RelativeEncoder extensionEncoder = cannonExtension.getEncoder();
-  private RelativeEncoder cannonRelative = cannonRotLead.getEncoder();
+private CANSparkMax cannonRotLead = new CANSparkMax(4, MotorType.kBrushless);
+private CANSparkMax cannonRotFollow = new CANSparkMax(11, MotorType.kBrushless);
+private CANSparkMax cannonExtension = new CANSparkMax(17, MotorType.kBrushless);
 
-  private SparkMaxPIDController cannonRotLeadPID = cannonRotLead.getPIDController();
-  private SparkMaxPIDController cannonExtensionPID = cannonExtension.getPIDController();
+private AbsoluteEncoder cannonAbsolute = cannonRotLead.getAbsoluteEncoder(Type.kDutyCycle);
+private RelativeEncoder extensionEncoder = cannonExtension.getEncoder();
+private RelativeEncoder cannonRelative = cannonRotLead.getEncoder();
 
-  private double kS = 0;
-  private double kG = 0.73;
-  private double kV = 2.44;
-  private double kA = 0.06;
+private SparkMaxPIDController cannonRotLeadPID = cannonRotLead.getPIDController();
+private SparkMaxPIDController cannonExtensionPID = cannonExtension.getPIDController();
 
-  private ArmFeedforward m_feedforward =
+private double kS = 0;
+private double kG = 0.73;
+private double kV = 2.44;
+private double kA = 0.06;
 
-      new ArmFeedforward(
-          kS, kG,
-          kV, kA);
+private ArmFeedforward m_feedforward =
 
+new ArmFeedforward(
+  kS, kG,
+  kV, kA);
+  
   public TheCannon() {
-    cannonRelative.setPositionConversionFactor(1 / (125 * (Math.PI * 2)));
-    extensionEncoder.setPositionConversionFactor(0.056289);
-
+    cannonRelative.setPosition(Math.toRadians(-30));
+    
+    cannonExtension.setSmartCurrentLimit(70);
+    
+    cannonRelative.setPositionConversionFactor(Math.PI / 2 / 30.30927848815918);
+    extensionEncoder.setPositionConversionFactor(1.802406002431152);
+    
     cannonExtension.setInverted(true);
-
+    
     cannonRotLead.getEncoder();
-
+    
     cannonRotLead.setIdleMode(IdleMode.kBrake);
     cannonRotFollow.setIdleMode(IdleMode.kBrake);
     cannonExtension.setIdleMode(IdleMode.kBrake);
-
+    
     cannonRotFollow.follow(cannonRotLead, true);
-
+    
     cannonRotLeadPID.setP(Preferences.getDouble("CannonKP", 6.0 / Math.PI));
     cannonRotLeadPID.setI(Preferences.getDouble("CannonPI", 0.0));
     cannonRotLeadPID.setD(Preferences.getDouble("CannonKD", 0.0));
-
+    
     cannonExtensionPID.setP(Preferences.getDouble("ExtensionKP", 1.0 / 6.0));
     cannonExtensionPID.setI(Preferences.getDouble("ExtensionKI", 0.0));
     cannonExtensionPID.setD(Preferences.getDouble("ExtensionKD", 0.0));
-
+    
     // cannonAbsolute.setPositionConversionFactor(1/360);
     // cannonAbsolute.setVelocityConversionFactor(1/360);
-
+    
     cannonRotLead.burnFlash();
     cannonRotFollow.burnFlash();
     cannonExtension.burnFlash();
-
+    
     cannonRotLeadPID.setFeedbackDevice(cannonAbsolute); // Caleb note: don't think this needs to be run periodically,
-                                                        // only once
+    // only once
   }
-
+  
   @Override
   public void periodic() {
 
-    if (Preferences.getBoolean("Wanna PID", false)) {
+    setAdaptiveFeedForward();
+
+    cannonExtensionPID.setReference(extensionInches, ControlType.kPosition); 
+    cannonRotLeadPID.setReference(testCannonAngle, ControlType.kPosition);
+
+    if (Preferences.getBoolean("Wanna PID Cannon", false)) {
       cannonRotLeadPID.setP(Preferences.getDouble("CannonKP", 6.0 / Math.PI));
       cannonRotLeadPID.setI(Preferences.getDouble("CannonPI", 0.0));
       cannonRotLeadPID.setD(Preferences.getDouble("CannonKD", 0.0));
@@ -90,10 +104,13 @@ public class TheCannon extends SubsystemBase implements Loggable {
       cannonExtensionPID.setP(Preferences.getDouble("ExtensionKP", 1.0 / 6.0));
       cannonExtensionPID.setI(Preferences.getDouble("ExtensionKI", 0.0));
       cannonExtensionPID.setD(Preferences.getDouble("ExtensionKD", 0.0));
+      Preferences.setBoolean("Wanna PID Cannon", false);
     }
 
   }
   // This method will be called once per scheduler run
+
+
 
   public void setAdaptiveFeedForward() {
 
@@ -159,7 +176,7 @@ public class TheCannon extends SubsystemBase implements Loggable {
 
   @Log
   public double getCannonAngleEncoder() {
-    return cannonRelative.getPosition() / (2 * Math.PI) * 360;
+    return Math.toDegrees(cannonRelative.getPosition());
   }
 
   @Log
@@ -173,5 +190,20 @@ public class TheCannon extends SubsystemBase implements Loggable {
     if (input) {
       cannonRelative.setPosition(0);
     }
+  }
+
+  @Log
+  public double getExtensionEncoder(){
+    return extensionEncoder.getPosition();
+  }
+
+  @Config
+  public void setExtensionInches(double input){
+    extensionInches = input;
+  }
+  @Log
+  public void setCannonAngle(double input){
+    testCannonAngle = input;
+    
   }
 }

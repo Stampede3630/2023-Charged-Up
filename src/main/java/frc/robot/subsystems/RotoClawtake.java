@@ -19,10 +19,13 @@ import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import io.github.oblarg.oblog.Loggable;
+import io.github.oblarg.oblog.annotations.Config;
+import io.github.oblarg.oblog.annotations.Log;
 
 public class RotoClawtake extends SubsystemBase implements Loggable {
 
   public double rotoMeasure;
+  public double rotoSetPoint = 0;
 
   public Compressor compressor = new Compressor(1, PneumaticsModuleType.REVPH);
   public DoubleSolenoid clawSolenoid = new DoubleSolenoid(PneumaticsModuleType.REVPH, 6, 7);
@@ -43,6 +46,10 @@ public class RotoClawtake extends SubsystemBase implements Loggable {
   /** Creates a new Claw. */
   public RotoClawtake() {
 
+    rotoMotor.clearFaults();
+
+    rotoMotor.setSmartCurrentLimit(30);
+
     rotoRelativeEncoder.setPositionConversionFactor((2 * Math.PI) / 60.0);
     clawRelativeEncoder.setPositionConversionFactor((2 * Math.PI) / 22.8571428571);
 
@@ -61,11 +68,14 @@ public class RotoClawtake extends SubsystemBase implements Loggable {
 
   @Override
   public void periodic() {
+
+    rotoMotorPID.setReference(rotoSetPoint, ControlType.kPosition);
     // This method will be called once per scheduler run
-    if (Preferences.getBoolean("Wanna PID", false)) {
+    if (Preferences.getBoolean("Wanna PID Roto", false)) {
       rotoMotorPID.setP(Preferences.getDouble("ExtensionKP", 1.0 / 6.0));
       rotoMotorPID.setI(Preferences.getDouble("ExtensionKI", 0.0));
       rotoMotorPID.setD(Preferences.getDouble("ExtensionPD", 0.0));
+      Preferences.setBoolean("Wanna PID Roto", false);
     }
   }
 
@@ -126,4 +136,18 @@ public class RotoClawtake extends SubsystemBase implements Loggable {
     clawMotor.set(-0.2); // delete this method after testing
   }
 
+  @Log
+  public double getRotoAngle(){
+    return rotoRelativeEncoder.getPosition();
+  }
+
+  @Config
+  public void setRotoAngle(double input){
+    rotoSetPoint = input;
+
+  }
+  @Log
+  public double getCurrent() {
+    return rotoMotor.getOutputCurrent();
+  }
 }

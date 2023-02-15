@@ -22,7 +22,9 @@ import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -60,6 +62,14 @@ public class RobotContainer {
   // This is just an example event map. It would be better to have a constant,
   // global event map
 
+  SendableChooser<NodeDriverStation> nodeDriverStation = new SendableChooser<>();
+
+  
+
+  SendableChooser<ArmTestSetPoints> armTestSetPoints = new SendableChooser<>();
+
+  
+
   @Log
   private final SwerveDrive s_SwerveDrive = new SwerveDrive();
   // The robot's subsystems and commands are defined here...
@@ -71,6 +81,13 @@ public class RobotContainer {
    * The container for the robot. Contains subsystems, OI devices, and commands.
    */
   public RobotContainer() {
+
+    for (ArmTestSetPoints setPoint : ArmTestSetPoints.values()) {
+      armTestSetPoints.addOption(setPoint.testPointName, setPoint);
+    }
+    for (NodeDriverStation ds : NodeDriverStation.values()) {
+      nodeDriverStation.addOption(ds.dsFriendlyName, ds);
+    }
     /**
      * Preferences are cool. they store the values in the roborio flash memory so
      * they don't necessarily get reset to default.
@@ -95,7 +112,9 @@ public class RobotContainer {
     Preferences.initDouble("ClawKP", 6.0 / Math.PI);
     Preferences.initDouble("ClawKI", 0.0);
     Preferences.initDouble("ClawKD", 0.0);
-    Preferences.initBoolean("Wanna PID", false);
+    Preferences.initBoolean("Wanna PID Roto", false);
+    Preferences.initBoolean("Wanna PID Cannon", false);
+
 
     autoPathGroup = (ArrayList<PathPlannerTrajectory>) PathPlanner.loadPathGroup("swerveTest",
         new PathConstraints(2, 2));
@@ -107,16 +126,19 @@ public class RobotContainer {
       gamePieceOrientationChooser.addOption(orientation.getFriendlyName(), orientation);
     }
 
-    SendableChooser<NodeDriverStation> nodeDriverStation = new SendableChooser<>();
-    for (NodeDriverStation ds : NodeDriverStation.values()) {
-      nodeDriverStation.addOption(ds.dsFriendlyName, ds);
-    }
+   
+
+
     Shuffleboard.getTab("nodeSelector")
         .add("orientation", gamePieceOrientationChooser)
         .withWidget(BuiltInWidgets.kComboBoxChooser);
 
     Shuffleboard.getTab("nodeSelector")
         .add("Node Driver Station", nodeDriverStation)
+        .withWidget(BuiltInWidgets.kComboBoxChooser);
+      
+    Shuffleboard.getTab("nodeSelector")
+        .add("Node Select", armTestSetPoints)
         .withWidget(BuiltInWidgets.kComboBoxChooser);
 
     HashMap<String, Command> eventMap = new HashMap<>();
@@ -249,6 +271,11 @@ public class RobotContainer {
     xBox.x()
         .onTrue(new InstantCommand(s_Claw::rotoClawReverse))
         .onFalse(new InstantCommand(s_Claw::stopClawTake));
+    xBox.y()
+    .onTrue((Commands.runOnce(()-> s_Cannon.setCannonAngle(armTestSetPoints.getSelected().getTestCannonAngle()))))
+    .onTrue((Commands.runOnce(()-> s_Cannon.setExtensionInches(armTestSetPoints.getSelected().getTestCannonExtension()))));
+        
+
 
     // xBox.a().onTrue(new
     // ProxyCommand(()->autoBuilder.followPathGroup(autoPathGroupOnTheFly()))
@@ -375,4 +402,38 @@ public class RobotContainer {
       this.dsFriendlyName = dsFriendlyName;
     }
   }
+
+  public static enum ArmTestSetPoints {
+    HIGH("for high node", 45, 40),
+    MID("for mid node", 30, 20),
+    LOW("for low/hybrid node", 0, 10),
+    UP("straight up", 90, 0),
+    ZERO("straight out", 0, 0);
+
+    public final String testPointName;
+    public final double testCannonAngle;
+    public final double testCannonExtention;
+
+    private ArmTestSetPoints(String testPointName, double testCannonAngle, double testCannonExtention){
+      this.testPointName = testPointName;
+      this.testCannonAngle = testCannonAngle;
+      this.testCannonExtention = testCannonExtention;
+    }
+
+    public double getTestCannonExtension(){
+      return testCannonAngle;
+    }
+
+    public double getTestCannonAngle(){
+      return testCannonAngle;
+    }
+
+  }
+
+  public double armTestSetPointsAngle(SendableChooser<ArmTestSetPoints> armTestSetPoints){
+  
+    return armTestSetPoints.getSelected().getTestCannonAngle();
+  }
+
+
 }
