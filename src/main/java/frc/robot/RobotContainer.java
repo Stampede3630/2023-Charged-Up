@@ -272,8 +272,8 @@ public class RobotContainer {
         .onTrue(new InstantCommand(s_Claw::rotoClawReverse))
         .onFalse(new InstantCommand(s_Claw::stopClawTake));
     xBox.y()
-        .onTrue((Commands.runOnce(()-> s_Cannon.setCannonAngle(armTestSetPoints.getSelected().getTestCannonAngle()), s_Cannon)))
-        .onTrue((Commands.runOnce(()-> s_Cannon.setExtensionInches(armTestSetPoints.getSelected().getTestCannonExtension()), s_Cannon)));
+        .onTrue((Commands.runOnce(()-> s_Cannon.setCannonAngle(armTestSetPoints.getSelected().getTestCannonAngle()))))
+        .andThen((Commands.runOnce(()-> s_Cannon.setExtensionInches(armTestSetPoints.getSelected().getTestCannonExtension()))));
         
 
 
