@@ -60,9 +60,7 @@ new ArmFeedforward(
     extensionEncoder.setPositionConversionFactor(1.802406002431152);
     
     cannonExtension.setInverted(true);
-    
-    cannonRotLead.getEncoder();
-    
+        
     cannonRotLead.setIdleMode(IdleMode.kBrake);
     cannonRotFollow.setIdleMode(IdleMode.kBrake);
     cannonExtension.setIdleMode(IdleMode.kBrake);
@@ -154,12 +152,12 @@ new ArmFeedforward(
 
   }
 
-  public void extendToSetpoint(poi poi) {
-    setAdaptiveFeedForward();
-    double ff = getArbitraryFeedForward();
-    cannonRotLeadPID.setReference(poi.getCannonAngle(), ControlType.kPosition, 0, ff, ArbFFUnits.kVoltage);
+  // public void extendToSetpoint(poi poi) {
+  //   setAdaptiveFeedForward();
+  //   double ff = getArbitraryFeedForward();
+  //   cannonRotLeadPID.setReference(poi.getCannonAngle(), ControlType.kPosition, 0, ff, ArbFFUnits.kVoltage);
 
-  }
+  // }
 
   public void rotateToSetpoint(poi poi) {
     setAdaptiveFeedForward();
@@ -203,7 +201,7 @@ new ArmFeedforward(
   }
   @Config
   public void setCannonAngle(double input){
-    testCannonAngle = input;
+    testCannonAngle = Math.toRadians(input);
     
   }
 }
