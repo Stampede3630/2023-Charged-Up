@@ -26,7 +26,9 @@ import io.github.oblarg.oblog.annotations.Log;
 
 public class TheCannon extends SubsystemBase implements Loggable {
   /** Creates a new TheCannon. */
+@Log
 public double extensionInches = 0;
+@Log
 public double testCannonAngle = 0;
 
 private CANSparkMax cannonRotLead = new CANSparkMax(4, MotorType.kBrushless);
@@ -35,7 +37,6 @@ private CANSparkMax cannonExtension = new CANSparkMax(17, MotorType.kBrushless);
 
 private AbsoluteEncoder cannonAbsolute = cannonRotLead.getAbsoluteEncoder(Type.kDutyCycle);
 private RelativeEncoder extensionEncoder = cannonExtension.getEncoder();
-private RelativeEncoder cannonRelative = cannonRotLead.getEncoder();
 
 private SparkMaxPIDController cannonRotLeadPID = cannonRotLead.getPIDController();
 private SparkMaxPIDController cannonExtensionPID = cannonExtension.getPIDController();
@@ -52,11 +53,16 @@ new ArmFeedforward(
   kV, kA);
   
   public TheCannon() {
-    cannonRelative.setPosition(Math.toRadians(-30));
+
+    cannonAbsolute.setPositionConversionFactor(360);
+    cannonAbsolute.setVelocityConversionFactor(360);
+    cannonAbsolute.setZeroOffset(157);
+    cannonRotLeadPID.setPositionPIDWrappingEnabled(true);
+    cannonRotLeadPID.setPositionPIDWrappingMaxInput(360);
+    cannonRotLeadPID.setPositionPIDWrappingMinInput(0);
     
     cannonExtension.setSmartCurrentLimit(70);
     
-    cannonRelative.setPositionConversionFactor(Math.PI / 2 / 30.30927848815918);
     extensionEncoder.setPositionConversionFactor(1.802406002431152);
     
     cannonExtension.setInverted(true);
@@ -67,7 +73,7 @@ new ArmFeedforward(
     
     cannonRotFollow.follow(cannonRotLead, true);
     
-    cannonRotLeadPID.setP(Preferences.getDouble("CannonKP", 6.0 / Math.PI));
+    cannonRotLeadPID.setP(Preferences.getDouble("CannonKP", 1.0 / 30.0));
     cannonRotLeadPID.setI(Preferences.getDouble("CannonPI", 0.0));
     cannonRotLeadPID.setD(Preferences.getDouble("CannonKD", 0.0));
     
@@ -77,7 +83,7 @@ new ArmFeedforward(
     
     // cannonAbsolute.setPositionConversionFactor(1/360);
     // cannonAbsolute.setVelocityConversionFactor(1/360);
-    
+
     cannonRotLead.burnFlash();
     cannonRotFollow.burnFlash();
     cannonExtension.burnFlash();
@@ -95,7 +101,7 @@ new ArmFeedforward(
     cannonRotLeadPID.setReference(testCannonAngle, ControlType.kPosition);
 
     if (Preferences.getBoolean("Wanna PID Cannon", false)) {
-      cannonRotLeadPID.setP(Preferences.getDouble("CannonKP", 6.0 / Math.PI));
+      cannonRotLeadPID.setP(Preferences.getDouble("CannonKP", 1.0/30.0));
       cannonRotLeadPID.setI(Preferences.getDouble("CannonPI", 0.0));
       cannonRotLeadPID.setD(Preferences.getDouble("CannonKD", 0.0));
 
@@ -120,6 +126,11 @@ new ArmFeedforward(
 
   }
 
+  public boolean errorWithinRange (){
+    return Math.abs(testCannonAngle - cannonAbsolute.getPosition()) < 10 ? true:false;
+    
+  }
+
   public void stowMode() {
     cannonRotLead.set(0);
     cannonExtension.set(0);
@@ -130,64 +141,36 @@ new ArmFeedforward(
 
   public void manExtend() {
     // extension motor spins
-    cannonExtension.set(0.4);
+    extensionInches += 1;
 
   }
 
   public void manRetract() {
     // extension motor spins the other way
-    cannonExtension.set(-0.4);
-
+    extensionInches -= 1;
   }
 
   public void manRotUp() {
     // rotation motor spins
-    cannonRotLead.set(0.4);
+    testCannonAngle += 1;
 
   }
 
   public void manRotDown() {
     // rotation motor spins the other way
-    cannonRotLead.set(-0.4);
+    testCannonAngle -= 1;
 
-  }
-
-  // public void extendToSetpoint(poi poi) {
-  //   setAdaptiveFeedForward();
-  //   double ff = getArbitraryFeedForward();
-  //   cannonRotLeadPID.setReference(poi.getCannonAngle(), ControlType.kPosition, 0, ff, ArbFFUnits.kVoltage);
-
-  // }
-
-  public void rotateToSetpoint(poi poi) {
-    setAdaptiveFeedForward();
-    double ff = getArbitraryFeedForward();
-    cannonExtensionPID.setReference(poi.getExtension(), ControlType.kPosition, 0, ff, ArbFFUnits.kVoltage);
-  }
-
-  public void setReference(double position) {
-    setAdaptiveFeedForward();
-    double ff = m_feedforward.calculate(Math.toRadians(cannonAbsolute.getPosition()),
-        Math.toRadians(cannonAbsolute.getVelocity()));
-    cannonExtensionPID.setReference(position, ControlType.kPosition, 0, ff, ArbFFUnits.kVoltage);
   }
 
   @Log
   public double getCannonAngleEncoder() {
-    return Math.toDegrees(cannonRelative.getPosition());
+    return cannonAbsolute.getPosition();
   }
 
   @Log
   public double getArbitraryFeedForward() {
     return m_feedforward.calculate(Math.toRadians(cannonAbsolute.getPosition()),
         Math.toRadians(cannonAbsolute.getVelocity()));
-  }
-
-  @Config(defaultValueBoolean = false)
-  public void zeroArm(boolean input) {
-    if (input) {
-      cannonRelative.setPosition(0);
-    }
   }
 
   @Log
@@ -201,7 +184,7 @@ new ArmFeedforward(
   }
   @Config
   public void setCannonAngle(double input){
-    testCannonAngle = Math.toRadians(input);
+    testCannonAngle = input;
     
   }
 }

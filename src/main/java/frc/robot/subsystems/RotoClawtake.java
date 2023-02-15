@@ -8,6 +8,7 @@ import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMax.ControlType;
+import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
 import com.revrobotics.SparkMaxPIDController;
@@ -45,6 +46,8 @@ public class RotoClawtake extends SubsystemBase implements Loggable {
 
   /** Creates a new Claw. */
   public RotoClawtake() {
+
+    rotoMotor.setIdleMode(IdleMode.kBrake);
 
     rotoMotor.clearFaults();
 

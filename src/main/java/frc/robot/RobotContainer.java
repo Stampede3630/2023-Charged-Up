@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -240,19 +241,13 @@ public class RobotContainer {
     // ));
 
     xBox.povUp()
-        .onTrue(new InstantCommand(s_Cannon::manRotUp, s_Cannon))
-        .onFalse(new InstantCommand(s_Cannon::stowMode, s_Cannon));
-
+        .onTrue(new InstantCommand(s_Cannon::manRotUp, s_Cannon));
     xBox.povDown()
-        .onTrue(new InstantCommand(s_Cannon::manRotDown, s_Cannon))
-        .onFalse(new InstantCommand(s_Cannon::stowMode, s_Cannon));
-
+        .onTrue(new InstantCommand(s_Cannon::manRotDown, s_Cannon));
     xBox.povRight()
-        .onTrue(new InstantCommand(s_Cannon::manExtend, s_Cannon))
-        .onFalse(new InstantCommand(s_Cannon::stowMode, s_Cannon));
+        .onTrue(new InstantCommand(s_Cannon::manExtend, s_Cannon));
     xBox.povLeft()
-        .onTrue(new InstantCommand(s_Cannon::manRetract, s_Cannon))
-        .onFalse(new InstantCommand(s_Cannon::stowMode, s_Cannon));
+        .onTrue(new InstantCommand(s_Cannon::manRetract, s_Cannon));
     xBox.rightTrigger(.5)
         .onTrue((new InstantCommand(s_Claw::runClawtake, s_Claw)))
         .onFalse((new InstantCommand(s_Claw::stopClawTake, s_Claw)));
@@ -265,15 +260,16 @@ public class RobotContainer {
     xBox.leftBumper()
         .onTrue(new InstantCommand(s_Claw::actuateClawReverse, s_Claw))
         .onFalse(new InstantCommand(s_Claw::stopClawTake, s_Claw));
-    xBox.a()
+    xBox.a().debounce(.1)
         .onTrue(new InstantCommand(s_Claw::rotoClaw))
         .onFalse(new InstantCommand(s_Claw::stopClawTake));
-    xBox.x()
+    xBox.x().debounce(.1)
         .onTrue(new InstantCommand(s_Claw::rotoClawReverse))
         .onFalse(new InstantCommand(s_Claw::stopClawTake));
     xBox.y()
         .onTrue((Commands.runOnce(()-> s_Cannon.setCannonAngle(armTestSetPoints.getSelected().getTestCannonAngle())))
-        .andThen((Commands.runOnce(()-> s_Cannon.setExtensionInches(armTestSetPoints.getSelected().getTestCannonExtension())))));
+        .andThen(new SequentialCommandGroup(Commands.waitUntil(s_Cannon::errorWithinRange)),
+          Commands.runOnce(()-> s_Cannon.setExtensionInches(armTestSetPoints.getSelected().getTestCannonExtension()))));
         
     // xBox.a().onTrue(new
     // ProxyCommand(()->autoBuilder.followPathGroup(autoPathGroupOnTheFly()))
