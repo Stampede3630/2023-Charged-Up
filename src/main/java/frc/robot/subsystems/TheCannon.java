@@ -27,9 +27,9 @@ import io.github.oblarg.oblog.annotations.Log;
 public class TheCannon extends SubsystemBase implements Loggable {
   /** Creates a new TheCannon. */
 @Log
-public double extensionInches = 0;
+public double extensionInches = 0.0;
 @Log
-public double testCannonAngle = 0;
+public double cannonRotation = 0.0;
 
 private CANSparkMax cannonRotLead = new CANSparkMax(4, MotorType.kBrushless);
 private CANSparkMax cannonRotFollow = new CANSparkMax(11, MotorType.kBrushless);
@@ -56,19 +56,16 @@ new ArmFeedforward(
 
     cannonAbsolute.setPositionConversionFactor(1);
     cannonAbsolute.setVelocityConversionFactor(1);
-    cannonAbsolute.setZeroOffset(157/360.0);
-    cannonRotLeadPID.setPositionPIDWrappingEnabled(false);
-    cannonRotLeadPID.setPositionPIDWrappingMaxInput(1);
-    cannonRotLeadPID.setPositionPIDWrappingMinInput(0);
-    
+    cannonAbsolute.setZeroOffset(157.0/360.0);
+
     cannonExtension.setSmartCurrentLimit(70);
     
     extensionEncoder.setPositionConversionFactor(1.802406002431152);
     
     cannonExtension.setInverted(true);
-        
-    cannonRotLead.setIdleMode(IdleMode.kBrake);
-    cannonRotFollow.setIdleMode(IdleMode.kBrake);
+    //changed idle mode to help with troubleshooting    
+    cannonRotLead.setIdleMode(IdleMode.kCoast);
+    cannonRotFollow.setIdleMode(IdleMode.kCoast);
     cannonExtension.setIdleMode(IdleMode.kBrake);
     
     cannonRotFollow.follow(cannonRotLead, true);
@@ -83,13 +80,12 @@ new ArmFeedforward(
     
     // cannonAbsolute.setPositionConversionFactor(1/360);
     // cannonAbsolute.setVelocityConversionFactor(1/360);
-
+    cannonRotLeadPID.setFeedbackDevice(cannonAbsolute);
     cannonRotLead.burnFlash();
     cannonRotFollow.burnFlash();
     cannonExtension.burnFlash();
     
-    cannonRotLeadPID.setFeedbackDevice(cannonAbsolute); // Caleb note: don't think this needs to be run periodically,
-    // only once
+     
   }
   
   @Override
@@ -98,7 +94,7 @@ new ArmFeedforward(
     setAdaptiveFeedForward();
 
     cannonExtensionPID.setReference(extensionInches, ControlType.kPosition); 
-    cannonRotLeadPID.setReference(testCannonAngle, ControlType.kPosition, 0, getArbitraryFeedForward(), ArbFFUnits.kVoltage);
+    cannonRotLeadPID.setReference(cannonRotation, ControlType.kPosition, 0, getArbitraryFeedForward(), ArbFFUnits.kVoltage);
 
     if (Preferences.getBoolean("Wanna PID Cannon", false)) {
       cannonRotLeadPID.setP(Preferences.getDouble("CannonKP", 12.0));
@@ -127,17 +123,16 @@ new ArmFeedforward(
   }
 
   public boolean errorWithinRange (){
-    return Math.abs(testCannonAngle - cannonAbsolute.getPosition()) < 360.0 * testCannonAngle ? true:false;
-    
+    return Math.abs(cannonRotation*360 - cannonAbsolute.getPosition()) < 10.0 ? true:false; 
   }
 
-  public void stowMode() {
-    cannonRotLead.set(0);
-    cannonExtension.set(0);
-    // cannonRotLeadPID.setReference(3, ControlType.kPosition);
-    // cannonAbsolute.setPosition(3);
+  // public void stowMode() {
+  //   cannonRotLead.set(0);
+  //   cannonExtension.set(0);
+  //   // cannonRotLeadPID.setReference(3, ControlType.kPosition);
+  //   // cannonAbsolute.setPosition(3);
 
-  }
+  // }
 
   public void manExtend() {
     // extension motor spins
@@ -152,17 +147,20 @@ new ArmFeedforward(
 
   public void manRotUp() {
     // rotation motor spins
-    setCannonAngle((testCannonAngle * 360.0) + 1);
+    setCannonAngle((cannonRotation * 360.0) + 1.0);
 
   }
 
   public void manRotDown() {
-    setCannonAngle((testCannonAngle * 360.0) - 1);
+    setCannonAngle((cannonRotation * 360.0) - 1.0);
 
   }
 
+  /**
+   * @return degress per sec
+   */
   public double getCannonVelocity(){
-    return cannonAbsolute.getVelocity() * 360.0;
+    return cannonAbsolute.getVelocity() * 360.0 / 60.0;
   }
 
   @Log
@@ -187,7 +185,7 @@ new ArmFeedforward(
   }
   @Config
   public void setCannonAngle(double input){
-    testCannonAngle = input/360.0;
+    cannonRotation = input/360.0;
     
   }
 }
