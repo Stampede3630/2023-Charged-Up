@@ -10,8 +10,10 @@ import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.SparkMaxLimitSwitch;
 import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
 import com.revrobotics.SparkMaxPIDController;
+import com.revrobotics.CANDigitalInput.LimitSwitchPolarity;
 import com.revrobotics.SparkMaxPIDController.ArbFFUnits;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
@@ -37,6 +39,7 @@ private CANSparkMax cannonExtension = new CANSparkMax(17, MotorType.kBrushless);
 
 private AbsoluteEncoder cannonAbsolute = cannonRotLead.getAbsoluteEncoder(Type.kDutyCycle);
 private RelativeEncoder extensionEncoder = cannonExtension.getEncoder();
+private SparkMaxLimitSwitch extensionHardStop = cannonExtension.getReverseLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen);
 
 private SparkMaxPIDController cannonRotLeadPID = cannonRotLead.getPIDController();
 private SparkMaxPIDController cannonExtensionPID = cannonExtension.getPIDController();
@@ -54,9 +57,9 @@ new ArmFeedforward(
   
   public TheCannon() {
     cannonAbsolute.setInverted(false);
-    cannonAbsolute.setPositionConversionFactor(1);
-    cannonAbsolute.setVelocityConversionFactor(1);
-    cannonAbsolute.setZeroOffset(.426-.25);
+    cannonAbsolute.setPositionConversionFactor(360.0);
+    cannonAbsolute.setVelocityConversionFactor(360.0);
+    cannonAbsolute.setZeroOffset(63.36);
 
     cannonExtension.setSmartCurrentLimit(70);
     
@@ -64,16 +67,16 @@ new ArmFeedforward(
     
     cannonExtension.setInverted(true);
     //changed idle mode to help with troubleshooting    
-    cannonRotLead.setIdleMode(IdleMode.kCoast);
-    cannonRotFollow.setIdleMode(IdleMode.kCoast);
+    cannonRotLead.setIdleMode(IdleMode.kBrake);
+    cannonRotFollow.setIdleMode(IdleMode.kBrake);
     cannonExtension.setIdleMode(IdleMode.kBrake);
     
+
     cannonRotFollow.follow(cannonRotLead, true);
     cannonRotLeadPID.setFeedbackDevice(cannonAbsolute);
-    cannonExtensionPID.setPositionPIDWrappingEnabled(false);
-    // cannonExtensionPID.setPositionPIDWrappingMaxInput(1);
-    // cannonExtensionPID.setPositionPIDWrappingMinInput(0);
-    cannonRotLeadPID.setP(Preferences.getDouble("CannonKP", 12.0));
+    cannonRotLeadPID.setPositionPIDWrappingEnabled(false);
+
+    cannonRotLeadPID.setP(Preferences.getDouble("CannonKP", 1.0/30.0));
     cannonRotLeadPID.setI(Preferences.getDouble("CannonPI", 0.0));
     cannonRotLeadPID.setD(Preferences.getDouble("CannonKD", 0.0));
     
@@ -99,7 +102,7 @@ new ArmFeedforward(
     cannonRotLeadPID.setReference(getRevReferenceAngleSetpoint(), ControlType.kPosition, 0, getArbitraryFeedForward(), ArbFFUnits.kVoltage);
 
     if (Preferences.getBoolean("Wanna PID Cannon", false)) {
-      cannonRotLeadPID.setP(Preferences.getDouble("CannonKP", 12.0));
+      cannonRotLeadPID.setP(Preferences.getDouble("CannonKP", 1.0/30.0));
       cannonRotLeadPID.setI(Preferences.getDouble("CannonPI", 0.0));
       cannonRotLeadPID.setD(Preferences.getDouble("CannonKD", 0.0));
 
@@ -124,8 +127,20 @@ new ArmFeedforward(
 
   }
 
+  @Log
+  public boolean getExtensionHardStop(){
+    return extensionHardStop.isPressed();
+  }
+
+  public void setExtensionZero(){
+    if (extensionHardStop.isPressed()){
+      extensionEncoder.setPosition(0);
+    }
+  }
+
+  @Log
   public boolean errorWithinRange (){
-    return Math.abs(cannonRotation - cannonAbsolute.getPosition()) < 10.0 ? true:false; 
+    return Math.abs(cannonRotation - getCannonAngleEncoder()) < 10.0 ? true:false; 
   }
 
   // public void stowMode() {
@@ -162,12 +177,12 @@ new ArmFeedforward(
    * @return degress per sec
    */
   public double getCannonVelocity(){
-    return cannonAbsolute.getVelocity() * 360.0 / 60.0;
+    return cannonAbsolute.getVelocity() / 60.0;
   }
 
   @Log
   public double getCannonAngleEncoder() {
-    return cannonAbsolute.getPosition() * 360.0 - 90;
+    return cannonAbsolute.getPosition() - 90;
   }
 
   @Log
@@ -191,6 +206,6 @@ new ArmFeedforward(
   }
 
   public double getRevReferenceAngleSetpoint() {
-     return (cannonRotation + 90)/360;
+     return (cannonRotation + 90);
   }
 }

@@ -101,7 +101,7 @@ public class RobotContainer {
     Preferences.initDouble("pKIRotationController", SwerveConstants.kDRotationController);
     Preferences.initDouble("pKDRotationController", SwerveConstants.kIRotationController);
     Preferences.initBoolean("pIntSteering", true);
-    Preferences.initDouble("CannonKP", 1.0 / 12.0);
+    Preferences.initDouble("CannonKP", 1.0 / 30.0);
     Preferences.initDouble("CannonKI", 0.0);
     Preferences.initDouble("CannonKD", 0.0);
     Preferences.initDouble("ExtensionKP", 1.0 / 6.0);
@@ -398,8 +398,8 @@ public class RobotContainer {
   }
 
   public static enum ArmTestSetPoints {
-    HIGH("for high node", 45, 40),
-    MID("for mid node", 30, 20),
+    HIGH("for high node", 40, 40),
+    MID("for mid node", 40, 20),
     LOW("for low/hybrid node", 0, 10),
     UP("straight up", 90, 0),
     ZERO("straight out", 0, 0);
@@ -415,7 +415,7 @@ public class RobotContainer {
     }
 
     public double getTestCannonExtension(){
-      return testCannonAngle;
+      return testCannonExtention;
     }
 
     public double getTestCannonAngle(){
