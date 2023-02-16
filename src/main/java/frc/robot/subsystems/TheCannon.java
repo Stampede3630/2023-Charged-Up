@@ -98,7 +98,7 @@ new ArmFeedforward(
     setAdaptiveFeedForward();
 
     cannonExtensionPID.setReference(extensionInches, ControlType.kPosition); 
-    cannonRotLeadPID.setReference(testCannonAngle, ControlType.kPosition);
+    cannonRotLeadPID.setReference(testCannonAngle, ControlType.kPosition, 0, getArbitraryFeedForward(), ArbFFUnits.kVoltage);
 
     if (Preferences.getBoolean("Wanna PID Cannon", false)) {
       cannonRotLeadPID.setP(Preferences.getDouble("CannonKP", 1.0/30.0));

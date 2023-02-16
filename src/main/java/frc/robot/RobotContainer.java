@@ -101,7 +101,7 @@ public class RobotContainer {
     Preferences.initDouble("pKIRotationController", SwerveConstants.kDRotationController);
     Preferences.initDouble("pKDRotationController", SwerveConstants.kIRotationController);
     Preferences.initBoolean("pIntSteering", true);
-    Preferences.initDouble("CannonKP", 6.0 / Math.PI);
+    Preferences.initDouble("CannonKP", 1.0 / 30.0);
     Preferences.initDouble("CannonKI", 0.0);
     Preferences.initDouble("CannonKD", 0.0);
     Preferences.initDouble("ExtensionKP", 1.0 / 6.0);
