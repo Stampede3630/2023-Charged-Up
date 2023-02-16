@@ -54,11 +54,11 @@ new ArmFeedforward(
   
   public TheCannon() {
 
-    cannonAbsolute.setPositionConversionFactor(360);
-    cannonAbsolute.setVelocityConversionFactor(360);
-    cannonAbsolute.setZeroOffset(157);
-    cannonRotLeadPID.setPositionPIDWrappingEnabled(true);
-    cannonRotLeadPID.setPositionPIDWrappingMaxInput(360);
+    cannonAbsolute.setPositionConversionFactor(1);
+    cannonAbsolute.setVelocityConversionFactor(1);
+    cannonAbsolute.setZeroOffset(157/360.0);
+    cannonRotLeadPID.setPositionPIDWrappingEnabled(false);
+    cannonRotLeadPID.setPositionPIDWrappingMaxInput(1);
     cannonRotLeadPID.setPositionPIDWrappingMinInput(0);
     
     cannonExtension.setSmartCurrentLimit(70);
@@ -73,7 +73,7 @@ new ArmFeedforward(
     
     cannonRotFollow.follow(cannonRotLead, true);
     
-    cannonRotLeadPID.setP(Preferences.getDouble("CannonKP", 1.0 / 30.0));
+    cannonRotLeadPID.setP(Preferences.getDouble("CannonKP", 12.0));
     cannonRotLeadPID.setI(Preferences.getDouble("CannonPI", 0.0));
     cannonRotLeadPID.setD(Preferences.getDouble("CannonKD", 0.0));
     
@@ -101,7 +101,7 @@ new ArmFeedforward(
     cannonRotLeadPID.setReference(testCannonAngle, ControlType.kPosition, 0, getArbitraryFeedForward(), ArbFFUnits.kVoltage);
 
     if (Preferences.getBoolean("Wanna PID Cannon", false)) {
-      cannonRotLeadPID.setP(Preferences.getDouble("CannonKP", 1.0/30.0));
+      cannonRotLeadPID.setP(Preferences.getDouble("CannonKP", 12.0));
       cannonRotLeadPID.setI(Preferences.getDouble("CannonPI", 0.0));
       cannonRotLeadPID.setD(Preferences.getDouble("CannonKD", 0.0));
 
@@ -127,7 +127,7 @@ new ArmFeedforward(
   }
 
   public boolean errorWithinRange (){
-    return Math.abs(testCannonAngle - cannonAbsolute.getPosition()) < 10 ? true:false;
+    return Math.abs(testCannonAngle - cannonAbsolute.getPosition()) < 360.0 * testCannonAngle ? true:false;
     
   }
 
@@ -152,25 +152,28 @@ new ArmFeedforward(
 
   public void manRotUp() {
     // rotation motor spins
-    testCannonAngle += 1;
+    setCannonAngle((testCannonAngle * 360.0) + 1);
 
   }
 
   public void manRotDown() {
-    // rotation motor spins the other way
-    testCannonAngle -= 1;
+    setCannonAngle((testCannonAngle * 360.0) - 1);
 
+  }
+
+  public double getCannonVelocity(){
+    return cannonAbsolute.getVelocity() * 360.0;
   }
 
   @Log
   public double getCannonAngleEncoder() {
-    return cannonAbsolute.getPosition();
+    return cannonAbsolute.getPosition() * 360.0;
   }
 
   @Log
   public double getArbitraryFeedForward() {
-    return m_feedforward.calculate(Math.toRadians(cannonAbsolute.getPosition()),
-        Math.toRadians(cannonAbsolute.getVelocity()));
+    return m_feedforward.calculate(Math.toRadians(getCannonAngleEncoder()),
+        Math.toRadians(getCannonVelocity()));
   }
 
   @Log
@@ -184,7 +187,7 @@ new ArmFeedforward(
   }
   @Config
   public void setCannonAngle(double input){
-    testCannonAngle = input;
+    testCannonAngle = input/360.0;
     
   }
 }
