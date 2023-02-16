@@ -111,7 +111,7 @@ new ArmFeedforward(
   // This method will be called once per scheduler run
 
 
-
+  //TODO: max extension 47inches, 0 is actually 13 inches
   public void setAdaptiveFeedForward() {
 
     kS = 0;
