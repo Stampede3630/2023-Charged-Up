@@ -53,10 +53,10 @@ new ArmFeedforward(
   kV, kA);
   
   public TheCannon() {
-
+    cannonAbsolute.setInverted(false);
     cannonAbsolute.setPositionConversionFactor(1);
     cannonAbsolute.setVelocityConversionFactor(1);
-    cannonAbsolute.setZeroOffset(157.0/360.0);
+    cannonAbsolute.setZeroOffset(.426-.25);
 
     cannonExtension.setSmartCurrentLimit(70);
     
@@ -69,7 +69,10 @@ new ArmFeedforward(
     cannonExtension.setIdleMode(IdleMode.kBrake);
     
     cannonRotFollow.follow(cannonRotLead, true);
-    
+    cannonRotLeadPID.setFeedbackDevice(cannonAbsolute);
+    cannonExtensionPID.setPositionPIDWrappingEnabled(false);
+    // cannonExtensionPID.setPositionPIDWrappingMaxInput(1);
+    // cannonExtensionPID.setPositionPIDWrappingMinInput(0);
     cannonRotLeadPID.setP(Preferences.getDouble("CannonKP", 12.0));
     cannonRotLeadPID.setI(Preferences.getDouble("CannonPI", 0.0));
     cannonRotLeadPID.setD(Preferences.getDouble("CannonKD", 0.0));
@@ -78,9 +81,8 @@ new ArmFeedforward(
     cannonExtensionPID.setI(Preferences.getDouble("ExtensionKI", 0.0));
     cannonExtensionPID.setD(Preferences.getDouble("ExtensionKD", 0.0));
     
-    // cannonAbsolute.setPositionConversionFactor(1/360);
-    // cannonAbsolute.setVelocityConversionFactor(1/360);
-    cannonRotLeadPID.setFeedbackDevice(cannonAbsolute);
+
+    
     cannonRotLead.burnFlash();
     cannonRotFollow.burnFlash();
     cannonExtension.burnFlash();
@@ -94,7 +96,7 @@ new ArmFeedforward(
     setAdaptiveFeedForward();
 
     cannonExtensionPID.setReference(extensionInches, ControlType.kPosition); 
-    cannonRotLeadPID.setReference(cannonRotation, ControlType.kPosition, 0, getArbitraryFeedForward(), ArbFFUnits.kVoltage);
+    cannonRotLeadPID.setReference(getRevReferenceAngleSetpoint(), ControlType.kPosition, 0, getArbitraryFeedForward(), ArbFFUnits.kVoltage);
 
     if (Preferences.getBoolean("Wanna PID Cannon", false)) {
       cannonRotLeadPID.setP(Preferences.getDouble("CannonKP", 12.0));
@@ -123,7 +125,7 @@ new ArmFeedforward(
   }
 
   public boolean errorWithinRange (){
-    return Math.abs(cannonRotation*360 - cannonAbsolute.getPosition()) < 10.0 ? true:false; 
+    return Math.abs(cannonRotation - cannonAbsolute.getPosition()) < 10.0 ? true:false; 
   }
 
   // public void stowMode() {
@@ -147,12 +149,12 @@ new ArmFeedforward(
 
   public void manRotUp() {
     // rotation motor spins
-    setCannonAngle((cannonRotation * 360.0) + 1.0);
+    setCannonAngle(cannonRotation  + 1.0);
 
   }
 
   public void manRotDown() {
-    setCannonAngle((cannonRotation * 360.0) - 1.0);
+    setCannonAngle(cannonRotation  - 1.0);
 
   }
 
@@ -165,7 +167,7 @@ new ArmFeedforward(
 
   @Log
   public double getCannonAngleEncoder() {
-    return cannonAbsolute.getPosition() * 360.0;
+    return cannonAbsolute.getPosition() * 360.0 - 90;
   }
 
   @Log
@@ -185,7 +187,10 @@ new ArmFeedforward(
   }
   @Config
   public void setCannonAngle(double input){
-    cannonRotation = input/360.0;
-    
+    cannonRotation = input;
+  }
+
+  public double getRevReferenceAngleSetpoint() {
+     return (cannonRotation + 90)/360;
   }
 }
