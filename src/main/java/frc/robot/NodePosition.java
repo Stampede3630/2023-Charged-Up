@@ -52,16 +52,20 @@ public class NodePosition {
     * R 132 + 42.19
     */
     public enum NodeGrid {
-      HIGH_LEFT(60-27, -22, 0, "leftHigh"),
-      MID_LEFT(45-27, -22, 0, "leftMid"),
       LOW_LEFT(0, -22, 0, "leftLow"),
-      HIGH_CENTER(60-27, 0, 0, "midHigh"),
-      MID_CENTER(45-27, 0, 0, "midMid"),
       LOW_CENTER(0, 0, 0, "midLow"),
-      HIGH_RIGHT(60-27, 22, 0, "rightHigh"),
+      LOW_RIGHT(0, 22, 0,"rightLow"),
+  
+      MID_LEFT(45-27, -22, 0, "leftMid"),
+      MID_CENTER(45-27, 0, 0, "midMid"),
       MID_RIGHT(45-27, 22, 0,"rightMid"),
-      LOW_RIGHT(0, 22, 0,"rightLow");
-
+  
+  
+      HIGH_LEFT(60-27, -22, 0, "leftHigh"),
+      HIGH_CENTER(60-27, 0, 0, "midHigh"),
+      HIGH_RIGHT(60-27, 22, 0, "rightHigh");
+      
+  
       public final double extension;
       public final double xOffset;
       public final double yOffset;
