@@ -4,13 +4,11 @@
 
 package frc.robot.subsystems;
 
-import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.CANSparkMax;
-import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
-import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
+import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxPIDController;
 
 import edu.wpi.first.wpilibj.Compressor;
@@ -19,6 +17,7 @@ import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.RobotContainer.GamePieceOrientation;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
@@ -27,6 +26,9 @@ public class RotoClawtake extends SubsystemBase implements Loggable {
 
   public double rotoMeasure;
   public double rotoSetPoint = 0;
+
+  public double clawSqueezeSpeed = 0.1;
+  private boolean haveGamePiece = false;
 
   public Compressor compressor = new Compressor(1, PneumaticsModuleType.REVPH);
   public DoubleSolenoid clawSolenoid = new DoubleSolenoid(PneumaticsModuleType.REVPH, 6, 7);
@@ -37,7 +39,8 @@ public class RotoClawtake extends SubsystemBase implements Loggable {
   public RelativeEncoder rotoRelativeEncoder = rotoMotor.getEncoder();
   public RelativeEncoder clawRelativeEncoder = clawMotor.getEncoder();
 
-  // public AbsoluteEncoder rotoAbsolute = rotoMotor.getAbsoluteEncoder(Type.kDutyCycle);
+  // public AbsoluteEncoder rotoAbsolute =
+  // rotoMotor.getAbsoluteEncoder(Type.kDutyCycle);
 
   public DigitalInput clawSwitch = new DigitalInput(0);
 
@@ -53,8 +56,9 @@ public class RotoClawtake extends SubsystemBase implements Loggable {
 
     rotoMotor.setSmartCurrentLimit(30);
 
-    rotoRelativeEncoder.setPositionConversionFactor((2 * Math.PI) / 60.0);
-    clawRelativeEncoder.setPositionConversionFactor((2 * Math.PI) / 22.8571428571);
+    rotoRelativeEncoder.setPositionConversionFactor((2 * Math.PI) / 60.0 / 17.6 * 360);
+    // clawRelativeEncoder.setPositionConversionFactor((2 * Math.PI) /
+    // 22.8571428571);
 
     clawMotorPID.setP(Preferences.getDouble("ClawKP", 6.0 / Math.PI));
     clawMotorPID.setI(Preferences.getDouble("ClawKI", 0.0));
@@ -66,7 +70,6 @@ public class RotoClawtake extends SubsystemBase implements Loggable {
 
     rotoMotor.burnFlash();
     clawTakeMotor.burnFlash();
-
   }
 
   @Override
@@ -75,9 +78,9 @@ public class RotoClawtake extends SubsystemBase implements Loggable {
     rotoMotorPID.setReference(rotoSetPoint, ControlType.kPosition);
     // This method will be called once per scheduler run
     if (Preferences.getBoolean("Wanna PID Roto", false)) {
-      rotoMotorPID.setP(Preferences.getDouble("ExtensionKP", 1.0 / 6.0));
-      rotoMotorPID.setI(Preferences.getDouble("ExtensionKI", 0.0));
-      rotoMotorPID.setD(Preferences.getDouble("ExtensionPD", 0.0));
+      rotoMotorPID.setP(Preferences.getDouble("RotoClawKP", 1.0 / 6.0));
+      rotoMotorPID.setI(Preferences.getDouble("RotoClawKI", 0.0));
+      rotoMotorPID.setD(Preferences.getDouble("RotoClawPD", 0.0));
       Preferences.setBoolean("Wanna PID Roto", false);
     }
   }
@@ -89,68 +92,58 @@ public class RotoClawtake extends SubsystemBase implements Loggable {
   }
 
   public void openClaw() {
-    // open piston
-    // clawSolenoid.set(Value.kForward);
-    clawMotorPID.setReference(4, ControlType.kPosition);
+    clawMotor.set(-clawSqueezeSpeed);
   }
 
   public void closeClaw() {
-    // close piston
-    // clawSolenoid.set(Value.kReverse);
-    clawMotorPID.setReference(0, ControlType.kPosition);
-
+    clawMotor.set(clawSqueezeSpeed);
   }
 
   public void runClawtake() {
     // run the rotoclawtake/grab a game piece
-    clawTakeMotor.set(-1);
+    clawTakeMotor.set(1);
   }
 
   public void reverseClawtake() {
     // spit out a game piece/outtake rotoclawtake
-    clawTakeMotor.set(1);
+    clawTakeMotor.set(-1);
   }
 
-  public void rotoClaw() { // GamePieceOrientation gamePieceOrientation add this parameter later
-    // twist the rotoclawtake
-    // rotoMotorPID.setReference(gamePieceOrientation.getRotOrientForRoto(),
-    // ControlType.kPosition);
-    rotoMotor.set(0.7);
+  public boolean haveGamePiece() {
+    return haveGamePiece;
   }
 
-  public void rotoClawReverse() { // delete this method after testing
-    rotoMotor.set(-0.7);
-
+  public void prepareForGamePiece(GamePieceOrientation originalOrientation) {
+    setRotoAngle(originalOrientation.getRotOrientForRoto());
   }
 
-  public void actuateClaw() { // add parameter GamePieceOrientation gamePieceOrientation?
-
-    clawMotor.set(0.2);
-
-    // if (gamePieceOrientation.getGamePieceType().equals("cone")){
-    // clawMotorPID.setReference(0, ControlType.kPosition);
-    // } else {
-    // clawMotorPID.setReference(4, ControlType.kPosition);
-    // }
-
-  }
-
-  public void actuateClawReverse() {
-    clawMotor.set(-0.2); // delete this method after testing
+  public void flipRotoClawtake() {
+    setRotoAngle((getRotoAngle() + 180) % 360);
   }
 
   @Log
-  public double getRotoAngle(){
+  public double getRotoAngle() {
     return rotoRelativeEncoder.getPosition();
   }
 
   @Config
-  public void setRotoAngle(double input){
+  public void setRotoAngle(double input) {
     rotoSetPoint = input;
+  }
 
+  @Config
+  public void setHaveGamePiece(boolean input) {
+    haveGamePiece = input;
   }
+
   @Log
-  public double getCurrent() {
-    return rotoMotor.getOutputCurrent();
+  public double getClampAngle() {
+    return clawRelativeEncoder.getPosition();
   }
+
+  @Config
+  public void setClawSqueezeSpeed(double speed) {
+    clawSqueezeSpeed = speed;
+  }
+
 }

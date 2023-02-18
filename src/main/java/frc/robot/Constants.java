@@ -25,43 +25,4 @@ public final class Constants {
     new Translation2d(0, 0)
   };
 
-
-public enum poi{
-  highLeft(0, 0, 0, 0),
-  highMid(1, 1, 1, 1),
-  highRight(2, 2, 2, 2),
-
-  doubleSubstation(3, 3, 3, 3),
-  singleSubstation(4, 4, 4, 4),
-  groundPickup(5, 5, 5, 5);
-
-  private double cannonAngle;
-  private double extension;
-  private double xCoord;
-  private double yCoord;
-
-  private poi(double cannonAngle, double extension, double xCoord, double yCoord){
-    this.cannonAngle = cannonAngle;
-    this.extension = extension;
-    this.xCoord = xCoord;
-    this.yCoord = yCoord;
-  }
-
-  public double getCannonAngle(){
-    return cannonAngle;
-  }
-
-  public double getExtension(){
-    return extension;
-  }
-  public double getXCoord(){
-    return xCoord;
-  }
-  public double getYCoord(){
-    return yCoord;
-  }
-
-
-}
-
 }

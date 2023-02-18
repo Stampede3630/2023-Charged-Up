@@ -13,15 +13,12 @@ import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxLimitSwitch;
 import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
 import com.revrobotics.SparkMaxPIDController;
-import com.revrobotics.CANDigitalInput.LimitSwitchPolarity;
 import com.revrobotics.SparkMaxPIDController.ArbFFUnits;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.wpilibj.Preferences;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.poi;
-import frc.robot.RobotContainer.ArmTestSetPoints;
+import frc.robot.RobotContainer.FacingPOI;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
@@ -70,20 +67,21 @@ new ArmFeedforward(
     cannonRotLead.setIdleMode(IdleMode.kBrake);
     cannonRotFollow.setIdleMode(IdleMode.kBrake);
     cannonExtension.setIdleMode(IdleMode.kBrake);
-    
-
     cannonRotFollow.follow(cannonRotLead, true);
+
     cannonRotLeadPID.setFeedbackDevice(cannonAbsolute);
     cannonRotLeadPID.setPositionPIDWrappingEnabled(false);
 
     cannonRotLeadPID.setP(Preferences.getDouble("CannonKP", 1.0/30.0));
     cannonRotLeadPID.setI(Preferences.getDouble("CannonPI", 0.0));
     cannonRotLeadPID.setD(Preferences.getDouble("CannonKD", 0.0));
+    cannonRotLeadPID.setOutputRange(-.5, .5);
     
     cannonExtensionPID.setP(Preferences.getDouble("ExtensionKP", 1.0 / 6.0));
     cannonExtensionPID.setI(Preferences.getDouble("ExtensionKI", 0.0));
     cannonExtensionPID.setD(Preferences.getDouble("ExtensionKD", 0.0));
     
+
 
     
     cannonRotLead.burnFlash();
@@ -111,6 +109,8 @@ new ArmFeedforward(
       cannonExtensionPID.setD(Preferences.getDouble("ExtensionKD", 0.0));
       Preferences.setBoolean("Wanna PID Cannon", false);
     }
+
+    setExtensionZero();
 
   }
   // This method will be called once per scheduler run
@@ -203,6 +203,13 @@ new ArmFeedforward(
   @Config
   public void setCannonAngle(double input){
     cannonRotation = input;
+  }
+
+  public void setCannonAngleSides(FacingPOI facing, double angle) {
+    if (facing == FacingPOI.COMMUNITY)
+      setCannonAngle(angle);
+    else if (facing == FacingPOI.HUMAN_PLAYER)
+      setCannonAngle(180-angle);
   }
 
   public double getRevReferenceAngleSetpoint() {

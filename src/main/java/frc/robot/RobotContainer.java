@@ -14,21 +14,26 @@ import com.pathplanner.lib.PathPoint;
 import com.pathplanner.lib.auto.PIDConstants;
 import com.pathplanner.lib.auto.SwerveAutoBuilder;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.SimpleWidget;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.PrintCommand;
+import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.NodePosition.NodeGrid;
+import frc.robot.NodePosition.NodeGroup;
 import frc.robot.subsystems.RotoClawtake;
 import frc.robot.subsystems.SwerveDrive;
 import frc.robot.subsystems.TheCannon;
@@ -55,7 +60,10 @@ public class RobotContainer {
   SwerveAutoBuilder autoBuilder;
   ArrayList<PathPlannerTrajectory> autoPathGroup, leftPathGroup, rightPathGroup;
   SendableChooser<GamePieceOrientation> gamePieceOrientationChooser = new SendableChooser<>();
-
+  SendableChooser<frc.robot.NodePosition.NodeGroup> nodeGroupChooser = new SendableChooser<>();
+  SendableChooser<NodeGrid> nodeGridChooser = new SendableChooser<>();
+  SimpleWidget gridChooser;
+  NodeGrid currentNodeGrid = NodeGrid.HIGH_CENTER;
   // This is just an example event map. It would be better to have a constant,
   // global event map
   // in your code that will be used by all path following commands.
@@ -64,12 +72,7 @@ public class RobotContainer {
   // global event map
 
   SendableChooser<NodeDriverStation> nodeDriverStation = new SendableChooser<>();
-
-  
-
   SendableChooser<ArmTestSetPoints> armTestSetPoints = new SendableChooser<>();
-
-  
 
   @Log
   private final SwerveDrive s_SwerveDrive = new SwerveDrive();
@@ -120,16 +123,14 @@ public class RobotContainer {
     autoPathGroup = (ArrayList<PathPlannerTrajectory>) PathPlanner.loadPathGroup("swerveTest",
         new PathConstraints(2, 2));
 
-    Shuffleboard.getTab("nodeSelector")
-        .add("node", "");
-
     for (GamePieceOrientation orientation : GamePieceOrientation.values()) {
       gamePieceOrientationChooser.addOption(orientation.getFriendlyName(), orientation);
     }
-
-   
-
-
+    gamePieceOrientationChooser.setDefaultOption(GamePieceOrientation.UPRIGHT.getFriendlyName(), GamePieceOrientation.UPRIGHT);
+    for (NodeGroup group : NodeGroup.values()) {
+      nodeGroupChooser.addOption(group.name(), group);
+    }
+    nodeGroupChooser.setDefaultOption(NodeGroup.CENTER.name(), NodeGroup.CENTER);
     Shuffleboard.getTab("nodeSelector")
         .add("orientation", gamePieceOrientationChooser)
         .withWidget(BuiltInWidgets.kComboBoxChooser);
@@ -139,9 +140,16 @@ public class RobotContainer {
         .withWidget(BuiltInWidgets.kComboBoxChooser);
       
     Shuffleboard.getTab("nodeSelector")
-        .add("Node Select", armTestSetPoints)
+        .add("Arm Point Select", armTestSetPoints)
         .withWidget(BuiltInWidgets.kComboBoxChooser);
 
+    Shuffleboard.getTab("nodeSelector")
+      .add("Node Group Chooser", nodeGroupChooser)
+      .withWidget(BuiltInWidgets.kComboBoxChooser);
+      
+    gridChooser = Shuffleboard.getTab("nodeSelector")
+      .add("Node Grid Chooser", "")
+      .withWidget("PathSelector");
     HashMap<String, Command> eventMap = new HashMap<>();
     eventMap.put("1stBallPickup", new WaitCommand(2));
     eventMap.put("2ndBallPickup", new WaitCommand(2));
@@ -183,6 +191,7 @@ public class RobotContainer {
     // Configure the button bindings
     configureButtonBindings();
     Logger.configureLoggingAndConfig(this, false);
+    // SmartDashboard.getString("nodeselector/Node Grid Chooser", "");
   }
 
   /**
@@ -241,46 +250,67 @@ public class RobotContainer {
     // ));
 
     xBox.povUp()
-        .onTrue(new InstantCommand(s_Cannon::manRotUp, s_Cannon));
+        .whileTrue(new RepeatCommand(Commands.runOnce(s_Cannon::manRotUp)));
     xBox.povDown()
-        .onTrue(new InstantCommand(s_Cannon::manRotDown, s_Cannon));
+        .whileTrue(new RepeatCommand(Commands.runOnce(s_Cannon::manRotDown)));
     xBox.povRight()
-        .onTrue(new InstantCommand(s_Cannon::manExtend, s_Cannon));
+        .whileTrue(new RepeatCommand(new InstantCommand(s_Cannon::manExtend, s_Cannon)));
     xBox.povLeft()
-        .onTrue(new InstantCommand(s_Cannon::manRetract, s_Cannon));
+        .whileTrue(new RepeatCommand(new InstantCommand(s_Cannon::manRetract, s_Cannon)));
     xBox.rightTrigger(.5)
-        .onTrue((new InstantCommand(s_Claw::runClawtake, s_Claw)))
+        .onTrue(new InstantCommand(s_Claw::runClawtake, s_Claw))
+          // .alongWith(Commands.runOnce(() -> s_Cannon.setCannonAngleSides(cannonFacing(), -20))))
         .onFalse((new InstantCommand(s_Claw::stopClawTake, s_Claw)));
     xBox.leftTrigger(.5)
         .onTrue(new InstantCommand(s_Claw::reverseClawtake, s_Claw))
         .onFalse(new InstantCommand(s_Claw::stopClawTake, s_Claw));
     xBox.rightBumper()
-        .onTrue(new InstantCommand(s_Claw::actuateClaw, s_Claw))
+        .onTrue(new InstantCommand(s_Claw::openClaw, s_Claw))
         .onFalse(new InstantCommand(s_Claw::stopClawTake, s_Claw));
     xBox.leftBumper()
-        .onTrue(new InstantCommand(s_Claw::actuateClawReverse, s_Claw))
+        .onTrue(new InstantCommand(s_Claw::closeClaw, s_Claw))
         .onFalse(new InstantCommand(s_Claw::stopClawTake, s_Claw));
-    xBox.a().debounce(.1)
-        .onTrue(new InstantCommand(s_Claw::rotoClaw))
-        .onFalse(new InstantCommand(s_Claw::stopClawTake));
+    // xBox.a().debounce(.1)
+    //     .onTrue(new InstantCommand(s_Claw::rotoClaw))
+    //     .onFalse(new InstantCommand(s_Claw::stopClawTake));
+    // xBox.x().debounce(.1)
+    //     .onTrue(new InstantCommand(s_Claw::rotoClawReverse))
+    //     .onFalse(new InstantCommand(s_Claw::stopClawTake));
     xBox.x().debounce(.1)
-        .onTrue(new InstantCommand(s_Claw::rotoClawReverse))
-        .onFalse(new InstantCommand(s_Claw::stopClawTake));
-    xBox.y()
-        .onTrue((Commands.runOnce(()-> s_Cannon.setCannonAngle(armTestSetPoints.getSelected().getTestCannonAngle())))
-        .andThen(new SequentialCommandGroup(Commands.waitUntil(s_Cannon::errorWithinRange)),
-          Commands.runOnce(()-> s_Cannon.setExtensionInches(armTestSetPoints.getSelected().getTestCannonExtension()))));
-        
+      .onTrue(Commands.runOnce(s_Claw::flipRotoClawtake).andThen(new PrintCommand("flipclawtake")));
+    // xBox.y()
+    //     .onTrue((Commands.runOnce(()-> s_Cannon.setCannonAngle(armTestSetPoints.getSelected().getTestCannonAngle())))
+    //     .andThen(new SequentialCommandGroup(Commands.waitUntil(s_Cannon::errorWithinRange)),
+    //       Commands.runOnce(()-> s_Cannon.setExtensionInches(armTestSetPoints.getSelected().getTestCannonExtension()))));
+
+    // new Trigger(s_Claw::haveGamePiece)
+    //   .whileTrue(new RepeatCommand(Commands.runOnce(() -> s_Cannon.setCannonAngleSides(cannonFacing(), 30)))
+    //     .andThen(Commands.runOnce(() -> s_Claw.flipRotoClawtake()))
+    //     .ignoringDisable(true))
+    //   .whileFalse(new RepeatCommand(Commands.runOnce(() -> s_Cannon.setCannonAngleSides(cannonFacing(), 150))
+    //     .andThen(Commands.runOnce(() -> s_Claw.prepareForGamePiece(gamePieceOrientationChooser.getSelected()))))
+    //     .ignoringDisable(true));
+
+    new Trigger(() -> robotFacing() != FacingPOI.NOTHING)
+      .onTrue(Commands.either(
+        Commands.runOnce(() -> s_Cannon.setCannonAngleSides(cannonFacing(), 30)).unless(xBox.rightTrigger()) // towards community
+        .andThen(Commands.runOnce(() -> s_Claw.flipRotoClawtake()))
+        .ignoringDisable(true),
+        Commands.runOnce(() -> s_Cannon.setCannonAngleSides(cannonFacing(), 150)).unless(xBox.rightTrigger()) // towards pickup
+        .andThen(Commands.runOnce(() -> s_Claw.prepareForGamePiece(gamePieceOrientationChooser.getSelected())))
+        .ignoringDisable(true), 
+        s_Claw::haveGamePiece));
+
     // xBox.a().onTrue(new
     // ProxyCommand(()->autoBuilder.followPathGroup(autoPathGroupOnTheFly()))
     // .beforeStarting(new
     // InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
-
+    //
     // xBox.x().onTrue(new
     // ProxyCommand(()->autoBuilder.followPathGroup(goToNearestGoal()))
     // .beforeStarting(new
     // InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
-
+    //
     // xBox.y().onTrue(new InstantCommand(s_Claw::openClaw)
     // .andThen(null)
     // .alongWith(null)
@@ -353,11 +383,70 @@ public class RobotContainer {
     return PGOTF;
   }
 
+  public NodeGrid getNodeGrid() {
+    String ntString = gridChooser.getEntry().getString("");
+    
+    if (currentNodeGrid.widgetName.equals(ntString)) {
+      return currentNodeGrid;
+    }
+
+    for (NodeGrid thingGrid : NodeGrid.values()) {
+      if (thingGrid.widgetName.equals(ntString)) {
+        currentNodeGrid = thingGrid;
+      }
+    }
+    return currentNodeGrid;
+  }
+
+  @Log
+  public double getYOffset() {
+    return NodePosition.getNodePosition(nodeGroupChooser.getSelected(), getNodeGrid()).getYCoord();
+  }
+
+  public FacingPOI robotFacing() {
+    FacingPOI gyroFacing = FacingPOI.NOTHING;
+    if (Math.abs(MathUtil.inputModulus(s_SwerveDrive.getRobotAngle().getDegrees(), -180, 180))<80) // gyro facing community
+      gyroFacing = FacingPOI.COMMUNITY;
+    else if (Math.abs(MathUtil.inputModulus(s_SwerveDrive.getRobotAngle().getDegrees(), -180, 180))>100) // gyro facing HP
+      gyroFacing = FacingPOI.HUMAN_PLAYER;
+    return gyroFacing;
+  }
+  @Log
+  public String robotFacingString() {
+    return robotFacing().name();
+  }
+  @Log
+  public String cannonFacingString() {
+    return cannonFacing().name();
+  }
+  public FacingPOI cannonFacing() {
+    FacingPOI gyroFacing = robotFacing();
+    boolean cannonFacingGyroZero = s_Cannon.getCannonAngleEncoder() < 90;
+
+    if (gyroFacing == FacingPOI.NOTHING)
+      return FacingPOI.NOTHING;
+
+    if (gyroFacing == FacingPOI.COMMUNITY)
+      if (cannonFacingGyroZero)
+        return FacingPOI.COMMUNITY;
+      else
+        return FacingPOI.HUMAN_PLAYER;
+    else // gyro must be facing HP
+      if (cannonFacingGyroZero)
+        return FacingPOI.HUMAN_PLAYER;
+      else
+        return FacingPOI.COMMUNITY;
+  }
+
+  public enum FacingPOI {
+    COMMUNITY, HUMAN_PLAYER, NOTHING
+  }
+
   public enum GamePieceOrientation {
     RIGHT("|>", 90, GamePieceType.CONE),
     LEFT("<|", -90, GamePieceType.CONE),
     UPRIGHT("/\\", 0, GamePieceType.CONE),
-    CUBE("口", 0, GamePieceType.CUBE);
+    CUBE("口", 90, GamePieceType.CUBE);
 
     private String friendlyName;
     private double rotOrientationAngle;
@@ -428,6 +517,7 @@ public class RobotContainer {
   
     return armTestSetPoints.getSelected().getTestCannonAngle();
   }
+
 
 
 }
