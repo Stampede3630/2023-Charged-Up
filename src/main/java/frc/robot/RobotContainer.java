@@ -128,6 +128,8 @@ public class RobotContainer {
       nodeGroupChooser.addOption(group.name(), group);
     }
     nodeGroupChooser.setDefaultOption(NodeGroup.CENTER.name(), NodeGroup.CENTER);
+    nodeGridChooser.setDefaultOption(NodeGrid.MID_CENTER.name(), NodeGrid.MID_CENTER);
+
     Shuffleboard.getTab("nodeSelector")
         .add("orientation", gamePieceOrientationChooser)
         .withWidget(BuiltInWidgets.kComboBoxChooser);
