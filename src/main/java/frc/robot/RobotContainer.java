@@ -21,14 +21,12 @@ import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj.shuffleboard.SimpleWidget;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.RepeatCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -59,11 +57,7 @@ public class RobotContainer {
   private boolean isIntegratedSteering = true;
   SwerveAutoBuilder autoBuilder;
   ArrayList<PathPlannerTrajectory> autoPathGroup, leftPathGroup, rightPathGroup;
-  SendableChooser<GamePieceOrientation> gamePieceOrientationChooser = new SendableChooser<>();
-  SendableChooser<frc.robot.NodePosition.NodeGroup> nodeGroupChooser = new SendableChooser<>();
-  SendableChooser<NodeGrid> nodeGridChooser = new SendableChooser<>();
-  SimpleWidget gridChooser;
-  NodeGrid currentNodeGrid = NodeGrid.HIGH_CENTER;
+  
   // This is just an example event map. It would be better to have a constant,
   // global event map
   // in your code that will be used by all path following commands.
@@ -73,6 +67,9 @@ public class RobotContainer {
 
   SendableChooser<NodeDriverStation> nodeDriverStation = new SendableChooser<>();
   SendableChooser<ArmTestSetPoints> armTestSetPoints = new SendableChooser<>();
+  SendableChooser<GamePieceOrientation> gamePieceOrientationChooser = new SendableChooser<>();
+  SendableChooser<frc.robot.NodePosition.NodeGroup> nodeGroupChooser = new SendableChooser<>();
+  SendableChooser<NodeGrid> nodeGridChooser = new SendableChooser<>();
 
   @Log
   private final SwerveDrive s_SwerveDrive = new SwerveDrive();
@@ -147,9 +144,10 @@ public class RobotContainer {
       .add("Node Group Chooser", nodeGroupChooser)
       .withWidget(BuiltInWidgets.kComboBoxChooser);
       
-    gridChooser = Shuffleboard.getTab("nodeSelector")
-      .add("Node Grid Chooser", "")
-      .withWidget("PathSelector");
+    Shuffleboard.getTab("nodeSelector")
+      .add("Node Grid Chooser", nodeGridChooser)
+      .withWidget("GridChooserWidget");
+
     HashMap<String, Command> eventMap = new HashMap<>();
     eventMap.put("1stBallPickup", new WaitCommand(2));
     eventMap.put("2ndBallPickup", new WaitCommand(2));
@@ -384,24 +382,9 @@ public class RobotContainer {
     return PGOTF;
   }
 
-  public NodeGrid getNodeGrid() {
-    String ntString = gridChooser.getEntry().getString("");
-    
-    if (currentNodeGrid.widgetName.equals(ntString)) {
-      return currentNodeGrid;
-    }
-
-    for (NodeGrid thingGrid : NodeGrid.values()) {
-      if (thingGrid.widgetName.equals(ntString)) {
-        currentNodeGrid = thingGrid;
-      }
-    }
-    return currentNodeGrid;
-  }
-
   @Log
   public double getYOffset() {
-    return NodePosition.getNodePosition(nodeGroupChooser.getSelected(), getNodeGrid()).getYCoord();
+    return NodePosition.getNodePosition(nodeGroupChooser.getSelected(), nodeGridChooser.getSelected()).getYCoord();
   }
 
   public FacingPOI robotFacing() {
@@ -412,14 +395,17 @@ public class RobotContainer {
       gyroFacing = FacingPOI.HUMAN_PLAYER;
     return gyroFacing;
   }
+
   @Log
   public String robotFacingString() {
     return robotFacing().toString();
   }
+
   @Log
   public String cannonFacingString() {
     return cannonFacing().toString();
   }
+
   public FacingPOI cannonFacing() {
     FacingPOI gyroFacing = robotFacing();
     boolean cannonFacingGyroZero = s_Cannon.getCannonAngleEncoder() < 90;
@@ -518,7 +504,5 @@ public class RobotContainer {
   
     return armTestSetPoints.getSelected().getTestCannonAngle();
   }
-
-
 
 }
