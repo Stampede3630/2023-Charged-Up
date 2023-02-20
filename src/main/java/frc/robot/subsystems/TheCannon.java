@@ -205,11 +205,15 @@ new ArmFeedforward(
     cannonRotation = input;
   }
 
-  public void setCannonAngleSides(FacingPOI facing, double angle) {
-    if (facing == FacingPOI.COMMUNITY)
-      setCannonAngle(angle);
-    else if (facing == FacingPOI.HUMAN_PLAYER)
-      setCannonAngle(180-angle);
+  public double setCannonAngleSides(FacingPOI robotFacing, double angle) {
+    double angleToSet = cannonRotation; // no change
+    if (robotFacing == FacingPOI.COMMUNITY)
+      angleToSet = 180-angle;
+    else if (robotFacing == FacingPOI.HUMAN_PLAYER)
+      angleToSet = angle;
+
+    setCannonAngle(angleToSet);
+    return angleToSet;
   }
 
   public double getRevReferenceAngleSetpoint() {

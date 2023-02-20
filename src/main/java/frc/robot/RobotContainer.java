@@ -293,13 +293,14 @@ public class RobotContainer {
 
     new Trigger(() -> robotFacing() != FacingPOI.NOTHING)
       .onTrue(Commands.either(
-        Commands.runOnce(() -> s_Cannon.setCannonAngleSides(cannonFacing(), 30)).unless(xBox.rightTrigger()) // towards community
-        .andThen(Commands.runOnce(() -> s_Claw.flipRotoClawtake()))
+        Commands.runOnce(() -> s_Claw.faceCommunitySides(s_Cannon.setCannonAngleSides(robotFacing(), 150)))
+        .unless(xBox.rightTrigger(.75))  //towards community
         .ignoringDisable(true),
-        Commands.runOnce(() -> s_Cannon.setCannonAngleSides(cannonFacing(), 150)).unless(xBox.rightTrigger()) // towards pickup
+        Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), 30)).unless(xBox.rightTrigger(.75)) // towards pickup
         .andThen(Commands.runOnce(() -> s_Claw.prepareForGamePiece(gamePieceOrientationChooser.getSelected())))
         .ignoringDisable(true), 
         s_Claw::haveGamePiece));
+
 
     // xBox.a().onTrue(new
     // ProxyCommand(()->autoBuilder.followPathGroup(autoPathGroupOnTheFly()))
@@ -405,19 +406,19 @@ public class RobotContainer {
 
   public FacingPOI robotFacing() {
     FacingPOI gyroFacing = FacingPOI.NOTHING;
-    if (Math.abs(MathUtil.inputModulus(s_SwerveDrive.getRobotAngle().getDegrees(), -180, 180))<80) // gyro facing community
+    if (Math.abs(MathUtil.inputModulus(s_SwerveDrive.getRobotAngle().getDegrees(), -180, 180))<50) // gyro facing community
       gyroFacing = FacingPOI.COMMUNITY;
-    else if (Math.abs(MathUtil.inputModulus(s_SwerveDrive.getRobotAngle().getDegrees(), -180, 180))>100) // gyro facing HP
+    else if (Math.abs(MathUtil.inputModulus(s_SwerveDrive.getRobotAngle().getDegrees(), -180, 180))>130) // gyro facing HP
       gyroFacing = FacingPOI.HUMAN_PLAYER;
     return gyroFacing;
   }
   @Log
   public String robotFacingString() {
-    return robotFacing().name();
+    return robotFacing().toString();
   }
   @Log
   public String cannonFacingString() {
-    return cannonFacing().name();
+    return cannonFacing().toString();
   }
   public FacingPOI cannonFacing() {
     FacingPOI gyroFacing = robotFacing();

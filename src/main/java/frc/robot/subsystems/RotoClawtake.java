@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.RobotContainer.FacingPOI;
 import frc.robot.RobotContainer.GamePieceOrientation;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Config;
@@ -121,6 +122,12 @@ public class RotoClawtake extends SubsystemBase implements Loggable {
     setRotoAngle((getRotoAngle() + 180) % 360);
   }
 
+  public void faceCommunitySides(double cannonSetPoint) {
+    if (cannonSetPoint < 90)
+      setRotoAngle(180);
+    else
+      setRotoAngle(0);
+  }
   @Log
   public double getRotoAngle() {
     return rotoRelativeEncoder.getPosition();
