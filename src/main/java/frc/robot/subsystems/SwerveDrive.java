@@ -8,6 +8,7 @@ package frc.robot.subsystems;
 import java.util.function.DoubleSupplier;
 
 import com.kauailabs.navx.frc.AHRS;
+
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
@@ -24,9 +25,15 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-import edu.wpi.first.wpilibj2.command.*;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.subsystems.swerve.QuadFalconSwerveDrive;
 import frc.robot.subsystems.swerve.SwerveConstants;
@@ -34,7 +41,6 @@ import frc.robot.subsystems.swerve.SwerveModule;
 import frc.robot.util.SimGyroSensorModel;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
-import edu.wpi.first.wpilibj.SPI;
 
 
 public class SwerveDrive extends SubsystemBase implements Loggable {
@@ -70,6 +76,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
     //NAVX gyro and sim setup
     gyro = new AHRS(SPI.Port.kMXP);
     gyro.reset(); 
+    gyro.setAngleAdjustment(90); //TODO: CHANGE THIS FOR FINAL BOT!!!!!!!!!!!!!!!
     simNavx = new SimGyroSensorModel();
 
     //SwerveDrive Setup
@@ -122,11 +129,8 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
 
     if (aprilTagDetected && limelightLatency() < 1.5) {
       m_odometry.addVisionMeasurement(visionPose, Timer.getFPGATimestamp() - limelightLatency());
-      updateOdometry();
-    } else {
-      updateOdometry();
     }
-
+    updateOdometry();
 
     m_driveTrain.checkAndSetSwerveCANStatus();
     drawRobotOnField(m_field);
@@ -177,8 +181,8 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
   public void updateRotationController(){
     if(holdHeadingEnabled){
       rotationControllerOutput = rotationController.calculate(
-                  Math.IEEEremainder(getRobotAngleDegrees(), 360),
-                  new State(holdHeadingAngle, 0.0))/-Units.radiansToDegrees(SwerveConstants.MAX_SPEED_RADIANSperSECOND);
+          Math.IEEEremainder(getRobotAngleDegrees(), 360),
+          new State(holdHeadingAngle, 0.0))/-Units.radiansToDegrees(SwerveConstants.MAX_SPEED_RADIANSperSECOND);
     }
   }
 
@@ -333,9 +337,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
       x = 8.2425 - myArray[0];
       y = 4.0515 + myArray[1];
       rot = myArray[5];
-
     }
-    
 
     return new Pose2d(x, y, Rotation2d.fromDegrees(rot));
 
