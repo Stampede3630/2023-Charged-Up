@@ -28,14 +28,14 @@ public class RotoClawtake extends SubsystemBase implements Loggable {
   public double rotoMeasure;
   public double rotoSetPoint = 0;
 
-  public double clawSqueezeSpeed = 0.1;
+  public double clawSqueezeSpeed = 0.4;
   private boolean haveGamePiece = false;
 
   public Compressor compressor = new Compressor(1, PneumaticsModuleType.REVPH);
   public DoubleSolenoid clawSolenoid = new DoubleSolenoid(PneumaticsModuleType.REVPH, 6, 7);
-  public CANSparkMax clawTakeMotor = new CANSparkMax(14, MotorType.kBrushless);
+  public CANSparkMax clawTakeMotor = new CANSparkMax(19, MotorType.kBrushless);
   public CANSparkMax rotoMotor = new CANSparkMax(13, MotorType.kBrushless);
-  public CANSparkMax clawMotor = new CANSparkMax(19, MotorType.kBrushless);
+  public CANSparkMax clawMotor = new CANSparkMax(14, MotorType.kBrushless);
 
   public RelativeEncoder rotoRelativeEncoder = rotoMotor.getEncoder();
   public RelativeEncoder clawRelativeEncoder = clawMotor.getEncoder();
@@ -52,6 +52,8 @@ public class RotoClawtake extends SubsystemBase implements Loggable {
   public RotoClawtake() {
 
     rotoMotor.setIdleMode(IdleMode.kBrake);
+    clawMotor.setIdleMode(IdleMode.kBrake);
+    clawTakeMotor.setIdleMode(IdleMode.kCoast);
 
     rotoMotor.clearFaults();
 
@@ -88,7 +90,10 @@ public class RotoClawtake extends SubsystemBase implements Loggable {
 
   public void stopClawTake() {
     clawTakeMotor.set(0);
-    rotoMotor.set(0);
+    
+  }
+
+  public void stopClawMotor(){
     clawMotor.set(0);
   }
 

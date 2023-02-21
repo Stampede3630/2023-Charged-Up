@@ -76,7 +76,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
     //NAVX gyro and sim setup
     gyro = new AHRS(SPI.Port.kMXP);
     gyro.reset(); 
-    gyro.setAngleAdjustment(90); //TODO: CHANGE THIS FOR FINAL BOT!!!!!!!!!!!!!!!
+    gyro.setAngleAdjustment(0); //TODO: CHANGE THIS FOR FINAL BOT!!!!!!!!!!!!!!!
     simNavx = new SimGyroSensorModel();
 
     //SwerveDrive Setup
@@ -165,7 +165,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
           new Translation2d(
             convertToMetersPerSecond(x)*joystickDriveGovernor,
             convertToMetersPerSecond(y)*joystickDriveGovernor), 
-          convertToRadiansPerSecond(rot)* joystickDriveGovernor, 
+          -convertToRadiansPerSecond(rot)* joystickDriveGovernor, 
           Preferences.getBoolean("pFieldRelative", Constants.fieldRelative));
         }, this);
   }
