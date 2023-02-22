@@ -93,12 +93,14 @@ public class RobotContainer {
   
   private DoubleSubscriber ySubscriber;
   private GamePieceType prev;
+  NetworkTableInstance inst = NetworkTableInstance.getDefault();
   
-
+  
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
    */
   public RobotContainer() {
+
 
     for (ArmTestSetPoints setPoint : ArmTestSetPoints.values()) {
       armTestSetPoints.addOption(setPoint.testPointName, setPoint);
@@ -542,7 +544,6 @@ public class RobotContainer {
   }
 
   public void listenForOrientationChange(){
-    NetworkTableInstance inst = NetworkTableInstance.getDefault();
 
     NetworkTable datatable = inst.getTable("GamePieceOrientationChooser");
     
