@@ -143,6 +143,11 @@ new ArmFeedforward(
     return Math.abs(cannonRotation - getCannonAngleEncoder()) < 10.0 ? true:false; 
   }
 
+  @Log
+  public boolean extensionErrorWithinRange(){
+    return Math.abs(extensionInches - getExtensionEncoder()) < 5.0 ? true:false;
+  }
+
   // public void stowMode() {
   //   cannonRotLead.set(0);
   //   cannonExtension.set(0);
