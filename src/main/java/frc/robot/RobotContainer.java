@@ -296,7 +296,10 @@ public class RobotContainer {
           .alongWith(Commands.runOnce(s_Claw::closeClaw)))
         .onFalse((new InstantCommand(s_Claw::stopClawTake)));
     xBox.leftTrigger(.55).debounce(.1, DebounceType.kFalling)
-        .onTrue(new InstantCommand(s_Claw::openClaw))
+        .onTrue(new InstantCommand(s_Claw::openClaw)
+          .alongWith(Commands.run(s_Claw::reverseClawtake))
+          .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(5.0)))
+          .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngleSides(robotFacing(), 150))))
         .onFalse(new InstantCommand(s_Claw::stopClawTake));
     xBox.rightBumper().debounce(.1, DebounceType.kFalling)
         .onTrue(new InstantCommand(s_Claw::openClaw).andThen(new PrintCommand("Right Bumper")))
