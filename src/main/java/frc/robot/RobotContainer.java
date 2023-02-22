@@ -6,6 +6,7 @@ package frc.robot;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 import com.pathplanner.lib.PathConstraints;
 import com.pathplanner.lib.PathPlanner;
@@ -16,6 +17,9 @@ import com.pathplanner.lib.auto.SwerveAutoBuilder;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Preferences;
@@ -27,12 +31,15 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
+import edu.wpi.first.wpilibj2.command.ProxyCommand;
 import edu.wpi.first.wpilibj2.command.RepeatCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.NodePosition.NodeGrid;
 import frc.robot.NodePosition.NodeGroup;
+import frc.robot.subsystems.LEDs;
 import frc.robot.subsystems.RotoClawtake;
 import frc.robot.subsystems.SwerveDrive;
 import frc.robot.subsystems.TheCannon;
@@ -78,6 +85,8 @@ public class RobotContainer {
   private final RotoClawtake s_Claw = new RotoClawtake();
 
   private final TheCannon s_Cannon = new TheCannon();
+
+  private final LEDs s_LEDs = new LEDs();
 
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -129,6 +138,9 @@ public class RobotContainer {
       nodeGroupChooser.addOption(group.name(), group);
     }
     nodeGroupChooser.setDefaultOption(NodeGroup.CENTER.name(), NodeGroup.CENTER);
+    for (NodeGrid child : NodeGrid.values()) {
+      nodeGridChooser.addOption(child.name(), child);
+    }
     nodeGridChooser.setDefaultOption(NodeGrid.MID_CENTER.name(), NodeGrid.MID_CENTER);
 
     Shuffleboard.getTab("nodeSelector")
@@ -149,7 +161,11 @@ public class RobotContainer {
       
     Shuffleboard.getTab("nodeSelector")
       .add("Node Grid Chooser", nodeGridChooser)
-      .withWidget("GridChooserWidget");
+      .withWidget("GridChooserWidget")
+      .withProperties(Map.of("Cone Image","C:\\Users\\Mustangs\\Documents\\evanArtwork\\cone.png",
+      "Cube Image","C:\\Users\\Mustangs\\Documents\\evanArtwork\\cube.png",
+      "Hybrid Image","C:\\Users\\Mustangs\\Documents\\evanArtwork\\hybrid.png",
+      "R", 1));
 
     HashMap<String, Command> eventMap = new HashMap<>();
     eventMap.put("1stBallPickup", new WaitCommand(2));
@@ -213,6 +229,10 @@ public class RobotContainer {
      * Trigger runs WHILETRUE for coast mode. Coast Mode method
      * is written to wait for slow speeds before setting to coast
      */
+    // new Trigger(()-> s_Claw.heldGamePiece == GamePieceType.CONE)
+    //   .onTrue(s_LEDs::becomeYellow)
+    //   .onFalse(s_LEDs::becomeRainbow);
+
     new Trigger(DriverStation::isDisabled)
         .whileTrue(s_SwerveDrive.setToCoast()
             .ignoringDisable(true)
@@ -261,19 +281,24 @@ public class RobotContainer {
         .whileTrue(new RepeatCommand(new InstantCommand(s_Cannon::manExtend, s_Cannon)));
     xBox.povLeft()
         .whileTrue(new RepeatCommand(new InstantCommand(s_Cannon::manRetract, s_Cannon)));
-    xBox.rightTrigger(.55).debounce(.1)
+    xBox.rightTrigger(.55).debounce(.1, DebounceType.kFalling)
         .onTrue(new InstantCommand(s_Claw::runClawtake)
-          .alongWith(Commands.runOnce(() -> s_Cannon.setCannonAngleSides(cannonFacing(), -15))))
-        .onFalse((new InstantCommand(s_Claw::stopClawTake).unless(xBox.leftTrigger(.5))));
-    xBox.leftTrigger(.55).debounce(.1)
-        .onTrue(new InstantCommand(s_Claw::reverseClawtake))
-        .onFalse(new InstantCommand(s_Claw::stopClawTake).unless(xBox.rightTrigger(.5)));
-    xBox.b().debounce(.1)
+          .alongWith(Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), 0)))
+          .alongWith(Commands.runOnce(s_Claw::closeClaw)))
+        .onFalse((new InstantCommand(s_Claw::stopClawTake)));
+    xBox.leftTrigger(.55).debounce(.1, DebounceType.kFalling)
+        .onTrue(new InstantCommand(s_Claw::openClaw))
+        .onFalse(new InstantCommand(s_Claw::stopClawTake));
+    xBox.rightBumper().debounce(.1, DebounceType.kFalling)
         .onTrue(new InstantCommand(s_Claw::openClaw).andThen(new PrintCommand("Right Bumper")))
-        .onFalse(new InstantCommand(s_Claw::stopClawMotor).unless(xBox.leftBumper()));
-    xBox.a().debounce(.1)
+        .onFalse(new InstantCommand(s_Claw::stopClawMotor));
+    xBox.leftBumper().debounce(.1, DebounceType.kFalling)
         .onTrue(new InstantCommand(s_Claw::closeClaw).andThen(new PrintCommand("Left Bumper")))
-        .onFalse(new InstantCommand(s_Claw::stopClawMotor).unless(xBox.rightBumper()));
+        .onFalse(new InstantCommand(s_Claw::stopClawMotor));
+
+    new Trigger(s_Claw::haveGamePiece)
+      .onTrue(Commands.runOnce(s_Claw::closeClaw)
+        .andThen(()-> s_Cannon.setCannonAngleSides(robotFacing(), 140)));
     // xBox.a().debounce(.1)
     //     .onTrue(new InstantCommand(s_Claw::rotoClaw))
     //     .onFalse(new InstantCommand(s_Claw::stopClawTake));
@@ -282,11 +307,11 @@ public class RobotContainer {
     //     .onFalse(new InstantCommand(s_Claw::stopClawTake));
     // xBox.x().debounce(.1)
     //   .onTrue(Commands.runOnce(s_Claw::flipRotoClawtake).andThen(new PrintCommand("flipclawtake")));
-    // xBox.y()
-    //     .onTrue((Commands.runOnce(()-> s_Cannon.setCannonAngle(armTestSetPoints.getSelected().getTestCannonAngle())))
-    //     .andThen(new SequentialCommandGroup(Commands.waitUntil(s_Cannon::errorWithinRange)),
-    //       Commands.runOnce(()-> s_Cannon.setExtensionInches(armTestSetPoints.getSelected().getTestCannonExtension()))));
-
+    xBox.y()
+        .onTrue((Commands.runOnce(()-> s_Cannon.setCannonAngle(NodePosition.getNodePosition(nodeGroupChooser.getSelected(), nodeGridChooser.getSelected()).getCannonAngle())))
+        .andThen(new SequentialCommandGroup(Commands.waitUntil(s_Cannon::errorWithinRange)),
+          Commands.runOnce(()-> s_Cannon.setExtensionInches(NodePosition.getNodePosition(nodeGroupChooser.getSelected(), nodeGridChooser.getSelected()).getExtension()))));
+    
     // new Trigger(s_Claw::haveGamePiece)
     //   .whileTrue(new RepeatCommand(Commands.runOnce(() -> s_Cannon.setCannonAngleSides(cannonFacing(), 30)))
     //     .andThen(Commands.runOnce(() -> s_Claw.flipRotoClawtake()))
@@ -297,19 +322,16 @@ public class RobotContainer {
 
     new Trigger(() -> robotFacing() != FacingPOI.NOTHING)
       .onTrue(Commands.either(
-        Commands.runOnce(() -> s_Claw.faceCommunitySides(s_Cannon.setCannonAngleSides(robotFacing(), 150)))
-        .unless(xBox.rightTrigger(.75))  //towards community
-        .ignoringDisable(true),
-        Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), 30)).unless(xBox.rightTrigger(.75)) // towards pickup
-        .andThen(Commands.runOnce(() -> s_Claw.prepareForGamePiece(gamePieceOrientationChooser.getSelected())))
-        .ignoringDisable(true), 
+        Commands.runOnce(() -> s_Claw.faceCommunitySides(s_Cannon.setCannonAngleSides(robotFacing(), 140)))
+        .unless(xBox.rightTrigger(.5)),
+        Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), 40)).unless(xBox.rightTrigger(.5)) // towards pickup
+        .andThen(Commands.runOnce(() -> s_Claw.prepareForGamePiece(gamePieceOrientationChooser.getSelected()))), 
         s_Claw::haveGamePiece));
-
-
-    // xBox.a().onTrue(new
-    // ProxyCommand(()->autoBuilder.followPathGroup(autoPathGroupOnTheFly()))
-    // .beforeStarting(new
-    // InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
+  
+    xBox.a().onTrue(new
+    ProxyCommand(()->autoBuilder.followPathGroup(autoPathGroupOnTheFly()))
+    .beforeStarting(new
+    InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
     //
     // xBox.x().onTrue(new
     // ProxyCommand(()->autoBuilder.followPathGroup(goToNearestGoal()))
@@ -338,9 +360,10 @@ public class RobotContainer {
         PathPlanner.generatePath(
             new PathConstraints(4, 3),
             new PathPoint(s_SwerveDrive.getOdometryPose().getTranslation(), s_SwerveDrive.getRobotAngle()),
-            new PathPoint(autoPathGroup.get(0).getInitialHolonomicPose().getTranslation(),
-                autoPathGroup.get(0).getInitialPose().getRotation(),
-                autoPathGroup.get(0).getInitialHolonomicPose().getRotation())));
+            new PathPoint(new Translation2d(Units.inchesToMeters(nodeGroupChooser.getSelected().xCoord), 
+              Units.inchesToMeters(nodeGroupChooser.getSelected().yCoord) + Units.inchesToMeters(getYOffset())), 
+              new Rotation2d(0), 
+              new Rotation2d(robotFacing() == FacingPOI.COMMUNITY ? 0:180))));
 
     return PGOTF;
   }

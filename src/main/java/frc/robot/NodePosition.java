@@ -7,6 +7,7 @@ public class NodePosition {
     private final double xCoord;
     private final double yCoord;
     private final double extension;
+    private final double cannonAngle;
 
     public double getXCoord() {
         return xCoord;
@@ -17,20 +18,26 @@ public class NodePosition {
     public double getExtension() {
         return extension;
     }
-    private NodePosition(double xCoord, double yCoord, double extension) {
+    public double getCannonAngle(){
+      return cannonAngle;
+
+    }
+
+    private NodePosition(double xCoord, double yCoord, double extension, double cannonAngle) {
       this.xCoord = xCoord;
       this.yCoord = yCoord;
       this.extension = extension;
+      this.cannonAngle = cannonAngle;
     }
     public enum NodeGroup{
 
-      LEFT(0,42.19),
-      CENTER(0,66+42.19),
-      RIGHT(0,132+42.19),
+      LEFT(68.50394,42.19),
+      CENTER(68.50394,66+42.19),
+      RIGHT(68.50394,132+42.19),
 
-      DOUBLE_SUBSTATION(3, 3),
-      SINGLE_SUBSTATION(4, 4),
-      GROUND_PICKUP(5, 5);
+      DOUBLE_SUBSTATION(625.9843, 289.7638),
+      SINGLE_SUBSTATION(541.73228, 301.1811),
+      GROUND_PICKUP(0, 0);
 
       public final double xCoord;
       public final double yCoord;
@@ -52,34 +59,36 @@ public class NodePosition {
     * R 132 + 42.19
     */
     public enum NodeGrid {
-      LOW_LEFT(0, -22, 0, "leftLow"),
-      LOW_CENTER(0, 0, 0, "midLow"),
-      LOW_RIGHT(0, 22, 0,"rightLow"),
+      LOW_LEFT(0, -22, 0, "leftLow", 0),
+      LOW_CENTER(0, 0, 0, "midLow", 0),
+      LOW_RIGHT(0, 22, 0,"rightLow", 0),
   
-      MID_LEFT(45-27, -22, 0, "leftMid"),
-      MID_CENTER(45-27, 0, 0, "midMid"),
-      MID_RIGHT(45-27, 22, 0,"rightMid"),
+      MID_LEFT(45-27, -22, 0, "leftMid", 40),
+      MID_CENTER(45-27, 0, 0, "midMid", 40),
+      MID_RIGHT(45-27, 22, 0,"rightMid", 40),
   
   
-      HIGH_LEFT(60-27, -22, 0, "leftHigh"),
-      HIGH_CENTER(60-27, 0, 0, "midHigh"),
-      HIGH_RIGHT(60-27, 22, 0, "rightHigh");
+      HIGH_LEFT(60-27, -22, 0, "leftHigh", 40),
+      HIGH_CENTER(60-27, 0, 0, "midHigh", 40),
+      HIGH_RIGHT(60-27, 22, 0, "rightHigh", 40);
       
   
       public final double extension;
       public final double xOffset;
       public final double yOffset;
       public final String widgetName;
-      private NodeGrid(double extension, double yOffset, double xOffset, String widgetName) {
+      public final double cannonAngle;
+      private NodeGrid(double extension, double yOffset, double xOffset, String widgetName, double cannonAngle) {
         this.extension = extension;
         this.xOffset = xOffset;
         this.yOffset = yOffset;
+        this.cannonAngle = cannonAngle;
         this.widgetName = widgetName;
       }
     }
 
   public static NodePosition getNodePosition(NodeGroup nodeGroup, NodeGrid nodeGrid) {
       double x = nodeGroup.xCoord + nodeGrid.xOffset + (DriverStation.getAlliance() == Alliance.Blue ? 99.86 : 0);
-      return new NodePosition(x, nodeGroup.yCoord + nodeGrid.yOffset, nodeGrid.extension);
+      return new NodePosition(x, nodeGroup.yCoord + nodeGrid.yOffset, nodeGrid.extension, nodeGrid.cannonAngle);
   }
 }
