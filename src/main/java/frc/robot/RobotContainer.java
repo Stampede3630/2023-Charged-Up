@@ -38,6 +38,7 @@ import edu.wpi.first.wpilibj2.command.ProxyCommand;
 import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.NodePosition.NodeGrid;
@@ -202,7 +203,7 @@ public class RobotContainer {
             xBox::getRightX).withName("DefaultDrive"));
 
     // // s_Cannon.setDefaultCommand(
-    // // new InstantCommand(s_Cannon::stowMode)
+    // // Commands.runOnce(s_Cannon::stowMode)
     // );
 
     // This will load the file "FullAuto.path" and generate it with a max velocity
@@ -269,12 +270,12 @@ public class RobotContainer {
                 .withName("StandardOperatorDrive"));
 
     // xBox.b()
-    //     .onTrue(new InstantCommand(() -> s_SwerveDrive.setHoldHeadingFlag(false)));
+    //     .onTrue(Commands.runOnce(() -> s_SwerveDrive.setHoldHeadingFlag(false)));
     
 
     // xBox.povCenter().negate().onTrue(
     // new SequentialCommandGroup(
-    // new InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(true)),
+    // Commands.runOnce(()->s_SwerveDrive.setHoldHeadingFlag(true)),
     // new
     // InstantCommand(()->s_SwerveDrive.setHoldHeadingAngle(-xBox.getHID().getPOV()
     // + 90))
@@ -287,41 +288,42 @@ public class RobotContainer {
     xBox.povDown()
         .whileTrue(new RepeatCommand(Commands.runOnce(s_Cannon::manRotDown)));
     xBox.povRight()
-        .whileTrue(new RepeatCommand(new InstantCommand(s_Cannon::manExtend, s_Cannon)));
+        .whileTrue(new RepeatCommand(Commands.runOnce(s_Cannon::manExtend, s_Cannon)));
     xBox.povLeft()
-        .whileTrue(new RepeatCommand(new InstantCommand(s_Cannon::manRetract, s_Cannon)));
+        .whileTrue(new RepeatCommand(Commands.runOnce(s_Cannon::manRetract, s_Cannon)));
     xBox.rightTrigger(.55).debounce(.1, DebounceType.kFalling)
-        .onTrue(new InstantCommand(s_Claw::runClawtake)
-          .alongWith(Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), 0)))
+        .onTrue(Commands.runOnce(s_Claw::runClawtake)
+          .alongWith(Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), -10)))
           .alongWith(Commands.runOnce(s_Claw::closeClaw)))
-        .onFalse((new InstantCommand(s_Claw::stopClawTake)));
+        .onFalse((Commands.runOnce(s_Claw::stopClawTake)));
     xBox.leftTrigger(.55).debounce(.1, DebounceType.kFalling)
-        .onTrue(new InstantCommand(s_Claw::openClaw)
-          .alongWith(Commands.run(s_Claw::reverseClawtake))
-          .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(5.0)))
-          .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngleSides(robotFacing(), 150))))
-        .onFalse(new InstantCommand(s_Claw::stopClawTake));
+        .onTrue(Commands.runOnce(s_Claw::openClaw)
+          .alongWith(Commands.runOnce(s_Claw::reverseClawtake)))
+        .onFalse(Commands.runOnce(s_Claw::stopClawTake)
+          .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(5.0))
+          .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange)
+          .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngleSides(robotFacing(), 150))))));
     xBox.rightBumper().debounce(.1, DebounceType.kFalling)
-        .onTrue(new InstantCommand(s_Claw::openClaw).andThen(new PrintCommand("Right Bumper")))
-        .onFalse(new InstantCommand(s_Claw::stopClawMotor));
+        .onTrue(Commands.runOnce(s_Claw::openClaw).andThen(new PrintCommand("Right Bumper")))
+        .onFalse(Commands.runOnce(s_Claw::stopClawMotor));
     xBox.leftBumper().debounce(.1, DebounceType.kFalling)
-        .onTrue(new InstantCommand(s_Claw::closeClaw).andThen(new PrintCommand("Left Bumper")))
-        .onFalse(new InstantCommand(s_Claw::stopClawMotor));
+        .onTrue(Commands.runOnce(s_Claw::closeClaw).andThen(new PrintCommand("Left Bumper")))
+        .onFalse(Commands.runOnce(s_Claw::stopClawMotor));
 
     new Trigger(s_Claw::haveGamePiece)
       .onTrue(Commands.runOnce(s_Claw::closeClaw)
         .andThen(()-> s_Cannon.setCannonAngleSides(robotFacing(), 140)));
     // xBox.a().debounce(.1)
-    //     .onTrue(new InstantCommand(s_Claw::rotoClaw))
-    //     .onFalse(new InstantCommand(s_Claw::stopClawTake));
+    //     .onTrue(Commands.runOnce(s_Claw::rotoClaw))
+    //     .onFalse(Commands.runOnce(s_Claw::stopClawTake));
     // xBox.x().debounce(.1)
-    //     .onTrue(new InstantCommand(s_Claw::rotoClawReverse))
-    //     .onFalse(new InstantCommand(s_Claw::stopClawTake));
+    //     .onTrue(Commands.runOnce(s_Claw::rotoClawReverse))
+    //     .onFalse(Commands.runOnce(s_Claw::stopClawTake));
     // xBox.x().debounce(.1)
     //   .onTrue(Commands.runOnce(s_Claw::flipRotoClawtake).andThen(new PrintCommand("flipclawtake")));
     xBox.y()
         .onTrue((Commands.runOnce(()-> s_Cannon.setCannonAngle(NodePosition.getNodePosition(nodeGroupChooser.getSelected(), nodeGridChooser.getSelected()).getCannonAngle())))
-        .andThen(new SequentialCommandGroup(Commands.waitUntil(s_Cannon::errorWithinRange)),
+        .andThen(new SequentialCommandGroup(Commands.waitUntil(s_Cannon::cannonErrorWithinRange)),
           Commands.runOnce(()-> s_Cannon.setExtensionInches(NodePosition.getNodePosition(nodeGroupChooser.getSelected(), nodeGridChooser.getSelected()).getExtension()))));
     
     // new Trigger(s_Claw::haveGamePiece)
@@ -350,7 +352,7 @@ public class RobotContainer {
     // .beforeStarting(new
     // InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
     //
-    // xBox.y().onTrue(new InstantCommand(s_Claw::openClaw)
+    // xBox.y().onTrue(Commands.runOnce(s_Claw::openClaw)
     // .andThen(null)
     // .alongWith(null)
     // .until(null));

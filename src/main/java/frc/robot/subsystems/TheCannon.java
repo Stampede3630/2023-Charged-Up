@@ -139,7 +139,7 @@ new ArmFeedforward(
   }
 
   @Log
-  public boolean errorWithinRange (){
+  public boolean cannonErrorWithinRange (){
     return Math.abs(cannonRotation - getCannonAngleEncoder()) < 10.0 ? true:false; 
   }
 

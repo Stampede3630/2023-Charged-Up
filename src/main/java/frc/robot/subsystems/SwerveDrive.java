@@ -48,7 +48,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
   QuadFalconSwerveDrive m_driveTrain;
   Pose2d prevRobotPose = new Pose2d();
   Pose2d robotPose = new Pose2d();
-  Pose2d visionPose = new Pose2d();
+  Pose2d visionPoseFront = new Pose2d();
   double deltaTime = 0;
   double prevTime = 0;
   AHRS gyro;
@@ -61,7 +61,8 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
   ProfiledPIDController rotationController;
   double rotationControllerOutput;
 
-  boolean aprilTagDetected = false;
+  boolean aprilTagDetectedFront = false;
+  boolean aprilTagDetectedBack = false;
 
   @Log
   public Field2d m_field;
@@ -121,17 +122,19 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
       simNavx.update(robotPose, prevRobotPose, deltaTime);
     }
 
-    aprilTagDetected = (NetworkTableInstance.getDefault().getTable("limelight").getEntry("tv").getDouble(0) == 1) ? true : false;
-
+    aprilTagDetectedFront = (NetworkTableInstance.getDefault().getTable("limelight-front").getEntry("tv").getDouble(0) == 1) ? true : false;
+    aprilTagDetectedBack = (NetworkTableInstance.getDefault().getTable("limelight-back").getEntry("tv").getDouble(0) == 1) ? true : false;
     // System.out.println(aprilTagDetected);
 
     robotPose = updateOdometry();
-    visionPose = limelightBotPose();
 
-    if (aprilTagDetected && limelightLatency() < 1.5) {
-      m_odometry.addVisionMeasurement(visionPose, Timer.getFPGATimestamp() - limelightLatency());
+    if (aprilTagDetectedFront && limelightLatencyFront() < 1.5) {
+      m_odometry.addVisionMeasurement(limelightBotPoseFront(), Timer.getFPGATimestamp() - limelightLatencyFront());
     }
-    updateOdometry();
+
+    if(aprilTagDetectedBack && limelightLatencyBack() < 1.5) {
+      m_odometry.addVisionMeasurement(limelightBotPoseBack(), Timer.getFPGATimestamp() - limelightLatencyBack());
+    }
 
     m_driveTrain.checkAndSetSwerveCANStatus();
     drawRobotOnField(m_field);
@@ -325,7 +328,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
 
 
   
-  public Pose2d limelightBotPose(){
+  public Pose2d limelightBotPoseFront(){
 
     double myArray[] = {0, 0, 0, 0, 0, 0};
     
@@ -343,10 +346,38 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
     return new Pose2d(x, y, Rotation2d.fromDegrees(rot));
 
   }
+
+  public Pose2d limelightBotPoseBack(){
+
+    double myArray[] = {0, 0, 0, 0, 0, 0};
+    
+    myArray = NetworkTableInstance.getDefault().getTable("limelight").getEntry("botpose").getDoubleArray(myArray);
+
+    double x = 0;
+    double y = 0;
+    double rot = 0;
+    if (myArray.length > 0){
+      x = 8.2425 - myArray[0];
+      y = 4.0515 + myArray[1];
+      rot = myArray[5];
+    }
+
+    return new Pose2d(x, y, Rotation2d.fromDegrees(rot));
+
+  }
+
   @Log
-  public double limelightLatency(){
+  public double limelightLatencyFront(){
     double vLatency = 0;
-    vLatency = NetworkTableInstance.getDefault().getTable("limelight").getEntry("tl").getDouble(vLatency);
+    vLatency = NetworkTableInstance.getDefault().getTable("limelight-front").getEntry("tl").getDouble(vLatency);
+   
+    return (vLatency * 0.001) + (11 * 0.001);
+  }
+
+  @Log
+  public double limelightLatencyBack(){
+    double vLatency = 0;
+    vLatency = NetworkTableInstance.getDefault().getTable("limelight-back").getEntry("tl").getDouble(vLatency);
    
     return (vLatency * 0.001) + (11 * 0.001);
   }
