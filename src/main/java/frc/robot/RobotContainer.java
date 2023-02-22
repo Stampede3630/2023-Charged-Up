@@ -20,6 +20,9 @@ import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.DoubleSubscriber;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Preferences;
@@ -87,6 +90,10 @@ public class RobotContainer {
   private final TheCannon s_Cannon = new TheCannon();
 
   private final LEDs s_LEDs = new LEDs();
+  
+  private DoubleSubscriber ySubscriber;
+  private GamePieceType prev;
+  
 
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -532,6 +539,19 @@ public class RobotContainer {
   public double armTestSetPointsAngle(SendableChooser<ArmTestSetPoints> armTestSetPoints){
   
     return armTestSetPoints.getSelected().getTestCannonAngle();
+  }
+
+  public void listenForOrientationChange(){
+    NetworkTableInstance inst = NetworkTableInstance.getDefault();
+
+    NetworkTable datatable = inst.getTable("GamePieceOrientationChooser");
+    
+    ySubscriber = datatable.getDoubleTopic("Y").subscribe(0.0);
+
+    if (gamePieceOrientationChooser.getSelected().getGamePieceType() != prev) {
+      prev = gamePieceOrientationChooser.getSelected().getGamePieceType();
+      System.out.println("a thing happened");
+    }
   }
 
 }
