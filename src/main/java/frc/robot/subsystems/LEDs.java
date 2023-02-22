@@ -7,6 +7,7 @@ package frc.robot.subsystems;
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.RobotContainer.GamePieceType;
 
 public class LEDs extends SubsystemBase {
 
@@ -18,6 +19,13 @@ public class LEDs extends SubsystemBase {
 
   @Override
   public void periodic() {
+    // if (GamePieceType.CONE != null){
+    //   becomeYellow();
+    // } else if(GamePieceType.CUBE != null){
+    //   becomePurple();
+    // } else{
+    //   becomeRainbow();
+    // }
     // This method will be called once per scheduler run
   }
 

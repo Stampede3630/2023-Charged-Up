@@ -40,6 +40,7 @@ import frc.robot.subsystems.swerve.SwerveConstants;
 import frc.robot.subsystems.swerve.SwerveModule;
 import frc.robot.util.SimGyroSensorModel;
 import io.github.oblarg.oblog.Loggable;
+import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
 
 
@@ -350,6 +351,11 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
     return (vLatency * 0.001) + (11 * 0.001);
   }
 
+  @Config(defaultValueBoolean = false)
+  public void zeroOdometry(boolean input){
+    if(input){
+      m_odometry.resetPosition(new Rotation2d(), m_driveTrain.getModulePositions(), prevRobotPose);
+    }
+  }
   
-
 }

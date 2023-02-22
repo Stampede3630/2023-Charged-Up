@@ -1,0 +1,66 @@
+[
+  {
+    "name": "/Preferences/pFieldRelative",
+    "type": "boolean",
+    "value": true,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/pAccelInputs",
+    "type": "boolean",
+    "value": false,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/pDriveGovernor",
+    "type": "double",
+    "value": 1.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/pOptimizeSteering",
+    "type": "boolean",
+    "value": true,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/pKPRotationController",
+    "type": "double",
+    "value": 6.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/pKIRotationController",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/pKDRotationController",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/pIntSteering",
+    "type": "boolean",
+    "value": true,
+    "properties": {
+      "persistent": true
+    }
+  }
+]
