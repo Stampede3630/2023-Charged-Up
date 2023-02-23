@@ -56,9 +56,11 @@ new ArmFeedforward(
     cannonAbsolute.setInverted(false);
     cannonAbsolute.setPositionConversionFactor(360.0);
     cannonAbsolute.setVelocityConversionFactor(360.0);
-    cannonAbsolute.setZeroOffset(66.36);
+    cannonAbsolute.setZeroOffset(61.36);
 
     cannonExtension.setSmartCurrentLimit(70);
+    cannonRotLead.setSmartCurrentLimit(70);
+    cannonRotFollow.setSmartCurrentLimit(70);
     
     extensionEncoder.setPositionConversionFactor(1.802406002431152);
     

@@ -31,9 +31,9 @@ public class NodePosition {
     }
     public enum NodeGroup{
 
-      LEFT(68.50394,42.19),
-      CENTER(68.50394,66+42.19),
-      RIGHT(68.50394,132+42.19),
+      LEFT(80.50394,42.19),
+      CENTER(80.50394,66+42.19),
+      RIGHT(80.50394,132+42.19),
 
       DOUBLE_SUBSTATION(625.9843, 289.7638),
       SINGLE_SUBSTATION(541.73228, 301.1811),
@@ -59,18 +59,18 @@ public class NodePosition {
     * R 132 + 42.19
     */
     public enum NodeGrid {
-      LOW_LEFT(0, -22, 0, "leftLow", 0),
-      LOW_CENTER(0, 0, 0, "midLow", 0),
-      LOW_RIGHT(0, 22, 0,"rightLow", 0),
+      LOW_LEFT(0, -22, 0, "leftLow", 180),
+      LOW_CENTER(0, 0, 0, "midLow", 180),
+      LOW_RIGHT(0, 22, 0,"rightLow", 180),
   
-      MID_LEFT(45-27, -22, 0, "leftMid", 40),
-      MID_CENTER(45-27, 0, 0, "midMid", 40),
-      MID_RIGHT(45-27, 22, 0,"rightMid", 40),
+      MID_LEFT(45-27, -22, 0, "leftMid", 140),
+      MID_CENTER(45-27, 0, 0, "midMid", 140),
+      MID_RIGHT(45-27, 22, 0,"rightMid", 140),
   
   
-      HIGH_LEFT(60-27, -22, 0, "leftHigh", 40),
-      HIGH_CENTER(60-27, 0, 0, "midHigh", 40),
-      HIGH_RIGHT(60-27, 22, 0, "rightHigh", 40);
+      HIGH_LEFT(60-27, -22, 0, "leftHigh", 140),
+      HIGH_CENTER(60-27, 0, 0, "midHigh", 140),
+      HIGH_RIGHT(60-27, 22, 0, "rightHigh", 140);
       
   
       public final double extension;

@@ -293,9 +293,15 @@ public class RobotContainer {
         .whileTrue(new RepeatCommand(Commands.runOnce(s_Cannon::manRetract, s_Cannon)));
     xBox.rightTrigger(.55).debounce(.1, DebounceType.kFalling)
         .onTrue(Commands.runOnce(s_Claw::runClawtake)
-          .alongWith(Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), -10.0)))
+          .alongWith(Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), -14.0)))
           .alongWith(Commands.runOnce(s_Claw::closeClaw)))
-        .onFalse((Commands.runOnce(s_Claw::stopClawTake)));
+        .onFalse(Commands.runOnce(s_Claw::stopClawTake)
+          .andThen(Commands.either(
+            Commands.runOnce(() -> s_Claw.faceCommunitySides(s_Cannon.setCannonAngleSides(robotFacing(), 140)))
+            .unless(xBox.rightTrigger(.5)),
+            Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), 40)).unless(xBox.rightTrigger(.5)) // towards pickup
+            .andThen(Commands.runOnce(() -> s_Claw.prepareForGamePiece(gamePieceOrientationChooser.getSelected()))), 
+            s_Claw::haveGamePiece)));
     xBox.leftTrigger(.55).debounce(.1, DebounceType.kFalling)
         .onTrue(Commands.runOnce(s_Claw::openClaw)
           .alongWith(Commands.runOnce(s_Claw::reverseClawtake)))
@@ -322,7 +328,7 @@ public class RobotContainer {
     // xBox.x().debounce(.1)
     //   .onTrue(Commands.runOnce(s_Claw::flipRotoClawtake).andThen(new PrintCommand("flipclawtake")));
     xBox.y()
-        .onTrue((Commands.runOnce(()-> s_Cannon.setCannonAngle(NodePosition.getNodePosition(nodeGroupChooser.getSelected(), nodeGridChooser.getSelected()).getCannonAngle())))
+        .onTrue((Commands.runOnce(()-> s_Cannon.setCannonAngleSides(robotFacing(), NodePosition.getNodePosition(nodeGroupChooser.getSelected(), nodeGridChooser.getSelected()).getCannonAngle())))
         .andThen(new SequentialCommandGroup(Commands.waitUntil(s_Cannon::cannonErrorWithinRange)),
           Commands.runOnce(()-> s_Cannon.setExtensionInches(NodePosition.getNodePosition(nodeGroupChooser.getSelected(), nodeGridChooser.getSelected()).getExtension()))));
     
@@ -373,10 +379,10 @@ public class RobotContainer {
     PGOTF.add(0,
         PathPlanner.generatePath(
             new PathConstraints(4, 3),
-            new PathPoint(s_SwerveDrive.getOdometryPose().getTranslation(), s_SwerveDrive.getRobotAngle()),
+            new PathPoint(s_SwerveDrive.getOdometryPose().getTranslation(), s_SwerveDrive.getOdometryPose().getRotation()),
             new PathPoint(new Translation2d(Units.inchesToMeters(nodeGroupChooser.getSelected().xCoord), 
               Units.inchesToMeters(nodeGroupChooser.getSelected().yCoord) + Units.inchesToMeters(getYOffset())), 
-              new Rotation2d(0), 
+              new Rotation2d(robotFacing() == FacingPOI.COMMUNITY ? 0:180), 
               new Rotation2d(robotFacing() == FacingPOI.COMMUNITY ? 0:180))));
 
     return PGOTF;
