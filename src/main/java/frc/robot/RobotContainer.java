@@ -318,6 +318,7 @@ public class RobotContainer {
 
     new Trigger(s_Claw::haveGamePiece)
       .onTrue(Commands.runOnce(s_Claw::closeClaw)
+        .andThen(s_Claw::slowClawTake)
         .andThen(()-> s_Cannon.setCannonAngleSides(robotFacing(), 140)));
     // xBox.a().debounce(.1)
     //     .onTrue(Commands.runOnce(s_Claw::rotoClaw))
@@ -352,6 +353,14 @@ public class RobotContainer {
     ProxyCommand(()->autoBuilder.followPathGroup(autoPathGroupOnTheFly()))
     .beforeStarting(new
     InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
+
+    new Trigger(prev != GamePieceType.CUBE)
+      .onTrue(()-> s_Claw.setRotoAngle(getYOffset())
+      .unless(()-> s_Claw.haveGamePiece() == true)
+      .andThen(()->s_Claw.setRotoAngle(getYOffset())));
+      
+
+
     //
     // xBox.x().onTrue(new
     // ProxyCommand(()->autoBuilder.followPathGroup(goToNearestGoal()))
