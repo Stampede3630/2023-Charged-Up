@@ -31,7 +31,10 @@
         "x": 5.170257173254561,
         "y": 4.012477230422011
       },
-      "nextControl": null,
+      "nextControl": {
+        "x": 5.170257173254561,
+        "y": 5.85807290213733
+      },
       "holonomicAngle": 0.0,
       "isReversal": false,
       "velOverride": null,
@@ -41,6 +44,28 @@
         "names": [
           "\"Run Claw\""
         ],
+        "executionBehavior": "parallel",
+        "waitBehavior": "none",
+        "waitTime": 0
+      }
+    },
+    {
+      "anchorPoint": {
+        "x": 3.1352882634590906,
+        "y": 4.887729063714356
+      },
+      "prevControl": {
+        "x": 3.211361867563594,
+        "y": 5.42995618600422
+      },
+      "nextControl": null,
+      "holonomicAngle": 0,
+      "isReversal": false,
+      "velOverride": null,
+      "isLocked": false,
+      "isStopPoint": false,
+      "stopEvent": {
+        "names": [],
         "executionBehavior": "parallel",
         "waitBehavior": "none",
         "waitTime": 0

@@ -31,9 +31,9 @@ public class NodePosition {
     }
     public enum NodeGroup{
 
-      LEFT(80.50394,42.19),
-      CENTER(80.50394,66+42.19),
-      RIGHT(80.50394,132+42.19),
+      LEFT(123.0,42.19),
+      CENTER(123.0,66+42.19),
+      RIGHT(123.0,132+42.19),
 
       DOUBLE_SUBSTATION(625.9843, 289.7638),
       SINGLE_SUBSTATION(541.73228, 301.1811),
