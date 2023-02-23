@@ -5,10 +5,13 @@
 package frc.robot.subsystems;
 
 
+import java.lang.constant.DirectMethodHandleDesc;
+import java.sql.Driver;
 import java.util.function.DoubleSupplier;
 
 import com.kauailabs.navx.frc.AHRS;
 
+import edu.wpi.first.hal.AllianceStationID;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
@@ -23,10 +26,12 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandBase;
@@ -330,16 +335,18 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
   
   public Pose2d limelightBotPoseFront(){
 
+    String allianceColorBotPose = DriverStation.getAlliance() == Alliance.Red ? "botpose_wpired" : "botpose_wpiblue";
+
     double myArray[] = {0, 0, 0, 0, 0, 0};
     
-    myArray = NetworkTableInstance.getDefault().getTable("limelight").getEntry("botpose").getDoubleArray(myArray);
+    myArray = NetworkTableInstance.getDefault().getTable("limelight-front").getEntry(allianceColorBotPose).getDoubleArray(myArray);
 
     double x = 0;
     double y = 0;
     double rot = 0;
     if (myArray.length > 0){
-      x = 8.2425 - myArray[0];
-      y = 4.0515 + myArray[1];
+      x = myArray[0];
+      y = myArray[1];
       rot = myArray[5];
     }
 
@@ -350,15 +357,17 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
   public Pose2d limelightBotPoseBack(){
 
     double myArray[] = {0, 0, 0, 0, 0, 0};
+    String allianceColorBotPose = DriverStation.getAlliance() == Alliance.Red ? "botpose_wpired" : "botpose_wpiblue";
+
+      myArray = NetworkTableInstance.getDefault().getTable("limelight-back").getEntry(allianceColorBotPose).getDoubleArray(myArray);
     
-    myArray = NetworkTableInstance.getDefault().getTable("limelight").getEntry("botpose").getDoubleArray(myArray);
 
     double x = 0;
     double y = 0;
     double rot = 0;
     if (myArray.length > 0){
-      x = 8.2425 - myArray[0];
-      y = 4.0515 + myArray[1];
+      x = myArray[0];
+      y = myArray[1];
       rot = myArray[5];
     }
 
@@ -385,7 +394,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
   @Config(defaultValueBoolean = false)
   public void zeroOdometry(boolean input){
     if(input){
-      m_odometry.resetPosition(new Rotation2d(), m_driveTrain.getModulePositions(), prevRobotPose);
+      m_odometry.resetPosition(new Rotation2d(), m_driveTrain.getModulePositions(), new Pose2d());
     }
   }
   

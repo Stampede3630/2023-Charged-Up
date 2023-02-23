@@ -293,7 +293,7 @@ public class RobotContainer {
         .whileTrue(new RepeatCommand(Commands.runOnce(s_Cannon::manRetract, s_Cannon)));
     xBox.rightTrigger(.55).debounce(.1, DebounceType.kFalling)
         .onTrue(Commands.runOnce(s_Claw::runClawtake)
-          .alongWith(Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), -10)))
+          .alongWith(Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), -10.0)))
           .alongWith(Commands.runOnce(s_Claw::closeClaw)))
         .onFalse((Commands.runOnce(s_Claw::stopClawTake)));
     xBox.leftTrigger(.55).debounce(.1, DebounceType.kFalling)
