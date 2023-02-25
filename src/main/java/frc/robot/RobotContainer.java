@@ -7,6 +7,7 @@ package frc.robot;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletionException;
 
 import com.pathplanner.lib.PathConstraints;
 import com.pathplanner.lib.PathPlanner;
@@ -16,7 +17,9 @@ import com.pathplanner.lib.auto.PIDConstants;
 import com.pathplanner.lib.auto.SwerveAutoBuilder;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
@@ -92,9 +95,15 @@ public class RobotContainer {
 
   private final LEDs s_LEDs = new LEDs();
   
-  private DoubleSubscriber ySubscriber;
-  private GamePieceType prev;
+  public GamePieceOrientation previousGamePieceOrientation;
+  public GamePieceType gamePieceType;
+  // private GamePieceType prev;
   NetworkTableInstance inst = NetworkTableInstance.getDefault();
+
+  NetworkTable datatable = inst.getTable("GamePieceOrientationChooser");
+
+  public String gamePieceString = gamePieceOrientationChooser.getSelected().getGamePieceType().toString();
+
   
   
   /**
@@ -319,7 +328,10 @@ public class RobotContainer {
     new Trigger(s_Claw::haveGamePiece)
       .onTrue(Commands.runOnce(s_Claw::closeClaw)
         .andThen(s_Claw::slowClawTake)
-        .andThen(()-> s_Cannon.setCannonAngleSides(robotFacing(), 140)));
+        .andThen(()-> s_Cannon.setCannonAngleSides(robotFacing(), 140))
+        .andThen(s_LEDs::beWhoYouAre));
+
+      
     // xBox.a().debounce(.1)
     //     .onTrue(Commands.runOnce(s_Claw::rotoClaw))
     //     .onFalse(Commands.runOnce(s_Claw::stopClawTake));
@@ -354,12 +366,17 @@ public class RobotContainer {
     .beforeStarting(new
     InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
 
-    new Trigger(prev != GamePieceType.CUBE)
-      .onTrue(()-> s_Claw.setRotoAngle(getYOffset())
-      .unless(()-> s_Claw.haveGamePiece() == true)
-      .andThen(()->s_Claw.setRotoAngle(getYOffset())));
-      
+    new Trigger(()->listenForOrientationChange())
+      .onTrue(Commands.runOnce(()-> s_Claw.setRotoAngle(previousGamePieceOrientation.getRotOrientForRoto()))
+        .andThen(Commands.runOnce(s_LEDs::bePurple)
+        .unless(()->(isCone() || isNoThing())))
+        .andThen(Commands.runOnce(s_LEDs::beYellow)
+        .unless(()->(isCube() || isNoThing())))
+        .andThen(Commands.runOnce(s_LEDs::beWhoYouAre)
+        .unless(()->(isCone() || isCube()))));
 
+      // .unless(()-> s_Claw.haveGamePiece())
+      // .andThen(()->s_Claw.setRotoAngle(previousGamePieceOrientation.getRotOrientForRoto())));
 
     //
     // xBox.x().onTrue(new
@@ -432,7 +449,7 @@ public class RobotContainer {
           new PathConstraints(4, 3),
           new PathPoint(s_SwerveDrive.getOdometryPose().getTranslation(), s_SwerveDrive.getRobotAngle()),
           new PathPoint(rightPathGroup.get(0).getInitialHolonomicPose().getTranslation(),
-              rightPathGroup.get(0).getInitialPose().getRotation(),
+              calculateHeading(),
               rightPathGroup.get(0).getInitialHolonomicPose().getRotation()));
       PGOTF.addAll(rightPathGroup);
     }
@@ -518,7 +535,7 @@ public class RobotContainer {
   }
 
   public enum GamePieceType {
-    CONE, CUBE
+    CONE, CUBE, NOTHING
   }
 
   public enum NodeDriverStation {
@@ -563,16 +580,75 @@ public class RobotContainer {
     return armTestSetPoints.getSelected().getTestCannonAngle();
   }
 
-  public void listenForOrientationChange(){
+  public boolean listenForOrientationChange(){
 
-    NetworkTable datatable = inst.getTable("GamePieceOrientationChooser");
-    
-    ySubscriber = datatable.getDoubleTopic("Y").subscribe(0.0);
+    previousGamePieceOrientation = gamePieceOrientationChooser.getSelected();
 
-    if (gamePieceOrientationChooser.getSelected().getGamePieceType() != prev) {
-      prev = gamePieceOrientationChooser.getSelected().getGamePieceType();
+    if (gamePieceOrientationChooser.getSelected() != previousGamePieceOrientation) {
+      previousGamePieceOrientation = gamePieceOrientationChooser.getSelected();
       System.out.println("a thing happened");
+      return true;
+    } else{
+      System.out.println("a thing did not happen");
+      return false;
     }
   }
 
+  public Rotation2d calculateHeading(){
+    Pose2d roboTranslationX = s_SwerveDrive.getOdometryPose();
+    double desiredTranslationX = (Units.inchesToMeters(nodeGroupChooser.getSelected().xCoord));
+    double desiredTranslationY = Units.inchesToMeters(nodeGroupChooser.getSelected().yCoord + getYOffset());
+
+    double oOfOA = roboTranslationX.getX() - desiredTranslationX;
+    double aOfOA = roboTranslationX.getY() - desiredTranslationY;
+
+    return new Rotation2d(-Math.atan(oOfOA/aOfOA));
+  }
+
+  public boolean listenForGamePieceLED(){
+
+    gamePieceType = gamePieceOrientationChooser.getSelected().getGamePieceType();
+
+    if (gamePieceOrientationChooser.getSelected().getGamePieceType() != gamePieceType) {
+      gamePieceType = gamePieceOrientationChooser.getSelected().getGamePieceType();
+      System.out.println("a thing happened");
+      return true;
+    } else{
+      System.out.println("a thing did not happen");
+      return false;
+    }
+  }
+
+  public boolean isCone(){
+    if (gamePieceString.equals("CONE")){
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  public boolean isCube(){
+    if (gamePieceString.equals("CUBE")){
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  public boolean isNoThing(){
+    if (gamePieceString.equals("NOTHING")){
+      return true;
+    } else {
+      return false;
+    }
+    //Not necessary because isNoThing is never true 6:13 PM Friday, February 24 (=^-w-^=), :3, UwU, >wO
+  }
+
+  // public boolean beDesiredPieceColorR(){
+  //   if (gamePieceType == gamePieceOrientationChooser.getSelected().getGamePieceType().CONE){
+  //     return false;
+  //   } else {
+  //     return true;
+  //   }
+  // }
 }
