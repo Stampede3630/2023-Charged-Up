@@ -7,8 +7,6 @@ package frc.robot;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CompletionException;
-
 import com.pathplanner.lib.PathConstraints;
 import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
@@ -17,13 +15,11 @@ import com.pathplanner.lib.auto.PIDConstants;
 import com.pathplanner.lib.auto.SwerveAutoBuilder;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -32,6 +28,7 @@ import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.WidgetType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -85,6 +82,7 @@ public class RobotContainer {
   SendableChooser<GamePieceOrientation> gamePieceOrientationChooser = new SendableChooser<>();
   SendableChooser<frc.robot.NodePosition.NodeGroup> nodeGroupChooser = new SendableChooser<>();
   SendableChooser<NodeGrid> nodeGridChooser = new SendableChooser<>();
+  SendableChooser<PickupLocation> pickupLocationChooser = new SendableChooser<>();
 
   @Log
   private final SwerveDrive s_SwerveDrive = new SwerveDrive();
@@ -96,14 +94,11 @@ public class RobotContainer {
   private final LEDs s_LEDs = new LEDs();
   
   public GamePieceOrientation previousGamePieceOrientation;
-  public GamePieceType gamePieceType;
+  public GamePieceType gamePieceTypeLed;
   // private GamePieceType prev;
   NetworkTableInstance inst = NetworkTableInstance.getDefault();
 
   NetworkTable datatable = inst.getTable("GamePieceOrientationChooser");
-
-  public String gamePieceString = gamePieceOrientationChooser.getSelected().getGamePieceType().toString();
-
   
   
   /**
@@ -146,8 +141,8 @@ public class RobotContainer {
     Preferences.initBoolean("Wanna PID Cannon", false);
 
 
-    autoPathGroup = (ArrayList<PathPlannerTrajectory>) PathPlanner.loadPathGroup("swerveTest",
-        new PathConstraints(2, 2));
+    // autoPathGroup = (ArrayList<PathPlannerTrajectory>) PathPlanner.loadPathGroup("swerveTest",
+        // new PathConstraints(2, 2));
 
     for (GamePieceOrientation orientation : GamePieceOrientation.values()) {
       gamePieceOrientationChooser.addOption(orientation.getFriendlyName(), orientation);
@@ -161,10 +156,14 @@ public class RobotContainer {
       nodeGridChooser.addOption(child.name(), child);
     }
     nodeGridChooser.setDefaultOption(NodeGrid.MID_CENTER.name(), NodeGrid.MID_CENTER);
+    for (PickupLocation loc : PickupLocation.values()) {
+      pickupLocationChooser.addOption(loc.name(), loc);
+    }
+    pickupLocationChooser.setDefaultOption(PickupLocation.GROUND.name(), PickupLocation.GROUND);
 
     Shuffleboard.getTab("nodeSelector")
         .add("orientation", gamePieceOrientationChooser)
-        .withWidget(BuiltInWidgets.kComboBoxChooser);
+        .withWidget(BuiltInWidgets.kSplitButtonChooser);
 
     Shuffleboard.getTab("nodeSelector")
         .add("Node Driver Station", nodeDriverStation)
@@ -176,7 +175,7 @@ public class RobotContainer {
 
     Shuffleboard.getTab("nodeSelector")
       .add("Node Group Chooser", nodeGroupChooser)
-      .withWidget(BuiltInWidgets.kComboBoxChooser);
+      .withWidget(BuiltInWidgets.kSplitButtonChooser);
       
     Shuffleboard.getTab("nodeSelector")
       .add("Node Grid Chooser", nodeGridChooser)
@@ -185,6 +184,10 @@ public class RobotContainer {
       "Cube Image","C:\\Users\\Mustangs\\Documents\\evanArtwork\\cube.png",
       "Hybrid Image","C:\\Users\\Mustangs\\Documents\\evanArtwork\\hybrid.png",
       "R", 1));
+
+    Shuffleboard.getTab("nodeSelector")
+      .add("Pickup Location", pickupLocationChooser)
+      .withWidget(BuiltInWidgets.kSplitButtonChooser);
 
     HashMap<String, Command> eventMap = new HashMap<>();
     eventMap.put("1stBallPickup", new WaitCommand(2));
@@ -253,11 +256,18 @@ public class RobotContainer {
     //   .onFalse(s_LEDs::becomeRainbow);
 
     new Trigger(DriverStation::isDisabled)
-        .whileTrue(s_SwerveDrive.setToCoast()
-            .ignoringDisable(true)
+        .whileTrue(s_SwerveDrive.setToCoast().ignoringDisable(true)
+        .andThen(s_Cannon::setCannonToCoast)
+        .andThen(s_Claw::setRotoCoast)
+        .andThen(Commands.runOnce(s_LEDs::beWhoYouAre).ignoringDisable(true))
             .withName("SetToCoast"))
         .onFalse(s_SwerveDrive.setToBrake()
             .withName("setToBrake"));
+    new Trigger(DriverStation::isEnabled)
+        .onTrue(Commands.runOnce(s_Claw::initializeClampCommand)
+        .andThen(s_Cannon::setCannonToBrake)
+        .andThen(s_Claw::setRotoBrake)
+        .andThen(Commands.runOnce(s_Claw::initializeClCommandWithGamePiece)));
 
     /**
      * next two triggers are to "toggle" rotation HOLD mode and set a heading
@@ -302,9 +312,11 @@ public class RobotContainer {
         .whileTrue(new RepeatCommand(Commands.runOnce(s_Cannon::manRetract, s_Cannon)));
     xBox.rightTrigger(.55).debounce(.1, DebounceType.kFalling)
         .onTrue(Commands.runOnce(s_Claw::runClawtake)
-          .alongWith(Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), -14.0)))
+          .alongWith(Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), pickupLocationChooser.getSelected().cannonAngle)))
+          .alongWith(Commands.waitUntil(s_Cannon::cannonErrorWithinRange).andThen(() -> s_Cannon.setExtensionInches(pickupLocationChooser.getSelected().cannonExtension)))
           .alongWith(Commands.runOnce(s_Claw::closeClaw)))
         .onFalse(Commands.runOnce(s_Claw::stopClawTake)
+          .andThen(Commands.runOnce(() -> s_Cannon.setExtensionInches(4)))
           .andThen(Commands.either(
             Commands.runOnce(() -> s_Claw.faceCommunitySides(s_Cannon.setCannonAngleSides(robotFacing(), 140)))
             .unless(xBox.rightTrigger(.5)),
@@ -319,17 +331,20 @@ public class RobotContainer {
           .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange)
           .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngleSides(robotFacing(), 150))))));
     xBox.rightBumper().debounce(.1, DebounceType.kFalling)
-        .onTrue(Commands.runOnce(s_Claw::openClaw).andThen(new PrintCommand("Right Bumper")))
+        .onTrue(Commands.repeatingSequence(Commands.runOnce(() -> s_Claw.setClawReference(s_Claw.getClampAngle()+5))))
         .onFalse(Commands.runOnce(s_Claw::stopClawMotor));
     xBox.leftBumper().debounce(.1, DebounceType.kFalling)
-        .onTrue(Commands.runOnce(s_Claw::closeClaw).andThen(new PrintCommand("Left Bumper")))
+        .onTrue(Commands.repeatingSequence(Commands.runOnce(() -> s_Claw.setClawReference(s_Claw.getClampAngle()-5))))
         .onFalse(Commands.runOnce(s_Claw::stopClawMotor));
 
     new Trigger(s_Claw::haveGamePiece)
       .onTrue(Commands.runOnce(s_Claw::closeClaw)
         .andThen(s_Claw::slowClawTake)
         .andThen(()-> s_Cannon.setCannonAngleSides(robotFacing(), 140))
-        .andThen(s_LEDs::beWhoYouAre));
+        .andThen(s_LEDs::beWhoYouAre))
+      .onFalse(Commands.either(Commands.runOnce(s_LEDs::bePurple), 
+      Commands.runOnce(s_LEDs::beYellow), 
+      ()-> (gamePieceOrientationChooser.getSelected().getGamePieceType().equals(GamePieceType.CUBE))));
 
       
     // xBox.a().debounce(.1)
@@ -338,8 +353,10 @@ public class RobotContainer {
     // xBox.x().debounce(.1)
     //     .onTrue(Commands.runOnce(s_Claw::rotoClawReverse))
     //     .onFalse(Commands.runOnce(s_Claw::stopClawTake));
-    // xBox.x().debounce(.1)
-    //   .onTrue(Commands.runOnce(s_Claw::flipRotoClawtake).andThen(new PrintCommand("flipclawtake")));
+    xBox.x().debounce(.1)
+      .onTrue(Commands.repeatingSequence(Commands.runOnce(() -> s_Claw.setRotoAngle(s_Claw.getRotoAngle() + 5))));
+    xBox.b().debounce(.1)
+      .onTrue(Commands.repeatingSequence(Commands.runOnce(() -> s_Claw.setRotoAngle(s_Claw.getRotoAngle() - 5))));
     xBox.y()
         .onTrue((Commands.runOnce(()-> s_Cannon.setCannonAngleSides(robotFacing(), NodePosition.getNodePosition(nodeGroupChooser.getSelected(), nodeGridChooser.getSelected()).getCannonAngle())))
         .andThen(new SequentialCommandGroup(Commands.waitUntil(s_Cannon::cannonErrorWithinRange)),
@@ -366,14 +383,21 @@ public class RobotContainer {
     .beforeStarting(new
     InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
 
-    new Trigger(()->listenForOrientationChange())
-      .onTrue(Commands.runOnce(()-> s_Claw.setRotoAngle(previousGamePieceOrientation.getRotOrientForRoto()))
-        .andThen(Commands.runOnce(s_LEDs::bePurple)
-        .unless(()->(isCone() || isNoThing())))
-        .andThen(Commands.runOnce(s_LEDs::beYellow)
-        .unless(()->(isCube() || isNoThing())))
-        .andThen(Commands.runOnce(s_LEDs::beWhoYouAre)
-        .unless(()->(isCone() || isCube()))));
+    new Trigger(()->listenForOrientationChange()).and(s_Claw::haveGamePiece).negate()
+      .onTrue(Commands.either(
+        Commands.runOnce(s_LEDs::bePurple), 
+        Commands.runOnce(s_LEDs::beYellow), 
+        () -> previousGamePieceOrientation.getGamePieceType().equals(GamePieceType.CUBE)));
+        
+      
+      
+      // Commands.runOnce(()-> s_Claw.setRotoAngle(previousGamePieceOrientation.getRotOrientForRoto()))
+      //   .andThen(Commands.runOnce(s_LEDs::bePurple)
+      //   .unless(()->(isCone() || isNoThing())))
+      //   .andThen(Commands.runOnce(s_LEDs::beYellow)
+      //   .unless(()->(isCube() || isNoThing())))
+      //   .andThen(Commands.runOnce(s_LEDs::beWhoYouAre)
+      //   .unless(()->(isCone() || isCube()))));
 
       // .unless(()-> s_Claw.haveGamePiece())
       // .andThen(()->s_Claw.setRotoAngle(previousGamePieceOrientation.getRotOrientForRoto())));
@@ -506,7 +530,7 @@ public class RobotContainer {
 
   public enum GamePieceOrientation {
     RIGHT("|>", 90, GamePieceType.CONE),
-    LEFT("<|", -90, GamePieceType.CONE),
+    LEFT("<|", 90, GamePieceType.CONE),
     UPRIGHT("/\\", 0, GamePieceType.CONE),
     CUBE("口", 90, GamePieceType.CUBE);
 
@@ -575,6 +599,14 @@ public class RobotContainer {
 
   }
 
+  public enum PickupLocation {
+    GROUND(-14, 10), SHELF(40, 24); // change these
+
+    private final double cannonAngle;
+    private final double cannonExtension;
+
+    private PickupLocation(double cannonAngle, double cannonExtension){this.cannonAngle = cannonAngle; this.cannonExtension = cannonExtension;}
+  }
   public double armTestSetPointsAngle(SendableChooser<ArmTestSetPoints> armTestSetPoints){
   
     return armTestSetPoints.getSelected().getTestCannonAngle();
@@ -586,10 +618,10 @@ public class RobotContainer {
 
     if (gamePieceOrientationChooser.getSelected() != previousGamePieceOrientation) {
       previousGamePieceOrientation = gamePieceOrientationChooser.getSelected();
-      System.out.println("a thing happened");
+
       return true;
     } else{
-      System.out.println("a thing did not happen");
+
       return false;
     }
   }
@@ -601,46 +633,36 @@ public class RobotContainer {
 
     double oOfOA = roboTranslationX.getX() - desiredTranslationX;
     double aOfOA = roboTranslationX.getY() - desiredTranslationY;
-
+    
     return new Rotation2d(-Math.atan(oOfOA/aOfOA));
   }
 
-  public boolean listenForGamePieceLED(){
-
-    gamePieceType = gamePieceOrientationChooser.getSelected().getGamePieceType();
-
-    if (gamePieceOrientationChooser.getSelected().getGamePieceType() != gamePieceType) {
-      gamePieceType = gamePieceOrientationChooser.getSelected().getGamePieceType();
-      System.out.println("a thing happened");
-      return true;
-    } else{
-      System.out.println("a thing did not happen");
-      return false;
-    }
-  }
+  // public boolean listenForGamePieceLED(){
+  //
+  //   gamePieceTypeLed = gamePieceOrientationChooser.getSelected().getGamePieceType();
+  //
+  //   if (gamePieceOrientationChooser.getSelected().getGamePieceType() != gamePieceTypeLed) {
+  //     gamePieceTypeLed = gamePieceOrientationChooser.getSelected().getGamePieceType();
+  //     System.out.println("a thing happened");
+  //     return true;
+  //   } else{
+  //     System.out.println("a thing did not happen");
+  //     return false;
+  //   }
+  // }
 
   public boolean isCone(){
-    if (gamePieceString.equals("CONE")){
-      return true;
-    } else {
-      return false;
-    }
+    return gamePieceOrientationChooser.getSelected().gamePieceType.equals(GamePieceType.CONE);
+
   }
 
   public boolean isCube(){
-    if (gamePieceString.equals("CUBE")){
-      return true;
-    } else {
-      return false;
-    }
+    return gamePieceOrientationChooser.getSelected().gamePieceType.equals(GamePieceType.CUBE);
+
   }
 
   public boolean isNoThing(){
-    if (gamePieceString.equals("NOTHING")){
-      return true;
-    } else {
-      return false;
-    }
+    return gamePieceOrientationChooser.getSelected().gamePieceType.equals(GamePieceType.NOTHING);
     //Not necessary because isNoThing is never true 6:13 PM Friday, February 24 (=^-w-^=), :3, UwU, >wO
   }
 

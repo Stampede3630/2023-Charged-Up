@@ -56,7 +56,7 @@ new ArmFeedforward(
     cannonAbsolute.setInverted(false);
     cannonAbsolute.setPositionConversionFactor(360.0);
     cannonAbsolute.setVelocityConversionFactor(360.0);
-    cannonAbsolute.setZeroOffset(61.36);
+    cannonAbsolute.setZeroOffset(294.0);
 
     cannonExtension.setSmartCurrentLimit(70);
     cannonRotLead.setSmartCurrentLimit(70);
@@ -64,11 +64,11 @@ new ArmFeedforward(
     
     extensionEncoder.setPositionConversionFactor(1.802406002431152);
     
-    cannonExtension.setInverted(true);
+    // cannonExtension.setInverted(true);
     //changed idle mode to help with troubleshooting    
-    cannonRotLead.setIdleMode(IdleMode.kBrake);
-    cannonRotFollow.setIdleMode(IdleMode.kBrake);
-    cannonExtension.setIdleMode(IdleMode.kBrake);
+    cannonRotLead.setIdleMode(IdleMode.kCoast);
+    cannonRotFollow.setIdleMode(IdleMode.kCoast);
+    cannonExtension.setIdleMode(IdleMode.kCoast);
     cannonRotFollow.follow(cannonRotLead, true);
 
     cannonRotLeadPID.setFeedbackDevice(cannonAbsolute);
@@ -98,7 +98,7 @@ new ArmFeedforward(
 
     setAdaptiveFeedForward();
 
-    cannonExtensionPID.setReference(extensionInches, ControlType.kPosition); 
+    cannonExtensionPID.setReference(-extensionInches, ControlType.kPosition); 
     cannonRotLeadPID.setReference(getRevReferenceAngleSetpoint(), ControlType.kPosition, 0, getArbitraryFeedForward(), ArbFFUnits.kVoltage);
 
     if (Preferences.getBoolean("Wanna PID Cannon", false)) {
@@ -129,6 +129,19 @@ new ArmFeedforward(
 
   }
 
+  public void setCannonToCoast(){
+    cannonRotLead.setIdleMode(IdleMode.kCoast);
+    cannonRotFollow.setIdleMode(IdleMode.kCoast);
+    cannonExtension.setIdleMode(IdleMode.kCoast);
+
+  }
+
+  public void setCannonToBrake(){
+    cannonRotLead.setIdleMode(IdleMode.kBrake);
+    cannonRotFollow.setIdleMode(IdleMode.kBrake);
+    cannonExtension.setIdleMode(IdleMode.kBrake);
+  }
+
   @Log
   public boolean getExtensionHardStop(){
     return extensionHardStop.isPressed();
@@ -142,12 +155,12 @@ new ArmFeedforward(
 
   @Log
   public boolean cannonErrorWithinRange (){
-    return Math.abs(cannonRotation - getCannonAngleEncoder()) < 10.0 ? true:false; 
+    return Math.abs(cannonRotation - getCannonAngleEncoder()) < 10.0; 
   }
 
   @Log
   public boolean extensionErrorWithinRange(){
-    return Math.abs(extensionInches - getExtensionEncoder()) < 5.0 ? true:false;
+    return Math.abs(extensionInches - getExtensionEncoder()) < 5.0;
   }
 
   // public void stowMode() {

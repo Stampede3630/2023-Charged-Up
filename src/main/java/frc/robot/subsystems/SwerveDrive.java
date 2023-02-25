@@ -160,7 +160,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
       () -> {
         double x = -_x.getAsDouble();
         double y = -_y.getAsDouble();
-        double rot = -_rot.getAsDouble();
+        double rot = Math.pow(-_rot.getAsDouble(), 3);
         double joystickDriveGovernor = Preferences.getDouble("pDriveGovernor", Constants.driveGovernor);
         
         if (Preferences.getBoolean("pAccelInputs", Constants.acceleratedInputs)) {
