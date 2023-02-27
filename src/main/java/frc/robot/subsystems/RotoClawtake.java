@@ -134,10 +134,6 @@ public class RotoClawtake extends SubsystemBase implements Loggable {
     clampMotor.set(0);
   }
 
-  public void slowClawTake(){ //this method is only for testing, will do it a better way later! --ej
-    clawTakeMotor.set(0.3);
-  }
-
   public void setClawReference(double value) {
     clampMotorPID.setReference(value, ControlType.kPosition);
   }

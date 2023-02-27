@@ -214,19 +214,6 @@ public class RobotContainer {
             xBox::getLeftX,
             xBox::getRightX).withName("DefaultDrive"));
 
-    // // s_Cannon.setDefaultCommand(
-    // // Commands.runOnce(s_Cannon::stowMode)
-    // );
-
-    // This will load the file "FullAuto.path" and generate it with a max velocity
-    // of 4 m/s and a max acceleration of 3 m/s^2
-    // for every path in the group
-    // autoPathGroup = ;//PathPlanner.loadPathGroup("Test5Ball", new
-    // PathConstraints(4, 3));
-    // leftPathGroup = ;//PathPlanner.loadPathGroup("LeftPath1WP", new
-    // PathConstraints(4, 3));
-    // rightPathGroup = ;//PathPlanner.loadPathGroup("RightPath1WP", new
-    // PathConstraints(4, 3));
     // Configure the button bindings
     configureButtonBindings();
     Logger.configureLoggingAndConfig(this, false);
@@ -251,9 +238,6 @@ public class RobotContainer {
      * Trigger runs WHILETRUE for coast mode. Coast Mode method
      * is written to wait for slow speeds before setting to coast
      */
-    // new Trigger(()-> s_Claw.heldGamePiece == GamePieceType.CONE)
-    //   .onTrue(s_LEDs::becomeYellow)
-    //   .onFalse(s_LEDs::becomeRainbow);
 
     new Trigger(DriverStation::isDisabled)
         .whileTrue(s_SwerveDrive.setToCoast().ignoringDisable(true)
@@ -288,20 +272,7 @@ public class RobotContainer {
                 xBox::getRightX)
                 .withName("StandardOperatorDrive"));
 
-    // xBox.b()
-    //     .onTrue(Commands.runOnce(() -> s_SwerveDrive.setHoldHeadingFlag(false)));
-    
-
-    // xBox.povCenter().negate().onTrue(
-    // new SequentialCommandGroup(
-    // Commands.runOnce(()->s_SwerveDrive.setHoldHeadingFlag(true)),
-    // new
-    // InstantCommand(()->s_SwerveDrive.setHoldHeadingAngle(-xBox.getHID().getPOV()
-    // + 90))
-    // ));
-
-    xBox.leftBumper().onTrue(new PrintCommand("bumper").ignoringDisable(true));
-
+    //testing triggers    
     xBox.povUp()
         .whileTrue(new RepeatCommand(Commands.runOnce(s_Cannon::manRotUp)));
     xBox.povDown()
@@ -310,26 +281,43 @@ public class RobotContainer {
         .whileTrue(new RepeatCommand(Commands.runOnce(s_Cannon::manExtend, s_Cannon)));
     xBox.povLeft()
         .whileTrue(new RepeatCommand(Commands.runOnce(s_Cannon::manRetract, s_Cannon)));
+
+    //combined triggers
+
+    //-> intake trigger
     xBox.rightTrigger(.55).debounce(.1, DebounceType.kFalling)
         .onTrue(Commands.runOnce(s_Claw::runClawtake)
-          .alongWith(Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), pickupLocationChooser.getSelected().cannonAngle)))
-          .alongWith(Commands.waitUntil(s_Cannon::cannonErrorWithinRange).andThen(() -> s_Cannon.setExtensionInches(pickupLocationChooser.getSelected().cannonExtension)))
-          .alongWith(Commands.runOnce(s_Claw::closeClaw)))
+          .alongWith(Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), pickupLocationChooser.getSelected().cannonAngle))
+          .alongWith(Commands.waitUntil(s_Cannon::cannonErrorWithinRange)
+            .andThen(() -> s_Cannon.setExtensionInches(pickupLocationChooser.getSelected().cannonExtension)))
+            .alongWith(Commands.runOnce(s_Claw::closeClaw))))
         .onFalse(Commands.runOnce(s_Claw::stopClawTake)
           .andThen(Commands.runOnce(() -> s_Cannon.setExtensionInches(4)))
-          .andThen(Commands.either(
+            .andThen(Commands.either(
             Commands.runOnce(() -> s_Claw.faceCommunitySides(s_Cannon.setCannonAngleSides(robotFacing(), 140)))
             .unless(xBox.rightTrigger(.5)),
             Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), 40)).unless(xBox.rightTrigger(.5)) // towards pickup
-            .andThen(Commands.runOnce(() -> s_Claw.prepareForGamePiece(gamePieceOrientationChooser.getSelected()))), 
-            s_Claw::haveGamePiece)));
+              .andThen(Commands.runOnce(() -> s_Claw.prepareForGamePiece(gamePieceOrientationChooser.getSelected()))), 
+                s_Claw::haveGamePiece)));
+
+    //-> outtake trigger
     xBox.leftTrigger(.55).debounce(.1, DebounceType.kFalling)
         .onTrue(Commands.runOnce(s_Claw::openClaw)
           .alongWith(Commands.runOnce(s_Claw::reverseClawtake)))
         .onFalse(Commands.runOnce(s_Claw::stopClawTake)
           .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(5.0))
-          .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange)
-          .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngleSides(robotFacing(), 150))))));
+            .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange)
+              .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngleSides(robotFacing(), 150))))));
+
+    //-> extension + cannonRot to setpoint
+    xBox.y()
+        .onTrue((Commands.runOnce(()-> s_Cannon.setCannonAngleSides(robotFacing(), NodePosition.getNodePosition(nodeGroupChooser.getSelected(), nodeGridChooser.getSelected()).getCannonAngle())))
+          .andThen(new SequentialCommandGroup(Commands.waitUntil(s_Cannon::cannonErrorWithinRange)),
+              Commands.runOnce(()-> s_Cannon.setExtensionInches(NodePosition.getNodePosition(nodeGroupChooser.getSelected(), nodeGridChooser.getSelected()).getExtension()))));
+
+    //single object triggers
+
+    //->claw
     xBox.rightBumper().debounce(.1, DebounceType.kFalling)
         .onTrue(Commands.repeatingSequence(Commands.runOnce(() -> s_Claw.setClawReference(s_Claw.getClampAngle()+5))))
         .onFalse(Commands.runOnce(s_Claw::stopClawMotor));
@@ -337,46 +325,34 @@ public class RobotContainer {
         .onTrue(Commands.repeatingSequence(Commands.runOnce(() -> s_Claw.setClawReference(s_Claw.getClampAngle()-5))))
         .onFalse(Commands.runOnce(s_Claw::stopClawMotor));
 
+    xBox.x().debounce(.1)
+        .onTrue(Commands.repeatingSequence(Commands.runOnce(() -> s_Claw.setRotoAngle(s_Claw.getRotoAngle() + 5))));      
+        
+    xBox.b().debounce(.1)
+        .onTrue(Commands.repeatingSequence(Commands.runOnce(() -> s_Claw.setRotoAngle(s_Claw.getRotoAngle() - 5))));
+
+    //->cannon
+
+    //->LED
+
+    //logic/no controller triggers
     new Trigger(s_Claw::haveGamePiece)
       .onTrue(Commands.runOnce(s_Claw::closeClaw)
-        .andThen(s_Claw::slowClawTake)
-        .andThen(()-> s_Cannon.setCannonAngleSides(robotFacing(), 140))
-        .andThen(s_LEDs::beWhoYouAre))
-      .onFalse(Commands.either(Commands.runOnce(s_LEDs::bePurple), 
-      Commands.runOnce(s_LEDs::beYellow), 
-      ()-> (gamePieceOrientationChooser.getSelected().getGamePieceType().equals(GamePieceType.CUBE))));
-
-      
-    // xBox.a().debounce(.1)
-    //     .onTrue(Commands.runOnce(s_Claw::rotoClaw))
-    //     .onFalse(Commands.runOnce(s_Claw::stopClawTake));
-    // xBox.x().debounce(.1)
-    //     .onTrue(Commands.runOnce(s_Claw::rotoClawReverse))
-    //     .onFalse(Commands.runOnce(s_Claw::stopClawTake));
-    xBox.x().debounce(.1)
-      .onTrue(Commands.repeatingSequence(Commands.runOnce(() -> s_Claw.setRotoAngle(s_Claw.getRotoAngle() + 5))));
-    xBox.b().debounce(.1)
-      .onTrue(Commands.repeatingSequence(Commands.runOnce(() -> s_Claw.setRotoAngle(s_Claw.getRotoAngle() - 5))));
-    xBox.y()
-        .onTrue((Commands.runOnce(()-> s_Cannon.setCannonAngleSides(robotFacing(), NodePosition.getNodePosition(nodeGroupChooser.getSelected(), nodeGridChooser.getSelected()).getCannonAngle())))
-        .andThen(new SequentialCommandGroup(Commands.waitUntil(s_Cannon::cannonErrorWithinRange)),
-          Commands.runOnce(()-> s_Cannon.setExtensionInches(NodePosition.getNodePosition(nodeGroupChooser.getSelected(), nodeGridChooser.getSelected()).getExtension()))));
-    
-    // new Trigger(s_Claw::haveGamePiece)
-    //   .whileTrue(new RepeatCommand(Commands.runOnce(() -> s_Cannon.setCannonAngleSides(cannonFacing(), 30)))
-    //     .andThen(Commands.runOnce(() -> s_Claw.flipRotoClawtake()))
-    //     .ignoringDisable(true))
-    //   .whileFalse(new RepeatCommand(Commands.runOnce(() -> s_Cannon.setCannonAngleSides(cannonFacing(), 150))
-    //     .andThen(Commands.runOnce(() -> s_Claw.prepareForGamePiece(gamePieceOrientationChooser.getSelected()))))
-    //     .ignoringDisable(true));
+        .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(1.37985 + 1)))
+         .andThen(()-> s_Cannon.setCannonAngleSides(robotFacing(), 140))
+          .andThen(s_LEDs::beWhoYouAre))
+      .onFalse(Commands.either(
+        Commands.runOnce(s_LEDs::bePurple), 
+        Commands.runOnce(s_LEDs::beYellow), 
+        ()-> (gamePieceOrientationChooser.getSelected().getGamePieceType().equals(GamePieceType.CUBE))));
 
     new Trigger(() -> robotFacing() != FacingPOI.NOTHING)
       .onTrue(Commands.either(
         Commands.runOnce(() -> s_Claw.faceCommunitySides(s_Cannon.setCannonAngleSides(robotFacing(), 140)))
         .unless(xBox.rightTrigger(.5)),
         Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), 40)).unless(xBox.rightTrigger(.5)) // towards pickup
-        .andThen(Commands.runOnce(() -> s_Claw.prepareForGamePiece(gamePieceOrientationChooser.getSelected()))), 
-        s_Claw::haveGamePiece));
+          .andThen(Commands.runOnce(() -> s_Claw.prepareForGamePiece(gamePieceOrientationChooser.getSelected()))), 
+           s_Claw::haveGamePiece));
   
     xBox.a().onTrue(new
     ProxyCommand(()->autoBuilder.followPathGroup(autoPathGroupOnTheFly()))
@@ -388,30 +364,6 @@ public class RobotContainer {
         Commands.runOnce(s_LEDs::bePurple), 
         Commands.runOnce(s_LEDs::beYellow), 
         () -> previousGamePieceOrientation.getGamePieceType().equals(GamePieceType.CUBE)));
-        
-      
-      
-      // Commands.runOnce(()-> s_Claw.setRotoAngle(previousGamePieceOrientation.getRotOrientForRoto()))
-      //   .andThen(Commands.runOnce(s_LEDs::bePurple)
-      //   .unless(()->(isCone() || isNoThing())))
-      //   .andThen(Commands.runOnce(s_LEDs::beYellow)
-      //   .unless(()->(isCube() || isNoThing())))
-      //   .andThen(Commands.runOnce(s_LEDs::beWhoYouAre)
-      //   .unless(()->(isCone() || isCube()))));
-
-      // .unless(()-> s_Claw.haveGamePiece())
-      // .andThen(()->s_Claw.setRotoAngle(previousGamePieceOrientation.getRotOrientForRoto())));
-
-    //
-    // xBox.x().onTrue(new
-    // ProxyCommand(()->autoBuilder.followPathGroup(goToNearestGoal()))
-    // .beforeStarting(new
-    // InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
-    //
-    // xBox.y().onTrue(Commands.runOnce(s_Claw::openClaw)
-    // .andThen(null)
-    // .alongWith(null)
-    // .until(null));
 
   }
 
