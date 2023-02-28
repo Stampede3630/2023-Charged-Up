@@ -88,6 +88,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
 
     //SwerveDrive Setup
     m_driveTrain = new QuadFalconSwerveDrive();
+    m_driveTrain.checkAndSetSwerveCANStatus();
     // m_driveTrain.checkAndSeedALLSwerveAngles();
     
     //helps visualize robot on virtual field
@@ -106,6 +107,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
 
   @Override
   public void periodic() {
+    m_driveTrain.checkAndSeedALLSwerveAngles();
     prevRobotPose = m_odometry.getEstimatedPosition();
     if(RobotBase.isSimulation()) {
       for(SwerveModule module : m_driveTrain.SwerveModuleList) {
@@ -139,6 +141,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
       m_odometry.addVisionMeasurement(limelightBotPoseBack(), Timer.getFPGATimestamp() - limelightLatencyBack());
     }
 
+    m_driveTrain.checkAndSetSwerveCANStatus();
     drawRobotOnField(m_field);
     updateRotationController();
   }
@@ -202,10 +205,9 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
    * or estimated by encoder wheels (if gyro is disconnected)
    */
   public Rotation2d getRobotAngle(){
-    // if(RobotBase.isSimulation() || !gyro.isConnected()) {
-      // return prevRobotPose.getRotation().rotateBy(new Rotation2d(m_driveTrain.m_kinematics.toChassisSpeeds(m_driveTrain.getModuleStates()).omegaRadiansPerSecond *deltaTime));   
-    // }
-    return gyro.getRotation2d();
+    if(RobotBase.isSimulation() || !gyro.isConnected()) {
+      return prevRobotPose.getRotation().rotateBy(new Rotation2d(m_driveTrain.m_kinematics.toChassisSpeeds(m_driveTrain.getModuleStates()).omegaRadiansPerSecond *deltaTime));   
+    } else return gyro.getRotation2d();
   }
 
   @Log
@@ -319,6 +321,17 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
   private double convertToRadiansPerSecond(double _input){
     return _input*SwerveConstants.MAX_SPEED_RADIANSperSECOND;
   }
+
+  
+  public Command switchToRemoteSteerCommand(){
+    return new InstantCommand(() -> m_driveTrain.switchToRemoteSteering(),this);
+  }
+
+  public Command switchToIntegratedSteerCommand(){
+    return new InstantCommand(() -> m_driveTrain.switchToIntegratedSteer(),this);
+  }
+
+
   
   public Pose2d limelightBotPoseFront(){
 
