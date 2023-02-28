@@ -1,6 +1,7 @@
 package frc.robot.subsystems.swerve;
 
-import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
+import com.ctre.phoenix.motorcontrol.InvertType;
+import com.ctre.phoenixpro.signals.InvertedValue;
 
 public final class SwerveConstants {
     public static final boolean OPTIMIZESTEERING = true;
@@ -59,10 +60,10 @@ public final class SwerveConstants {
     // Give a positive input on the joystick or phoenix tuner
     // Switch this if it goes opposite the desired direction
     // Because of the gearing the convention could be reversed (GUESS AND CHECK)
-    public static TalonFXInvertType FRInvertType = TalonFXInvertType.Clockwise;
-    public static TalonFXInvertType FLInvertType = TalonFXInvertType.CounterClockwise;
-    public static TalonFXInvertType BRInvertType = TalonFXInvertType.Clockwise;
-    public static TalonFXInvertType BLInvertType = TalonFXInvertType.CounterClockwise;
+    public static InvertedValue FRInvertType = InvertedValue.Clockwise_Positive;
+    public static InvertedValue FLInvertType = InvertedValue.CounterClockwise_Positive;
+    public static InvertedValue BRInvertType = InvertedValue.Clockwise_Positive;
+    public static InvertedValue BLInvertType = InvertedValue.CounterClockwise_Positive;
 
     // Swerve Steering PIDs (kP, kI, kD)
     public static Gains FRSteerGains = new Gains(25, 0, 0);
