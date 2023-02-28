@@ -96,6 +96,14 @@ public class SwerveModule {
 
     private void swerveModuleInit() {
 
+        final Slot0Configs DriveMotorGains = new Slot0Configs();
+
+        DriveMotorGains.kP = driveMotor.kGAINS.kP;
+        DriveMotorGains.kI = driveMotor.kGAINS.kI;
+        DriveMotorGains.kD = driveMotor.kGAINS.kD;
+        DriveMotorGains.kS = SwerveConstants.kS;
+        DriveMotorGains.kV = SwerveConstants.kV;
+
         TalonFXConfiguration talonConfigs = new TalonFXConfiguration();
         
         MotorOutputConfigs invertedIsTheQuestion = new MotorOutputConfigs();
@@ -108,6 +116,7 @@ public class SwerveModule {
         SteerMotorGains.kP = steeringMotor.kGAINS.kP; 
         SteerMotorGains.kI = steeringMotor.kGAINS.kI; 
         SteerMotorGains.kD = steeringMotor.kGAINS.kD; 
+        
 
         talonConfigs.Slot0 = SteerMotorGains;
         // Modify configuration to use remote CANcoder fused

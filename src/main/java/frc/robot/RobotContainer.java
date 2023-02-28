@@ -124,7 +124,6 @@ public class RobotContainer {
     Preferences.initDouble("pKPRotationController", SwerveConstants.kPRotationController);
     Preferences.initDouble("pKIRotationController", SwerveConstants.kDRotationController);
     Preferences.initDouble("pKDRotationController", SwerveConstants.kIRotationController);
-    Preferences.initBoolean("pIntSteering", true);
     Preferences.initDouble("CannonKP", 1.0 / 30.0);
     Preferences.initDouble("CannonKI", 0.0);
     Preferences.initDouble("CannonKD", 0.0);
@@ -198,9 +197,9 @@ public class RobotContainer {
         s_SwerveDrive::getOdometryPose, // Pose2d supplier
         s_SwerveDrive::resetOdometry, // Pose2d consumer, used to reset odometry at the beginning of auto
         s_SwerveDrive.getKinematics(), // SwerveDriveKinematics
-        new PIDConstants(5, 0.0, 0.0), // PID constants to correct for translation error (used to create the X and Y
+        new PIDConstants(SwerveConstants.kP, 0.0, 0.0), // PID constants to correct for translation error (used to create the X and Y
                                        // PID controllers)
-        new PIDConstants(5, 0.0, 0.0), // PID constants to correct for rotation error (used to create the rotation
+        new PIDConstants(1, 0.0, 0.0), // PID constants to correct for rotation error (used to create the rotation
                                        // controller)
         s_SwerveDrive::setAutoModuleStates, // Module states consumer used to output to the drive subsystem
         eventMap,
@@ -229,9 +228,6 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
-    new Trigger(() -> Preferences.getBoolean("pIntSteering", true))
-        .onFalse(s_SwerveDrive.switchToRemoteSteerCommand().ignoringDisable(true))
-        .onTrue(s_SwerveDrive.switchToIntegratedSteerCommand().ignoringDisable(true));
 
     /**
      * Trigger Coast/Brake modes when DS is Disabled/Enabled.
