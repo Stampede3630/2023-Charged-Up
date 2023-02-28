@@ -6,7 +6,7 @@ package frc.robot;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-
+import java.util.Map;
 import com.pathplanner.lib.PathConstraints;
 import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
@@ -15,23 +15,35 @@ import com.pathplanner.lib.auto.PIDConstants;
 import com.pathplanner.lib.auto.SwerveAutoBuilder;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.WidgetType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
+import edu.wpi.first.wpilibj2.command.ProxyCommand;
 import edu.wpi.first.wpilibj2.command.RepeatCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.NodePosition.NodeGrid;
 import frc.robot.NodePosition.NodeGroup;
+import frc.robot.subsystems.LEDs;
 import frc.robot.subsystems.RotoClawtake;
 import frc.robot.subsystems.SwerveDrive;
 import frc.robot.subsystems.TheCannon;
@@ -70,6 +82,7 @@ public class RobotContainer {
   SendableChooser<GamePieceOrientation> gamePieceOrientationChooser = new SendableChooser<>();
   SendableChooser<frc.robot.NodePosition.NodeGroup> nodeGroupChooser = new SendableChooser<>();
   SendableChooser<NodeGrid> nodeGridChooser = new SendableChooser<>();
+  SendableChooser<PickupLocation> pickupLocationChooser = new SendableChooser<>();
 
   @Log
   private final SwerveDrive s_SwerveDrive = new SwerveDrive();
@@ -78,10 +91,21 @@ public class RobotContainer {
 
   private final TheCannon s_Cannon = new TheCannon();
 
+  private final LEDs s_LEDs = new LEDs();
+  
+  public GamePieceOrientation previousGamePieceOrientation;
+  public GamePieceType gamePieceTypeLed;
+  // private GamePieceType prev;
+  NetworkTableInstance inst = NetworkTableInstance.getDefault();
+
+  NetworkTable datatable = inst.getTable("GamePieceOrientationChooser");
+  
+  
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
    */
   public RobotContainer() {
+
 
     for (ArmTestSetPoints setPoint : ArmTestSetPoints.values()) {
       armTestSetPoints.addOption(setPoint.testPointName, setPoint);
@@ -100,7 +124,6 @@ public class RobotContainer {
     Preferences.initDouble("pKPRotationController", SwerveConstants.kPRotationController);
     Preferences.initDouble("pKIRotationController", SwerveConstants.kDRotationController);
     Preferences.initDouble("pKDRotationController", SwerveConstants.kIRotationController);
-    Preferences.initBoolean("pIntSteering", true);
     Preferences.initDouble("CannonKP", 1.0 / 30.0);
     Preferences.initDouble("CannonKI", 0.0);
     Preferences.initDouble("CannonKD", 0.0);
@@ -117,8 +140,8 @@ public class RobotContainer {
     Preferences.initBoolean("Wanna PID Cannon", false);
 
 
-    autoPathGroup = (ArrayList<PathPlannerTrajectory>) PathPlanner.loadPathGroup("swerveTest",
-        new PathConstraints(2, 2));
+    // autoPathGroup = (ArrayList<PathPlannerTrajectory>) PathPlanner.loadPathGroup("swerveTest",
+        // new PathConstraints(2, 2));
 
     for (GamePieceOrientation orientation : GamePieceOrientation.values()) {
       gamePieceOrientationChooser.addOption(orientation.getFriendlyName(), orientation);
@@ -128,9 +151,18 @@ public class RobotContainer {
       nodeGroupChooser.addOption(group.name(), group);
     }
     nodeGroupChooser.setDefaultOption(NodeGroup.CENTER.name(), NodeGroup.CENTER);
+    for (NodeGrid child : NodeGrid.values()) {
+      nodeGridChooser.addOption(child.name(), child);
+    }
+    nodeGridChooser.setDefaultOption(NodeGrid.MID_CENTER.name(), NodeGrid.MID_CENTER);
+    for (PickupLocation loc : PickupLocation.values()) {
+      pickupLocationChooser.addOption(loc.name(), loc);
+    }
+    pickupLocationChooser.setDefaultOption(PickupLocation.GROUND.name(), PickupLocation.GROUND);
+
     Shuffleboard.getTab("nodeSelector")
         .add("orientation", gamePieceOrientationChooser)
-        .withWidget(BuiltInWidgets.kComboBoxChooser);
+        .withWidget(BuiltInWidgets.kSplitButtonChooser);
 
     Shuffleboard.getTab("nodeSelector")
         .add("Node Driver Station", nodeDriverStation)
@@ -142,11 +174,19 @@ public class RobotContainer {
 
     Shuffleboard.getTab("nodeSelector")
       .add("Node Group Chooser", nodeGroupChooser)
-      .withWidget(BuiltInWidgets.kComboBoxChooser);
+      .withWidget(BuiltInWidgets.kSplitButtonChooser);
       
     Shuffleboard.getTab("nodeSelector")
       .add("Node Grid Chooser", nodeGridChooser)
-      .withWidget("GridChooserWidget");
+      .withWidget("GridChooserWidget")
+      .withProperties(Map.of("Cone Image","C:\\Users\\Mustangs\\Documents\\evanArtwork\\cone.png",
+      "Cube Image","C:\\Users\\Mustangs\\Documents\\evanArtwork\\cube.png",
+      "Hybrid Image","C:\\Users\\Mustangs\\Documents\\evanArtwork\\hybrid.png",
+      "R", 1));
+
+    Shuffleboard.getTab("nodeSelector")
+      .add("Pickup Location", pickupLocationChooser)
+      .withWidget(BuiltInWidgets.kSplitButtonChooser);
 
     HashMap<String, Command> eventMap = new HashMap<>();
     eventMap.put("1stBallPickup", new WaitCommand(2));
@@ -157,9 +197,9 @@ public class RobotContainer {
         s_SwerveDrive::getOdometryPose, // Pose2d supplier
         s_SwerveDrive::resetOdometry, // Pose2d consumer, used to reset odometry at the beginning of auto
         s_SwerveDrive.getKinematics(), // SwerveDriveKinematics
-        new PIDConstants(5, 0.0, 0.0), // PID constants to correct for translation error (used to create the X and Y
+        new PIDConstants(SwerveConstants.kP, 0.0, 0.0), // PID constants to correct for translation error (used to create the X and Y
                                        // PID controllers)
-        new PIDConstants(5, 0.0, 0.0), // PID constants to correct for rotation error (used to create the rotation
+        new PIDConstants(1, 0.0, 0.0), // PID constants to correct for rotation error (used to create the rotation
                                        // controller)
         s_SwerveDrive::setAutoModuleStates, // Module states consumer used to output to the drive subsystem
         eventMap,
@@ -173,19 +213,6 @@ public class RobotContainer {
             xBox::getLeftX,
             xBox::getRightX).withName("DefaultDrive"));
 
-    // // s_Cannon.setDefaultCommand(
-    // // new InstantCommand(s_Cannon::stowMode)
-    // );
-
-    // This will load the file "FullAuto.path" and generate it with a max velocity
-    // of 4 m/s and a max acceleration of 3 m/s^2
-    // for every path in the group
-    // autoPathGroup = ;//PathPlanner.loadPathGroup("Test5Ball", new
-    // PathConstraints(4, 3));
-    // leftPathGroup = ;//PathPlanner.loadPathGroup("LeftPath1WP", new
-    // PathConstraints(4, 3));
-    // rightPathGroup = ;//PathPlanner.loadPathGroup("RightPath1WP", new
-    // PathConstraints(4, 3));
     // Configure the button bindings
     configureButtonBindings();
     Logger.configureLoggingAndConfig(this, false);
@@ -201,21 +228,25 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
-    new Trigger(() -> Preferences.getBoolean("pIntSteering", true))
-        .onFalse(s_SwerveDrive.switchToRemoteSteerCommand().ignoringDisable(true))
-        .onTrue(s_SwerveDrive.switchToIntegratedSteerCommand().ignoringDisable(true));
 
     /**
      * Trigger Coast/Brake modes when DS is Disabled/Enabled.
      * Trigger runs WHILETRUE for coast mode. Coast Mode method
      * is written to wait for slow speeds before setting to coast
      */
+
     new Trigger(DriverStation::isDisabled)
-        .whileTrue(s_SwerveDrive.setToCoast()
-            .ignoringDisable(true)
-            .withName("SetToCoast"))
-        .onFalse(s_SwerveDrive.setToBrake()
-            .withName("setToBrake"));
+        .whileTrue(s_SwerveDrive.setToCoast().ignoringDisable(true)
+        .andThen(s_Cannon::setCannonToCoast)
+        .andThen(s_Claw::setRotoCoast)
+        .andThen(Commands.runOnce(s_LEDs::beWhoYouAre).ignoringDisable(true))
+            .withName("SetToCoast"));
+    new Trigger(DriverStation::isEnabled)
+        .onTrue(Commands.runOnce(s_Claw::initializeClampCommand)
+        .andThen(Commands.runOnce(s_SwerveDrive::setToBrake))
+        .andThen(s_Cannon::setCannonToBrake)
+        .andThen(s_Claw::setRotoBrake)
+        .andThen(Commands.runOnce(s_Claw::initializeClCommandWithGamePiece)));
 
     /**
      * next two triggers are to "toggle" rotation HOLD mode and set a heading
@@ -236,84 +267,98 @@ public class RobotContainer {
                 xBox::getRightX)
                 .withName("StandardOperatorDrive"));
 
-    xBox.b()
-        .onTrue(new InstantCommand(() -> s_SwerveDrive.setHoldHeadingFlag(false)));
-
-    // xBox.povCenter().negate().onTrue(
-    // new SequentialCommandGroup(
-    // new InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(true)),
-    // new
-    // InstantCommand(()->s_SwerveDrive.setHoldHeadingAngle(-xBox.getHID().getPOV()
-    // + 90))
-    // ));
-
+    //testing triggers    
     xBox.povUp()
         .whileTrue(new RepeatCommand(Commands.runOnce(s_Cannon::manRotUp)));
     xBox.povDown()
         .whileTrue(new RepeatCommand(Commands.runOnce(s_Cannon::manRotDown)));
     xBox.povRight()
-        .whileTrue(new RepeatCommand(new InstantCommand(s_Cannon::manExtend, s_Cannon)));
+        .whileTrue(new RepeatCommand(Commands.runOnce(s_Cannon::manExtend, s_Cannon)));
     xBox.povLeft()
-        .whileTrue(new RepeatCommand(new InstantCommand(s_Cannon::manRetract, s_Cannon)));
-    xBox.rightTrigger(.5)
-        .onTrue(new InstantCommand(s_Claw::runClawtake, s_Claw))
-          // .alongWith(Commands.runOnce(() -> s_Cannon.setCannonAngleSides(cannonFacing(), -20))))
-        .onFalse((new InstantCommand(s_Claw::stopClawTake, s_Claw)));
-    xBox.leftTrigger(.5)
-        .onTrue(new InstantCommand(s_Claw::reverseClawtake, s_Claw))
-        .onFalse(new InstantCommand(s_Claw::stopClawTake, s_Claw));
-    xBox.rightBumper()
-        .onTrue(new InstantCommand(s_Claw::openClaw, s_Claw))
-        .onFalse(new InstantCommand(s_Claw::stopClawTake, s_Claw));
-    xBox.leftBumper()
-        .onTrue(new InstantCommand(s_Claw::closeClaw, s_Claw))
-        .onFalse(new InstantCommand(s_Claw::stopClawTake, s_Claw));
-    // xBox.a().debounce(.1)
-    //     .onTrue(new InstantCommand(s_Claw::rotoClaw))
-    //     .onFalse(new InstantCommand(s_Claw::stopClawTake));
-    // xBox.x().debounce(.1)
-    //     .onTrue(new InstantCommand(s_Claw::rotoClawReverse))
-    //     .onFalse(new InstantCommand(s_Claw::stopClawTake));
-    xBox.x().debounce(.1)
-      .onTrue(Commands.runOnce(s_Claw::flipRotoClawtake).andThen(new PrintCommand("flipclawtake")));
-    // xBox.y()
-    //     .onTrue((Commands.runOnce(()-> s_Cannon.setCannonAngle(armTestSetPoints.getSelected().getTestCannonAngle())))
-    //     .andThen(new SequentialCommandGroup(Commands.waitUntil(s_Cannon::errorWithinRange)),
-    //       Commands.runOnce(()-> s_Cannon.setExtensionInches(armTestSetPoints.getSelected().getTestCannonExtension()))));
+        .whileTrue(new RepeatCommand(Commands.runOnce(s_Cannon::manRetract, s_Cannon)));
 
-    // new Trigger(s_Claw::haveGamePiece)
-    //   .whileTrue(new RepeatCommand(Commands.runOnce(() -> s_Cannon.setCannonAngleSides(cannonFacing(), 30)))
-    //     .andThen(Commands.runOnce(() -> s_Claw.flipRotoClawtake()))
-    //     .ignoringDisable(true))
-    //   .whileFalse(new RepeatCommand(Commands.runOnce(() -> s_Cannon.setCannonAngleSides(cannonFacing(), 150))
-    //     .andThen(Commands.runOnce(() -> s_Claw.prepareForGamePiece(gamePieceOrientationChooser.getSelected()))))
-    //     .ignoringDisable(true));
+    //combined triggers
+
+    //-> intake trigger
+    xBox.rightTrigger(.55).debounce(.1, DebounceType.kFalling)
+        .onTrue(Commands.runOnce(s_Claw::runClawtake)
+          .alongWith(Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), pickupLocationChooser.getSelected().cannonAngle))
+          .alongWith(Commands.waitUntil(s_Cannon::cannonErrorWithinRange)
+            .andThen(() -> s_Cannon.setExtensionInches(pickupLocationChooser.getSelected().cannonExtension)))
+            .alongWith(Commands.runOnce(s_Claw::closeClaw))))
+        .onFalse(Commands.runOnce(s_Claw::stopClawTake)
+          .andThen(Commands.runOnce(() -> s_Cannon.setExtensionInches(4)))
+            .andThen(Commands.either(
+            Commands.runOnce(() -> s_Claw.faceCommunitySides(s_Cannon.setCannonAngleSides(robotFacing(), 140)))
+            .unless(xBox.rightTrigger(.5)),
+            Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), 40)).unless(xBox.rightTrigger(.5)) // towards pickup
+              .andThen(Commands.runOnce(() -> s_Claw.prepareForGamePiece(gamePieceOrientationChooser.getSelected()))), 
+                s_Claw::haveGamePiece)));
+
+    //-> outtake trigger
+    xBox.leftTrigger(.55).debounce(.1, DebounceType.kFalling)
+        .onTrue(Commands.runOnce(s_Claw::openClaw)
+          .alongWith(Commands.runOnce(s_Claw::reverseClawtake)))
+        .onFalse(Commands.runOnce(s_Claw::stopClawTake)
+          .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(5.0))
+            .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange)
+              .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngleSides(robotFacing(), 150))))));
+
+    //-> extension + cannonRot to setpoint
+    xBox.y()
+        .onTrue((Commands.runOnce(()-> s_Cannon.setCannonAngleSides(robotFacing(), NodePosition.getNodePosition(nodeGroupChooser.getSelected(), nodeGridChooser.getSelected()).getCannonAngle())))
+          .andThen(new SequentialCommandGroup(Commands.waitUntil(s_Cannon::cannonErrorWithinRange)),
+              Commands.runOnce(()-> s_Cannon.setExtensionInches(NodePosition.getNodePosition(nodeGroupChooser.getSelected(), nodeGridChooser.getSelected()).getExtension()))));
+
+    //single object triggers
+
+    //->claw
+    xBox.rightBumper().debounce(.1, DebounceType.kFalling)
+        .onTrue(Commands.repeatingSequence(Commands.runOnce(() -> s_Claw.setClawReference(s_Claw.getClampAngle()+5))))
+        .onFalse(Commands.runOnce(s_Claw::stopClawMotor));
+    xBox.leftBumper().debounce(.1, DebounceType.kFalling)
+        .onTrue(Commands.repeatingSequence(Commands.runOnce(() -> s_Claw.setClawReference(s_Claw.getClampAngle()-5))))
+        .onFalse(Commands.runOnce(s_Claw::stopClawMotor));
+
+    xBox.x().debounce(.1)
+        .onTrue(Commands.repeatingSequence(Commands.runOnce(() -> s_Claw.setRotoAngle(s_Claw.getRotoAngle() + 5))));      
+        
+    xBox.b().debounce(.1)
+        .onTrue(Commands.repeatingSequence(Commands.runOnce(() -> s_Claw.setRotoAngle(s_Claw.getRotoAngle() - 5))));
+
+    //->cannon
+
+    //->LED
+
+    //logic/no controller triggers
+    new Trigger(s_Claw::haveGamePiece)
+      .onTrue(Commands.runOnce(s_Claw::closeClaw)
+        .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(1.37985 + 1)))
+         .andThen(()-> s_Cannon.setCannonAngleSides(robotFacing(), 140))
+          .andThen(s_LEDs::beWhoYouAre))
+      .onFalse(Commands.either(
+        Commands.runOnce(s_LEDs::bePurple), 
+        Commands.runOnce(s_LEDs::beYellow), 
+        ()-> (gamePieceOrientationChooser.getSelected().getGamePieceType().equals(GamePieceType.CUBE))));
 
     new Trigger(() -> robotFacing() != FacingPOI.NOTHING)
       .onTrue(Commands.either(
-        Commands.runOnce(() -> s_Claw.faceCommunitySides(s_Cannon.setCannonAngleSides(robotFacing(), 150)))
-        .unless(xBox.rightTrigger(.75))  //towards community
-        .ignoringDisable(true),
-        Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), 30)).unless(xBox.rightTrigger(.75)) // towards pickup
-        .andThen(Commands.runOnce(() -> s_Claw.prepareForGamePiece(gamePieceOrientationChooser.getSelected())))
-        .ignoringDisable(true), 
-        s_Claw::haveGamePiece));
+        Commands.runOnce(() -> s_Claw.faceCommunitySides(s_Cannon.setCannonAngleSides(robotFacing(), 140)))
+        .unless(xBox.rightTrigger(.5)),
+        Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), 40)).unless(xBox.rightTrigger(.5)) // towards pickup
+          .andThen(Commands.runOnce(() -> s_Claw.prepareForGamePiece(gamePieceOrientationChooser.getSelected()))), 
+           s_Claw::haveGamePiece));
+  
+    xBox.a().onTrue(new
+    ProxyCommand(()->autoBuilder.followPathGroup(autoPathGroupOnTheFly()))
+    .beforeStarting(new
+    InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
 
-
-    // xBox.a().onTrue(new
-    // ProxyCommand(()->autoBuilder.followPathGroup(autoPathGroupOnTheFly()))
-    // .beforeStarting(new
-    // InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
-    //
-    // xBox.x().onTrue(new
-    // ProxyCommand(()->autoBuilder.followPathGroup(goToNearestGoal()))
-    // .beforeStarting(new
-    // InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
-    //
-    // xBox.y().onTrue(new InstantCommand(s_Claw::openClaw)
-    // .andThen(null)
-    // .alongWith(null)
-    // .until(null));
+    new Trigger(()->listenForOrientationChange()).and(s_Claw::haveGamePiece).negate()
+      .onTrue(Commands.either(
+        Commands.runOnce(s_LEDs::bePurple), 
+        Commands.runOnce(s_LEDs::beYellow), 
+        () -> previousGamePieceOrientation.getGamePieceType().equals(GamePieceType.CUBE)));
 
   }
 
@@ -331,10 +376,11 @@ public class RobotContainer {
     PGOTF.add(0,
         PathPlanner.generatePath(
             new PathConstraints(4, 3),
-            new PathPoint(s_SwerveDrive.getOdometryPose().getTranslation(), s_SwerveDrive.getRobotAngle()),
-            new PathPoint(autoPathGroup.get(0).getInitialHolonomicPose().getTranslation(),
-                autoPathGroup.get(0).getInitialPose().getRotation(),
-                autoPathGroup.get(0).getInitialHolonomicPose().getRotation())));
+            new PathPoint(s_SwerveDrive.getOdometryPose().getTranslation(), s_SwerveDrive.getOdometryPose().getRotation()),
+            new PathPoint(new Translation2d(Units.inchesToMeters(nodeGroupChooser.getSelected().xCoord), 
+              Units.inchesToMeters(nodeGroupChooser.getSelected().yCoord) + Units.inchesToMeters(getYOffset())), 
+              new Rotation2d(robotFacing() == FacingPOI.COMMUNITY ? 0:180), 
+              new Rotation2d(robotFacing() == FacingPOI.COMMUNITY ? 0:180))));
 
     return PGOTF;
   }
@@ -374,7 +420,7 @@ public class RobotContainer {
           new PathConstraints(4, 3),
           new PathPoint(s_SwerveDrive.getOdometryPose().getTranslation(), s_SwerveDrive.getRobotAngle()),
           new PathPoint(rightPathGroup.get(0).getInitialHolonomicPose().getTranslation(),
-              rightPathGroup.get(0).getInitialPose().getRotation(),
+              calculateHeading(),
               rightPathGroup.get(0).getInitialHolonomicPose().getRotation()));
       PGOTF.addAll(rightPathGroup);
     }
@@ -431,7 +477,7 @@ public class RobotContainer {
 
   public enum GamePieceOrientation {
     RIGHT("|>", 90, GamePieceType.CONE),
-    LEFT("<|", -90, GamePieceType.CONE),
+    LEFT("<|", 90, GamePieceType.CONE),
     UPRIGHT("/\\", 0, GamePieceType.CONE),
     CUBE("口", 90, GamePieceType.CUBE);
 
@@ -460,7 +506,7 @@ public class RobotContainer {
   }
 
   public enum GamePieceType {
-    CONE, CUBE
+    CONE, CUBE, NOTHING
   }
 
 
@@ -503,9 +549,78 @@ public class RobotContainer {
 
   }
 
+  public enum PickupLocation {
+    GROUND(-14, 10), SHELF(40, 24); // change these
+
+    private final double cannonAngle;
+    private final double cannonExtension;
+
+    private PickupLocation(double cannonAngle, double cannonExtension){this.cannonAngle = cannonAngle; this.cannonExtension = cannonExtension;}
+  }
   public double armTestSetPointsAngle(SendableChooser<ArmTestSetPoints> armTestSetPoints){
   
     return armTestSetPoints.getSelected().getTestCannonAngle();
   }
 
+  public boolean listenForOrientationChange(){
+
+    previousGamePieceOrientation = gamePieceOrientationChooser.getSelected();
+
+    if (gamePieceOrientationChooser.getSelected() != previousGamePieceOrientation) {
+      previousGamePieceOrientation = gamePieceOrientationChooser.getSelected();
+
+      return true;
+    } else{
+
+      return false;
+    }
+  }
+
+  public Rotation2d calculateHeading(){
+    Pose2d roboTranslationX = s_SwerveDrive.getOdometryPose();
+    double desiredTranslationX = (Units.inchesToMeters(nodeGroupChooser.getSelected().xCoord));
+    double desiredTranslationY = Units.inchesToMeters(nodeGroupChooser.getSelected().yCoord + getYOffset());
+
+    double oOfOA = roboTranslationX.getX() - desiredTranslationX;
+    double aOfOA = roboTranslationX.getY() - desiredTranslationY;
+    
+    return new Rotation2d(-Math.atan(oOfOA/aOfOA));
+  }
+
+  // public boolean listenForGamePieceLED(){
+  //
+  //   gamePieceTypeLed = gamePieceOrientationChooser.getSelected().getGamePieceType();
+  //
+  //   if (gamePieceOrientationChooser.getSelected().getGamePieceType() != gamePieceTypeLed) {
+  //     gamePieceTypeLed = gamePieceOrientationChooser.getSelected().getGamePieceType();
+  //     System.out.println("a thing happened");
+  //     return true;
+  //   } else{
+  //     System.out.println("a thing did not happen");
+  //     return false;
+  //   }
+  // }
+
+  public boolean isCone(){
+    return gamePieceOrientationChooser.getSelected().gamePieceType.equals(GamePieceType.CONE);
+
+  }
+
+  public boolean isCube(){
+    return gamePieceOrientationChooser.getSelected().gamePieceType.equals(GamePieceType.CUBE);
+
+  }
+
+  public boolean isNoThing(){
+    return gamePieceOrientationChooser.getSelected().gamePieceType.equals(GamePieceType.NOTHING);
+    //Not necessary because isNoThing is never true 6:13 PM Friday, February 24 (=^-w-^=), :3, UwU, >wO
+  }
+
+  // public boolean beDesiredPieceColorR(){
+  //   if (gamePieceType == gamePieceOrientationChooser.getSelected().getGamePieceType().CONE){
+  //     return false;
+  //   } else {
+  //     return true;
+  //   }
+  // }
 }

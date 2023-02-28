@@ -5,10 +5,13 @@
 package frc.robot.subsystems;
 
 
+import java.lang.constant.DirectMethodHandleDesc;
+import java.sql.Driver;
 import java.util.function.DoubleSupplier;
 
 import com.kauailabs.navx.frc.AHRS;
 
+import edu.wpi.first.hal.AllianceStationID;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
@@ -23,10 +26,12 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandBase;
@@ -40,6 +45,7 @@ import frc.robot.subsystems.swerve.SwerveConstants;
 import frc.robot.subsystems.swerve.SwerveModule;
 import frc.robot.util.SimGyroSensorModel;
 import io.github.oblarg.oblog.Loggable;
+import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
 
 
@@ -47,7 +53,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
   QuadFalconSwerveDrive m_driveTrain;
   Pose2d prevRobotPose = new Pose2d();
   Pose2d robotPose = new Pose2d();
-  Pose2d visionPose = new Pose2d();
+  Pose2d visionPoseFront = new Pose2d();
   double deltaTime = 0;
   double prevTime = 0;
   AHRS gyro;
@@ -60,7 +66,8 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
   ProfiledPIDController rotationController;
   double rotationControllerOutput;
 
-  boolean aprilTagDetected = false;
+  boolean aprilTagDetectedFront = false;
+  boolean aprilTagDetectedBack = false;
 
   @Log
   public Field2d m_field;
@@ -76,12 +83,11 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
     //NAVX gyro and sim setup
     gyro = new AHRS(SPI.Port.kMXP);
     gyro.reset(); 
-    gyro.setAngleAdjustment(90); //TODO: CHANGE THIS FOR FINAL BOT!!!!!!!!!!!!!!!
+    gyro.setAngleAdjustment(0); //TODO: CHANGE THIS FOR FINAL BOT!!!!!!!!!!!!!!!
     simNavx = new SimGyroSensorModel();
 
     //SwerveDrive Setup
     m_driveTrain = new QuadFalconSwerveDrive();
-    m_driveTrain.checkAndSetSwerveCANStatus();
     // m_driveTrain.checkAndSeedALLSwerveAngles();
     
     //helps visualize robot on virtual field
@@ -100,7 +106,6 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
 
   @Override
   public void periodic() {
-    m_driveTrain.checkAndSeedALLSwerveAngles();
     prevRobotPose = m_odometry.getEstimatedPosition();
     if(RobotBase.isSimulation()) {
       for(SwerveModule module : m_driveTrain.SwerveModuleList) {
@@ -120,19 +125,20 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
       simNavx.update(robotPose, prevRobotPose, deltaTime);
     }
 
-    aprilTagDetected = (NetworkTableInstance.getDefault().getTable("limelight").getEntry("tv").getDouble(0) == 1) ? true : false;
-
+    aprilTagDetectedFront = (NetworkTableInstance.getDefault().getTable("limelight-front").getEntry("tv").getDouble(0) == 1) ? true : false;
+    aprilTagDetectedBack = (NetworkTableInstance.getDefault().getTable("limelight-back").getEntry("tv").getDouble(0) == 1) ? true : false;
     // System.out.println(aprilTagDetected);
 
     robotPose = updateOdometry();
-    visionPose = limelightBotPose();
 
-    if (aprilTagDetected && limelightLatency() < 1.5) {
-      m_odometry.addVisionMeasurement(visionPose, Timer.getFPGATimestamp() - limelightLatency());
+    if (aprilTagDetectedFront && limelightLatencyFront() < 1.5) {
+      m_odometry.addVisionMeasurement(limelightBotPoseFront(), Timer.getFPGATimestamp() - limelightLatencyFront());
     }
-    updateOdometry();
 
-    m_driveTrain.checkAndSetSwerveCANStatus();
+    if(aprilTagDetectedBack && limelightLatencyBack() < 1.5) {
+      m_odometry.addVisionMeasurement(limelightBotPoseBack(), Timer.getFPGATimestamp() - limelightLatencyBack());
+    }
+
     drawRobotOnField(m_field);
     updateRotationController();
   }
@@ -151,7 +157,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
       () -> {
         double x = -_x.getAsDouble();
         double y = -_y.getAsDouble();
-        double rot = -_rot.getAsDouble();
+        double rot = Math.pow(-_rot.getAsDouble(), 3);
         double joystickDriveGovernor = Preferences.getDouble("pDriveGovernor", Constants.driveGovernor);
         
         if (Preferences.getBoolean("pAccelInputs", Constants.acceleratedInputs)) {
@@ -165,7 +171,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
           new Translation2d(
             convertToMetersPerSecond(x)*joystickDriveGovernor,
             convertToMetersPerSecond(y)*joystickDriveGovernor), 
-          convertToRadiansPerSecond(rot)* joystickDriveGovernor, 
+          -convertToRadiansPerSecond(rot)* joystickDriveGovernor, 
           Preferences.getBoolean("pFieldRelative", Constants.fieldRelative));
         }, this);
   }
@@ -196,9 +202,10 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
    * or estimated by encoder wheels (if gyro is disconnected)
    */
   public Rotation2d getRobotAngle(){
-    if(RobotBase.isSimulation() || !gyro.isConnected()) {
-      return prevRobotPose.getRotation().rotateBy(new Rotation2d(m_driveTrain.m_kinematics.toChassisSpeeds(m_driveTrain.getModuleStates()).omegaRadiansPerSecond *deltaTime));   
-    } else return gyro.getRotation2d();
+    // if(RobotBase.isSimulation() || !gyro.isConnected()) {
+      // return prevRobotPose.getRotation().rotateBy(new Rotation2d(m_driveTrain.m_kinematics.toChassisSpeeds(m_driveTrain.getModuleStates()).omegaRadiansPerSecond *deltaTime));   
+    // }
+    return gyro.getRotation2d();
   }
 
   @Log
@@ -312,44 +319,70 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
   private double convertToRadiansPerSecond(double _input){
     return _input*SwerveConstants.MAX_SPEED_RADIANSperSECOND;
   }
-
   
-  public Command switchToRemoteSteerCommand(){
-    return new InstantCommand(() -> m_driveTrain.switchToRemoteSteering(),this);
-  }
+  public Pose2d limelightBotPoseFront(){
 
-  public Command switchToIntegratedSteerCommand(){
-    return new InstantCommand(() -> m_driveTrain.switchToIntegratedSteer(),this);
-  }
-
-
-  
-  public Pose2d limelightBotPose(){
+    String allianceColorBotPose = DriverStation.getAlliance() == Alliance.Red ? "botpose_wpired" : "botpose_wpiblue";
 
     double myArray[] = {0, 0, 0, 0, 0, 0};
     
-    myArray = NetworkTableInstance.getDefault().getTable("limelight").getEntry("botpose").getDoubleArray(myArray);
+    myArray = NetworkTableInstance.getDefault().getTable("limelight-front").getEntry(allianceColorBotPose).getDoubleArray(myArray);
 
     double x = 0;
     double y = 0;
     double rot = 0;
     if (myArray.length > 0){
-      x = 8.2425 - myArray[0];
-      y = 4.0515 + myArray[1];
+      x = myArray[0];
+      y = myArray[1];
       rot = myArray[5];
     }
 
     return new Pose2d(x, y, Rotation2d.fromDegrees(rot));
 
   }
+
+  public Pose2d limelightBotPoseBack(){
+
+    double myArray[] = {0, 0, 0, 0, 0, 0};
+    String allianceColorBotPose = DriverStation.getAlliance() == Alliance.Red ? "botpose_wpired" : "botpose_wpiblue";
+
+      myArray = NetworkTableInstance.getDefault().getTable("limelight-back").getEntry(allianceColorBotPose).getDoubleArray(myArray);
+    
+
+    double x = 0;
+    double y = 0;
+    double rot = 0;
+    if (myArray.length > 0){
+      x = myArray[0];
+      y = myArray[1];
+      rot = myArray[5];
+    }
+
+    return new Pose2d(x, y, Rotation2d.fromDegrees(rot));
+
+  }
+
   @Log
-  public double limelightLatency(){
+  public double limelightLatencyFront(){
     double vLatency = 0;
-    vLatency = NetworkTableInstance.getDefault().getTable("limelight").getEntry("tl").getDouble(vLatency);
+    vLatency = NetworkTableInstance.getDefault().getTable("limelight-front").getEntry("tl").getDouble(vLatency);
    
     return (vLatency * 0.001) + (11 * 0.001);
   }
 
-  
+  @Log
+  public double limelightLatencyBack(){
+    double vLatency = 0;
+    vLatency = NetworkTableInstance.getDefault().getTable("limelight-back").getEntry("tl").getDouble(vLatency);
+   
+    return (vLatency * 0.001) + (11 * 0.001);
+  }
 
+  @Config(defaultValueBoolean = false)
+  public void zeroOdometry(boolean input){
+    if(input){
+      m_odometry.resetPosition(new Rotation2d(), m_driveTrain.getModulePositions(), new Pose2d());
+    }
+  }
+  
 }

@@ -1,10 +1,11 @@
 package frc.robot.subsystems.swerve;
 
-import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
+import com.ctre.phoenix.motorcontrol.InvertType;
+import com.ctre.phoenixpro.signals.InvertedValue;
 
 public final class SwerveConstants {
     public static final boolean OPTIMIZESTEERING = true;
-    public static final boolean BOT_IS_NOT_CHARACTERIZED = true;
+    public static final boolean BOT_IS_NOT_CHARACTERIZED = false;
     public static final boolean RUN_TRAJECTORY = true;
 
     // SWERVE MODULE CHARACTERISTICS
@@ -51,24 +52,24 @@ public final class SwerveConstants {
     // CHANGE TO 0 first, reset the sensor,
     // PHYSICALLY zero out the motor
     // place the OPPOSITE of the value
-    public static double FRSensorOffset = 118.564; // 121.904; test? values
-    public static double FLSensorOffset = 34.629;// 40.869;
-    public static double BRSensorOffset = 50.537;// 179.561;
-    public static double BLSensorOffset = -23.818;// -24.873;
+    public static double FRSensorOffset = -0.145752; // 121.904; test? values
+    public static double FLSensorOffset = -0.390381;// 40.869;
+    public static double BRSensorOffset = -0.376953;// 179.561;
+    public static double BLSensorOffset = -0.553223;// -24.873;
 
     // Give a positive input on the joystick or phoenix tuner
     // Switch this if it goes opposite the desired direction
     // Because of the gearing the convention could be reversed (GUESS AND CHECK)
-    public static TalonFXInvertType FRInvertType = TalonFXInvertType.Clockwise;
-    public static TalonFXInvertType FLInvertType = TalonFXInvertType.CounterClockwise;
-    public static TalonFXInvertType BRInvertType = TalonFXInvertType.Clockwise;
-    public static TalonFXInvertType BLInvertType = TalonFXInvertType.CounterClockwise;
+    public static InvertedValue FRInvertType = InvertedValue.Clockwise_Positive;
+    public static InvertedValue FLInvertType = InvertedValue.CounterClockwise_Positive;
+    public static InvertedValue BRInvertType = InvertedValue.Clockwise_Positive;
+    public static InvertedValue BLInvertType = InvertedValue.CounterClockwise_Positive;
 
     // Swerve Steering PIDs (kP, kI, kD)
-    public static Gains FRSteerGains = new Gains(25, 0, 0);
-    public static Gains FLSteerGains = new Gains(25, 0, 0);
-    public static Gains BRSteerGains = new Gains(25, 0, 0);
-    public static Gains BLSteerGains = new Gains(25, 0, 0);
+    public static Gains FRSteerGains = new Gains(24.8, 0, 0);
+    public static Gains FLSteerGains = new Gains(24.8, 0, 0);
+    public static Gains BRSteerGains = new Gains(24.8, 0, 0);
+    public static Gains BLSteerGains = new Gains(24.8, 0, 0);
 
     // Swerve Driving PIDs (kP, kI, kD)
     // Once characterized the drive PIDs are meaningless
@@ -77,10 +78,10 @@ public final class SwerveConstants {
     public static Gains BRDriveGains = new Gains(0.07, 0, 0, 1023.0 / 20660.0);
     public static Gains BLDriveGains = new Gains(0.07, 0, 0, 1023.0 / 20660.0);
 
-    public static final double kS = 0.4148;
-    public static final double kV = 2.55;
-    public static final double kA = 3.4537;
-    public static final double kP = 11.469;// previous value (for testing): 4.4561 -e
+    public static final double kS = 0.1455;
+    public static final double kV = 2.2956;
+    public static final double kA = 0.62818;
+    public static final double kP = 2.1956; //now better!
 
     // CTRE CAN-based constants (shouldn't need to change these)
     public static final int kDefaultPIDSlotID = 0;
