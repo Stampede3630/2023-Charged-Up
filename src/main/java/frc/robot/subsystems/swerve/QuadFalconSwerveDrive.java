@@ -2,8 +2,8 @@ package frc.robot.subsystems.swerve;
 
 import java.util.List;
 
-import com.ctre.phoenix.motorcontrol.ControlMode;
-import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
+import com.ctre.phoenixpro.*;
+import com.ctre.phoenixpro.controls.DutyCycleOut;
 
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -12,7 +12,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 
 public class QuadFalconSwerveDrive {
   public String NeutralMode = "Brake";
-  public TalonFXConfiguration driveMotorConfig = new TalonFXConfiguration();
+  // public TalonFXConfiguration driveMotorConfig = new TalonFXConfiguration();
 
   public SwerveModule FrontLeftSwerveModule = new SwerveModule(
       new SwerveModule.DriveMotor(SwerveConstants.FLDriveID, SwerveConstants.FLInvertType,
@@ -54,33 +54,6 @@ public class QuadFalconSwerveDrive {
       BackLeftSwerveModule,
       BackRightSwerveModule);
 
-  public void checkAndSetSwerveCANStatus() {
-    FrontLeftSwerveModule.setSwerveModuleCANStatusFrames();
-    BackLeftSwerveModule.setSwerveModuleCANStatusFrames();
-    BackRightSwerveModule.setSwerveModuleCANStatusFrames();
-    FrontRightSwerveModule.setSwerveModuleCANStatusFrames();
-  }
-
-  public void checkAndSeedALLSwerveAngles() {
-    FrontLeftSwerveModule.seedCANCoderAngleToMotorAngle();
-    BackLeftSwerveModule.seedCANCoderAngleToMotorAngle();
-    BackRightSwerveModule.seedCANCoderAngleToMotorAngle();
-    FrontRightSwerveModule.seedCANCoderAngleToMotorAngle();
-  }
-
-  public void switchToRemoteSteering() {
-    FrontLeftSwerveModule.switchToCANCoderSteer();
-    BackLeftSwerveModule.switchToCANCoderSteer();
-    BackRightSwerveModule.switchToCANCoderSteer();
-    FrontRightSwerveModule.switchToCANCoderSteer();
-  }
-
-  public void switchToIntegratedSteer() {
-    FrontLeftSwerveModule.switchToIntegratedSteer();
-    BackLeftSwerveModule.switchToIntegratedSteer();
-    BackRightSwerveModule.switchToIntegratedSteer();
-    FrontRightSwerveModule.switchToIntegratedSteer();
-  }
 
   public String getSteerMethodStrings() {
     return FrontLeftSwerveModule.steerMode +
@@ -89,19 +62,19 @@ public class QuadFalconSwerveDrive {
         FrontRightSwerveModule.steerMode;
   }
 
-  public void activateDefensiveStop() {
-    FrontLeftSwerveModule.setSteeringAngle(0); // 45
-    FrontLeftSwerveModule.driveMotor.set(ControlMode.PercentOutput, 0);
+  // public void activateDefensiveStop() {
+  //   FrontLeftSwerveModule.setSteeringAngle(0); // 45
+  //   FrontLeftSwerveModule.driveMotor.set(ControlMode.PercentOutput, 0);
 
-    FrontRightSwerveModule.setSteeringAngle(0); // 135
-    FrontRightSwerveModule.driveMotor.set(ControlMode.PercentOutput, 0);
+  //   FrontRightSwerveModule.setSteeringAngle(0); // 135
+  //   FrontRightSwerveModule.driveMotor.set(ControlMode.PercentOutput, 0);
 
-    BackLeftSwerveModule.setSteeringAngle(0); // 135
-    BackLeftSwerveModule.driveMotor.set(ControlMode.PercentOutput, 0);
+  //   BackLeftSwerveModule.setSteeringAngle(0); // 135
+  //   BackLeftSwerveModule.driveMotor.set(ControlMode.PercentOutput, 0);
 
-    BackRightSwerveModule.setSteeringAngle(0); // 45
-    BackRightSwerveModule.driveMotor.set(ControlMode.PercentOutput, 0);
-  }
+  //   BackRightSwerveModule.setSteeringAngle(0); // 45
+  //   BackRightSwerveModule.driveMotor.setControl(ControlMode.DutyCycleOut, 0);
+  // }
 
   public void setModuleSpeeds(SwerveModuleState[] _swerveModuleStates) {
     FrontLeftSwerveModule.setDesiredState(_swerveModuleStates[0]);
@@ -117,10 +90,10 @@ public class QuadFalconSwerveDrive {
    */
   public void setToCoast() {
     if (NeutralMode == "Brake" &&
-        Math.abs(FrontLeftSwerveModule.driveMotor.getSelectedSensorVelocity()) < 100 &&
-        Math.abs(BackLeftSwerveModule.driveMotor.getSelectedSensorVelocity()) < 100 &&
-        Math.abs(FrontRightSwerveModule.driveMotor.getSelectedSensorVelocity()) < 100 &&
-        Math.abs(BackRightSwerveModule.driveMotor.getSelectedSensorVelocity()) < 100) {
+        Math.abs(FrontLeftSwerveModule.driveMotor.getVelocity().getValue()) < 100 &&
+        Math.abs(BackLeftSwerveModule.driveMotor.getVelocity().getValue()) < 100 &&
+        Math.abs(FrontRightSwerveModule.driveMotor.getVelocity().getValue()) < 100 &&
+        Math.abs(BackRightSwerveModule.driveMotor.getVelocity().getValue()) < 100) {
       FrontRightSwerveModule.setModuleToCoast();
       BackRightSwerveModule.setModuleToCoast();
       FrontLeftSwerveModule.setModuleToCoast();
@@ -137,28 +110,15 @@ public class QuadFalconSwerveDrive {
     NeutralMode = "Brake";
   }
 
-  public void enableCurrentLimiting() {
-    FrontRightSwerveModule.enableCurrentLimiting();
-    BackRightSwerveModule.enableCurrentLimiting();
-    FrontLeftSwerveModule.enableCurrentLimiting();
-    BackLeftSwerveModule.enableCurrentLimiting();
-  }
 
-  public void disableCurrentLimiting() {
-    FrontRightSwerveModule.disableCurrentLimiting();
-    BackRightSwerveModule.disableCurrentLimiting();
-    FrontLeftSwerveModule.disableCurrentLimiting();
-    BackLeftSwerveModule.disableCurrentLimiting();
-  }
-
-  public SwerveModuleState[] getModuleStates() {
-    return new SwerveModuleState[] {
-        FrontLeftSwerveModule.getSwerveModuleState(),
-        FrontRightSwerveModule.getSwerveModuleState(),
-        BackLeftSwerveModule.getSwerveModuleState(),
-        BackRightSwerveModule.getSwerveModuleState()
-    };
-  }
+  // public SwerveModuleState[] getModuleStates() {
+  //   return new SwerveModuleState[] {
+  //       FrontLeftSwerveModule.getSwerveModuleState(),
+  //       FrontRightSwerveModule.getSwerveModuleState(),
+  //       BackLeftSwerveModule.getSwerveModuleState(),
+  //       BackRightSwerveModule.getSwerveModuleState()
+  //   };
+  // }
 
   public SwerveModulePosition[] getModulePositions() {
     return new SwerveModulePosition[] {
