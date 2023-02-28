@@ -5,6 +5,7 @@ import com.ctre.phoenixpro.configs.CANcoderConfiguration;
 import com.ctre.phoenixpro.configs.MotorOutputConfigs;
 import com.ctre.phoenixpro.configs.Slot0Configs;
 import com.ctre.phoenixpro.configs.TalonFXConfiguration;
+import com.ctre.phoenixpro.controls.PositionDutyCycle;
 import com.ctre.phoenixpro.controls.PositionVoltage;
 import com.ctre.phoenixpro.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenixpro.hardware.CANcoder;
@@ -33,7 +34,7 @@ public class SwerveModule {
     MotorOutputConfigs steeMotorOutputConfigs = new MotorOutputConfigs();
 
     private SwerveModulePosition m_internalState = new SwerveModulePosition();
-    private PositionVoltage m_angleSetter = new PositionVoltage(0);
+    private PositionDutyCycle m_angleSetter = new PositionDutyCycle(0);
     private VelocityTorqueCurrentFOC m_velocitySetter = new VelocityTorqueCurrentFOC(0);
 
     boolean readyToSeed = false;
@@ -123,7 +124,7 @@ public class SwerveModule {
         talonConfigs.Feedback.FeedbackRemoteSensorID = steeringSensor.getDeviceID() ;
         talonConfigs.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
         talonConfigs.Feedback.RotorToSensorRatio = SwerveConstants.STEERING_MOTOR_GEARING;
-
+        talonConfigs.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         talonConfigs.ClosedLoopGeneral.ContinuousWrap =
                 true; // Enable continuous wrap for swerve modules
         steeringMotor.getConfigurator().apply(talonConfigs);
@@ -176,6 +177,7 @@ public class SwerveModule {
 
     public void setModuleToBrake() {
         MotorOutputConfigs setBrake = new MotorOutputConfigs();
+        setBrake.NeutralMode = NeutralModeValue.Brake;
         driveMotor.getConfigurator().apply(setBrake);
         steeringMotor.getConfigurator().apply(setBrake);
     }
@@ -336,7 +338,7 @@ public SwerveModulePosition getPosition() {
         var optimized = SwerveModuleState.optimize(desiredState, m_internalState.angle);
 
         double angleToSetDeg = optimized.angle.getRotations();
-        steeringMotor.setControl(m_angleSetter.withPosition(angleToSetDeg));
+        steeringMotor.setControl(m_angleSetter.withPosition(angleToSetDeg).withSlot(0));
         double velocityToSet = optimized.speedMetersPerSecond * m_driveRotationsPerMeter;
         driveMotor.setControl(m_velocitySetter.withVelocity(velocityToSet));
     

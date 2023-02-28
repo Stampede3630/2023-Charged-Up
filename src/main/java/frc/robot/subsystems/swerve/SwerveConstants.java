@@ -52,10 +52,10 @@ public final class SwerveConstants {
     // CHANGE TO 0 first, reset the sensor,
     // PHYSICALLY zero out the motor
     // place the OPPOSITE of the value
-    public static double FRSensorOffset = 118.564; // 121.904; test? values
-    public static double FLSensorOffset = 34.629;// 40.869;
-    public static double BRSensorOffset = 50.537;// 179.561;
-    public static double BLSensorOffset = -23.818;// -24.873;
+    public static double FRSensorOffset = -0.145752; // 121.904; test? values
+    public static double FLSensorOffset = -0.390381;// 40.869;
+    public static double BRSensorOffset = -0.376953;// 179.561;
+    public static double BLSensorOffset = -0.553223;// -24.873;
 
     // Give a positive input on the joystick or phoenix tuner
     // Switch this if it goes opposite the desired direction
@@ -66,10 +66,10 @@ public final class SwerveConstants {
     public static InvertedValue BLInvertType = InvertedValue.CounterClockwise_Positive;
 
     // Swerve Steering PIDs (kP, kI, kD)
-    public static Gains FRSteerGains = new Gains(25, 0, 0);
-    public static Gains FLSteerGains = new Gains(25, 0, 0);
-    public static Gains BRSteerGains = new Gains(25, 0, 0);
-    public static Gains BLSteerGains = new Gains(25, 0, 0);
+    public static Gains FRSteerGains = new Gains(24.8, 0, 0);
+    public static Gains FLSteerGains = new Gains(24.8, 0, 0);
+    public static Gains BRSteerGains = new Gains(24.8, 0, 0);
+    public static Gains BLSteerGains = new Gains(24.8, 0, 0);
 
     // Swerve Driving PIDs (kP, kI, kD)
     // Once characterized the drive PIDs are meaningless

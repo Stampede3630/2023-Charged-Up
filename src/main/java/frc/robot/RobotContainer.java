@@ -240,11 +240,10 @@ public class RobotContainer {
         .andThen(s_Cannon::setCannonToCoast)
         .andThen(s_Claw::setRotoCoast)
         .andThen(Commands.runOnce(s_LEDs::beWhoYouAre).ignoringDisable(true))
-            .withName("SetToCoast"))
-        .onFalse(s_SwerveDrive.setToBrake()
-            .withName("setToBrake"));
+            .withName("SetToCoast"));
     new Trigger(DriverStation::isEnabled)
         .onTrue(Commands.runOnce(s_Claw::initializeClampCommand)
+        .andThen(Commands.runOnce(s_SwerveDrive::setToBrake))
         .andThen(s_Cannon::setCannonToBrake)
         .andThen(s_Claw::setRotoBrake)
         .andThen(Commands.runOnce(s_Claw::initializeClCommandWithGamePiece)));
