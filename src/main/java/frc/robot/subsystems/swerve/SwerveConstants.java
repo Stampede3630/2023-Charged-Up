@@ -5,7 +5,7 @@ import com.ctre.phoenixpro.signals.InvertedValue;
 
 public final class SwerveConstants {
     public static final boolean OPTIMIZESTEERING = true;
-    public static final boolean BOT_IS_NOT_CHARACTERIZED = true;
+    public static final boolean BOT_IS_NOT_CHARACTERIZED = false;
     public static final boolean RUN_TRAJECTORY = true;
 
     // SWERVE MODULE CHARACTERISTICS
