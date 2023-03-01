@@ -106,8 +106,10 @@ public class SwerveModule {
         DriveMotorGains.kV = SwerveConstants.kV;
 
         TalonFXConfiguration talonConfigs = new TalonFXConfiguration();
-        
+        steeringMotor.getConfigurator().refresh(talonConfigs);
+
         MotorOutputConfigs invertedIsTheQuestion = new MotorOutputConfigs();
+        driveMotor.getConfigurator().refresh(invertedIsTheQuestion);
         invertedIsTheQuestion.Inverted = driveMotor.kWheelDirectionType;
         invertedIsTheQuestion.NeutralMode = NeutralModeValue.Brake;
         driveMotor.getConfigurator().apply(invertedIsTheQuestion);
