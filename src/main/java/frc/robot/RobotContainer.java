@@ -236,14 +236,14 @@ public class RobotContainer {
      */
 
     new Trigger(DriverStation::isDisabled)
-        // .whileTrue(s_SwerveDrive.setToCoast().ignoringDisable(true)
+        .whileTrue(Commands.repeatingSequence(Commands.runOnce(s_SwerveDrive::setToCoast)).ignoringDisable(true))
         .whileTrue((Commands.runOnce(s_Cannon::setCannonToCoast))
         .alongWith(Commands.runOnce(s_Claw::setRotoCoast))
         .alongWith(Commands.runOnce(s_LEDs::beWhoYouAre).ignoringDisable(true))
             .withName("SetToCoast"));
     new Trigger(DriverStation::isEnabled)
           .onTrue(s_Claw.initializeClampCommand()
-          // .alongWith(Commands.runOnce(s_SwerveDrive::setToBrake, s_SwerveDrive))
+          .alongWith(Commands.runOnce(s_SwerveDrive::setToBrake))
           .alongWith(Commands.runOnce(s_Cannon::setCannonToBrake))
           .alongWith(Commands.runOnce(s_Claw::setRotoBrake))
           .alongWith(s_Claw.initializeClCommandWithGamePiece()));

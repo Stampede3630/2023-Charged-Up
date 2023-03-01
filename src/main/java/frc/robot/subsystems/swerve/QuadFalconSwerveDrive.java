@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.ctre.phoenixpro.*;
 import com.ctre.phoenixpro.controls.DutyCycleOut;
+import com.ctre.phoenixpro.signals.NeutralModeValue;
 
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -11,7 +12,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 
 public class QuadFalconSwerveDrive {
-  public String NeutralMode = "Brake";
+  public NeutralModeValue NeutralMode = NeutralModeValue.Brake;
   // public TalonFXConfiguration driveMotorConfig = new TalonFXConfiguration();
 
   public SwerveModule FrontLeftSwerveModule = new SwerveModule(
@@ -89,7 +90,7 @@ public class QuadFalconSwerveDrive {
    * This allows for easy moving of the robot
    */
   public void setToCoast() {
-    if (NeutralMode == "Brake" &&
+    if (NeutralMode == NeutralModeValue.Brake &&
         Math.abs(FrontLeftSwerveModule.driveMotor.getVelocity().getValue()) < 100 &&
         Math.abs(BackLeftSwerveModule.driveMotor.getVelocity().getValue()) < 100 &&
         Math.abs(FrontRightSwerveModule.driveMotor.getVelocity().getValue()) < 100 &&
@@ -98,7 +99,7 @@ public class QuadFalconSwerveDrive {
       BackRightSwerveModule.setModuleToCoast();
       FrontLeftSwerveModule.setModuleToCoast();
       BackLeftSwerveModule.setModuleToCoast();
-      NeutralMode = "Coast";
+      NeutralMode = NeutralModeValue.Coast;
     }
   }
 
@@ -107,7 +108,7 @@ public class QuadFalconSwerveDrive {
     BackRightSwerveModule.setModuleToBrake();
     FrontLeftSwerveModule.setModuleToBrake();
     BackLeftSwerveModule.setModuleToBrake();
-    NeutralMode = "Brake";
+    NeutralMode = NeutralModeValue.Brake;
   }
 
 

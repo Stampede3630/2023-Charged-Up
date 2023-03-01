@@ -61,7 +61,7 @@ public final class SwerveConstants {
     // Switch this if it goes opposite the desired direction
     // Because of the gearing the convention could be reversed (GUESS AND CHECK)
     public static InvertedValue FRInvertType = InvertedValue.Clockwise_Positive; //Clockwise_Positive
-    public static InvertedValue FLInvertType = InvertedValue.CounterClockwise_Positive;
+    public static InvertedValue FLInvertType = InvertedValue.CounterClockwise_Positive; //CounterClockwise_Positive
     public static InvertedValue BRInvertType = InvertedValue.Clockwise_Positive; //Clockwise_Positive
     public static InvertedValue BLInvertType = InvertedValue.CounterClockwise_Positive; //CounterClockwise_Positive
 
@@ -94,7 +94,7 @@ public final class SwerveConstants {
     public static final double DRIVE_MOTOR_TICKSperREVOLUTION = DRIVE_MOTOR_GEARING * TICKSperTALONFX_Rotation;
     public static final double METERSperWHEEL_REVOLUTION = 2 * Math.PI * WHEEL_RADIUS_METERS;
     public static final double METERSperROBOT_REVOLUTION = 2 * Math.PI
-            * pythagoreanTheorem(TRACK_WIDE, WHEEL_BASE_METERS);
+            * Math.hypot(TRACK_WIDE, WHEEL_BASE_METERS);
     public static final double MAX_SPEED_METERSperSECOND = MAX_SPEED_TICKSper100MS / SECONDSper100MS
             / DRIVE_MOTOR_TICKSperREVOLUTION * METERSperWHEEL_REVOLUTION;
     public static final double MAX_SPEED_RADIANSperSECOND = MAX_SPEED_METERSperSECOND / METERSperROBOT_REVOLUTION
@@ -132,10 +132,5 @@ public final class SwerveConstants {
             kIzone = 300;
             kPeakOutput = 1;
         }
-    }
-
-    private static double pythagoreanTheorem(double side1, double side2) {
-        double radius = Math.sqrt(Math.pow(side1, 2.0) + Math.pow(side2, 2.0));
-        return radius;
     }
 }

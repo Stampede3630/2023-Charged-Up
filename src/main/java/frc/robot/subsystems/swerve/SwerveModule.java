@@ -31,8 +31,9 @@ public class SwerveModule {
     private BaseStatusSignalValue[] m_signals;
     private double m_driveRotationsPerMeter = 0;
 
-    MotorOutputConfigs driveMotorOutputConfig = new MotorOutputConfigs();
-    MotorOutputConfigs steeMotorOutputConfigs = new MotorOutputConfigs();
+    TalonFXConfiguration driveTalonConfig = new TalonFXConfiguration();
+    TalonFXConfiguration steerTalonConfig = new TalonFXConfiguration();
+    CANcoderConfiguration canCoderConfig = new CANcoderConfiguration();
 
     private SwerveModulePosition m_internalState = new SwerveModulePosition();
     private PositionDutyCycle m_angleSetter = new PositionDutyCycle(0);
@@ -97,7 +98,7 @@ public class SwerveModule {
     }
 
     private void swerveModuleInit() {
-
+        driveMotor.getConfigurator().refresh(driveTalonConfig);
         final Slot0Configs DriveMotorGains = new Slot0Configs();
 
         DriveMotorGains.kP = 0;
@@ -107,40 +108,35 @@ public class SwerveModule {
         DriveMotorGains.kV = SwerveConstants.kV;
         // driveMotor.getConfigurator().apply(DriveMotorGains);
 
-        TalonFXConfiguration driveTalonConfig = new TalonFXConfiguration();
         driveTalonConfig.Slot0 = DriveMotorGains;
-        driveMotor.getConfigurator().refresh(driveTalonConfig);
-        TalonFXConfiguration steerTalonConfigs = new TalonFXConfiguration();
-        steeringMotor.getConfigurator().refresh(steerTalonConfigs);
 
         // MotorOutputConfigs driveMotorCOnfigs = new MotorOutputConfigs();
-        driveTalonConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; //driveMotor.kWheelDirectionType
+        driveTalonConfig.MotorOutput.Inverted = driveMotor.kWheelDirectionType;
         driveTalonConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         
         driveMotor.getConfigurator().apply(driveTalonConfig);
+
+        steeringMotor.getConfigurator().refresh(steerTalonConfig);
         
         final Slot0Configs SteerMotorGains = new Slot0Configs();
-        
         SteerMotorGains.kP = steeringMotor.kGAINS.kP; 
         SteerMotorGains.kI = steeringMotor.kGAINS.kI; 
         SteerMotorGains.kD = steeringMotor.kGAINS.kD; 
-        
-
-        steerTalonConfigs.Slot0 = SteerMotorGains;
+        steerTalonConfig.Slot0 = SteerMotorGains;
         // Modify configuration to use remote CANcoder fused
-        steerTalonConfigs.Feedback.FeedbackRemoteSensorID = steeringSensor.getDeviceID() ;
-        steerTalonConfigs.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
-        steerTalonConfigs.Feedback.RotorToSensorRatio = SwerveConstants.STEERING_MOTOR_GEARING;
-        steerTalonConfigs.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-        steerTalonConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        steerTalonConfigs.ClosedLoopGeneral.ContinuousWrap =
-                true; // Enable continuous wrap for swerve modules
+        steerTalonConfig.Feedback.FeedbackRemoteSensorID = steeringSensor.getDeviceID() ;
+        steerTalonConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
+        steerTalonConfig.Feedback.RotorToSensorRatio = SwerveConstants.STEERING_MOTOR_GEARING;
+        steerTalonConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        steerTalonConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        steerTalonConfig.ClosedLoopGeneral.ContinuousWrap = true; // Enable continuous wrap for swerve modules
         
-        steeringMotor.getConfigurator().apply(steerTalonConfigs);
+        steeringMotor.getConfigurator().apply(steerTalonConfig);
 
-        CANcoderConfiguration cancoderConfigs = new CANcoderConfiguration();
-        cancoderConfigs.MagnetSensor.MagnetOffset = steeringSensor.kOffsetDegrees;
-        steeringSensor.getConfigurator().apply(cancoderConfigs);
+        steeringSensor.getConfigurator().refresh(canCoderConfig);
+
+        canCoderConfig.MagnetSensor.MagnetOffset = steeringSensor.kOffsetDegrees;
+        steeringSensor.getConfigurator().apply(canCoderConfig);
 
         // driveMotor.getConfigurator().apply(talonConfigs);
 
@@ -174,27 +170,23 @@ public class SwerveModule {
 */
 
     public void setModuleToCoast() {
-        MotorOutputConfigs setCoast = new MotorOutputConfigs();
+        driveMotor.getConfigurator().refresh(driveTalonConfig);
+        steeringMotor.getConfigurator().refresh(steerTalonConfig);
 
-        driveMotor.getConfigurator().refresh(setCoast);
-        steeringMotor.getConfigurator().refresh(setCoast);
-
-        setCoast.NeutralMode = NeutralModeValue.Coast;
-
-        driveMotor.getConfigurator().apply(setCoast);
-        steeringMotor.getConfigurator().apply(setCoast);
+        driveTalonConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        steerTalonConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        driveMotor.getConfigurator().apply(driveTalonConfig);
+        steeringMotor.getConfigurator().apply(steerTalonConfig);
     }
 
     public void setModuleToBrake() {
-        MotorOutputConfigs setBrake = new MotorOutputConfigs();
+        driveMotor.getConfigurator().refresh(driveTalonConfig);
+        steeringMotor.getConfigurator().refresh(steerTalonConfig);
 
-        driveMotor.getConfigurator().refresh(setBrake);
-        steeringMotor.getConfigurator().refresh(setBrake);
-
-        setBrake.NeutralMode = NeutralModeValue.Brake;
-        driveMotor.getConfigurator().apply(setBrake);
-        steeringMotor.getConfigurator().apply(setBrake);
-        System.out.println("set me to brake");
+        driveTalonConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        steerTalonConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        driveMotor.getConfigurator().apply(driveTalonConfig);
+        steeringMotor.getConfigurator().apply(steerTalonConfig);
     }
 
     /**
