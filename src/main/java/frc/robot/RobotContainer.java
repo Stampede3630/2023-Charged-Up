@@ -242,7 +242,7 @@ public class RobotContainer {
         .alongWith(Commands.runOnce(s_LEDs::beWhoYouAre).ignoringDisable(true))
             .withName("SetToCoast"));
     new Trigger(DriverStation::isEnabled)
-        .onTrue(s_Claw.initializeClampCommand()
+          .onTrue(s_Claw.initializeClampCommand()
           // .alongWith(Commands.runOnce(s_SwerveDrive::setToBrake, s_SwerveDrive))
           .alongWith(Commands.runOnce(s_Cannon::setCannonToBrake))
           .alongWith(Commands.runOnce(s_Claw::setRotoBrake))

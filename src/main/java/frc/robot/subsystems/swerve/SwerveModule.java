@@ -20,6 +20,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.RobotBase;
+import frc.robot.subsystems.swerve.SwerveConstants.Gains;
 
 public class SwerveModule {
 
@@ -104,6 +105,7 @@ public class SwerveModule {
         DriveMotorGains.kD = 0;
         DriveMotorGains.kS = SwerveConstants.kS;
         DriveMotorGains.kV = SwerveConstants.kV;
+        driveMotor.getConfigurator().apply(DriveMotorGains);
 
         TalonFXConfiguration talonConfigs = new TalonFXConfiguration();
         steeringMotor.getConfigurator().refresh(talonConfigs);
@@ -112,12 +114,10 @@ public class SwerveModule {
         driveMotor.getConfigurator().refresh(invertedIsTheQuestion);
         invertedIsTheQuestion.Inverted = driveMotor.kWheelDirectionType;
         invertedIsTheQuestion.NeutralMode = NeutralModeValue.Brake;
+        
         driveMotor.getConfigurator().apply(invertedIsTheQuestion);
         
         final Slot0Configs SteerMotorGains = new Slot0Configs();
-
-        talonConfigs.ClosedLoopGeneral.ContinuousWrap = 
-                true;
         
         SteerMotorGains.kP = steeringMotor.kGAINS.kP; 
         SteerMotorGains.kI = steeringMotor.kGAINS.kI; 
@@ -130,8 +130,10 @@ public class SwerveModule {
         talonConfigs.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
         talonConfigs.Feedback.RotorToSensorRatio = SwerveConstants.STEERING_MOTOR_GEARING;
         talonConfigs.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        talonConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         talonConfigs.ClosedLoopGeneral.ContinuousWrap =
                 true; // Enable continuous wrap for swerve modules
+        
         steeringMotor.getConfigurator().apply(talonConfigs);
 
         CANcoderConfiguration cancoderConfigs = new CANcoderConfiguration();
