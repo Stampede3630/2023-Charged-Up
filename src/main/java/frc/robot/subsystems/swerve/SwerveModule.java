@@ -99,9 +99,9 @@ public class SwerveModule {
 
         final Slot0Configs DriveMotorGains = new Slot0Configs();
 
-        DriveMotorGains.kP = driveMotor.kGAINS.kP;
-        DriveMotorGains.kI = driveMotor.kGAINS.kI;
-        DriveMotorGains.kD = driveMotor.kGAINS.kD;
+        DriveMotorGains.kP = 0;
+        DriveMotorGains.kI = 0;
+        DriveMotorGains.kD = 0;
         DriveMotorGains.kS = SwerveConstants.kS;
         DriveMotorGains.kV = SwerveConstants.kV;
 
@@ -109,11 +109,14 @@ public class SwerveModule {
         
         MotorOutputConfigs invertedIsTheQuestion = new MotorOutputConfigs();
         invertedIsTheQuestion.Inverted = driveMotor.kWheelDirectionType;
-        invertedIsTheQuestion.NeutralMode = NeutralModeValue.Coast;
+        invertedIsTheQuestion.NeutralMode = NeutralModeValue.Brake;
         driveMotor.getConfigurator().apply(invertedIsTheQuestion);
-
+        
         final Slot0Configs SteerMotorGains = new Slot0Configs();
 
+        talonConfigs.ClosedLoopGeneral.ContinuousWrap = 
+                true;
+        
         SteerMotorGains.kP = steeringMotor.kGAINS.kP; 
         SteerMotorGains.kI = steeringMotor.kGAINS.kI; 
         SteerMotorGains.kD = steeringMotor.kGAINS.kD; 
@@ -133,9 +136,7 @@ public class SwerveModule {
         cancoderConfigs.MagnetSensor.MagnetOffset = steeringSensor.kOffsetDegrees;
         steeringSensor.getConfigurator().apply(cancoderConfigs);
 
-        talonConfigs.ClosedLoopGeneral.ContinuousWrap = 
-                true;
-        driveMotor.getConfigurator().apply(talonConfigs);
+        // driveMotor.getConfigurator().apply(talonConfigs);
 
         m_drivePosition = driveMotor.getPosition();
         m_driveVelocity = driveMotor.getVelocity();
@@ -180,6 +181,7 @@ public class SwerveModule {
         setBrake.NeutralMode = NeutralModeValue.Brake;
         driveMotor.getConfigurator().apply(setBrake);
         steeringMotor.getConfigurator().apply(setBrake);
+        System.out.println("set me to brake");
     }
 
     /**
@@ -341,7 +343,6 @@ public SwerveModulePosition getPosition() {
         steeringMotor.setControl(m_angleSetter.withPosition(angleToSetDeg).withSlot(0));
         double velocityToSet = optimized.speedMetersPerSecond * m_driveRotationsPerMeter;
         driveMotor.setControl(m_velocitySetter.withVelocity(velocityToSet));
-    
 
     }
 

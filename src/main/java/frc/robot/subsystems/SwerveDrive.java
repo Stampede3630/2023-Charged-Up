@@ -102,6 +102,8 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
       robotPose, 
       VecBuilder.fill(0.001, 0.001, Units.degreesToRadians(.1)), 
       VecBuilder.fill(0.05, 0.05, Units.degreesToRadians(30)));
+
+      m_driveTrain.setToBrake();
     }
 
   @Override
@@ -290,8 +292,8 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
       m_odometry.getEstimatedPosition().transformBy(new Transform2d(m_driveTrain.BackRightSwerveModule.moduleXYTranslation, m_driveTrain.BackRightSwerveModule.getPosition().angle)));
   }
 
-  public Command setToBrake(){
-    return new InstantCommand(()->m_driveTrain.setToBrake());
+  public void setToBrake(){
+    m_driveTrain.setToBrake();
   }
 
   @Log
@@ -308,9 +310,9 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
    * METHOD WILL NOT WORK UNLESS ADDED TO PERIODIC
    */
 
-  public Command setToCoast(){
-    return new RunCommand(()->m_driveTrain.setToCoast());
-  }
+  // public Command setToCoast(){
+  //   return new RunCommand(()->m_driveTrain.setToCoast());
+  // }
 
   private double convertToMetersPerSecond(double _input){
     return _input*SwerveConstants.MAX_SPEED_METERSperSECOND;

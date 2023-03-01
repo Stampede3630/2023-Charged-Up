@@ -140,8 +140,8 @@ public class RobotContainer {
     Preferences.initBoolean("Wanna PID Cannon", false);
 
 
-    // autoPathGroup = (ArrayList<PathPlannerTrajectory>) PathPlanner.loadPathGroup("swerveTest",
-        // new PathConstraints(2, 2));
+    autoPathGroup = (ArrayList<PathPlannerTrajectory>) PathPlanner.loadPathGroup("helloWorld",
+        new PathConstraints(2, 2));
 
     for (GamePieceOrientation orientation : GamePieceOrientation.values()) {
       gamePieceOrientationChooser.addOption(orientation.getFriendlyName(), orientation);
@@ -236,17 +236,17 @@ public class RobotContainer {
      */
 
     new Trigger(DriverStation::isDisabled)
-        .whileTrue(s_SwerveDrive.setToCoast().ignoringDisable(true)
-        .andThen(s_Cannon::setCannonToCoast)
-        .andThen(s_Claw::setRotoCoast)
-        .andThen(Commands.runOnce(s_LEDs::beWhoYouAre).ignoringDisable(true))
+        // .whileTrue(s_SwerveDrive.setToCoast().ignoringDisable(true)
+        .whileTrue((Commands.runOnce(s_Cannon::setCannonToCoast))
+        .alongWith(Commands.runOnce(s_Claw::setRotoCoast))
+        .alongWith(Commands.runOnce(s_LEDs::beWhoYouAre).ignoringDisable(true))
             .withName("SetToCoast"));
     new Trigger(DriverStation::isEnabled)
-        .onTrue(Commands.runOnce(s_Claw::initializeClampCommand)
-        .andThen(Commands.runOnce(s_SwerveDrive::setToBrake))
-        .andThen(s_Cannon::setCannonToBrake)
-        .andThen(s_Claw::setRotoBrake)
-        .andThen(Commands.runOnce(s_Claw::initializeClCommandWithGamePiece)));
+        .onTrue(s_Claw.initializeClampCommand()
+          // .alongWith(Commands.runOnce(s_SwerveDrive::setToBrake, s_SwerveDrive))
+          .alongWith(Commands.runOnce(s_Cannon::setCannonToBrake))
+          .alongWith(Commands.runOnce(s_Claw::setRotoBrake))
+          .alongWith(s_Claw.initializeClCommandWithGamePiece()));
 
     /**
      * next two triggers are to "toggle" rotation HOLD mode and set a heading
@@ -623,4 +623,5 @@ public class RobotContainer {
   //     return true;
   //   }
   // }
+
 }

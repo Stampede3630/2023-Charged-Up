@@ -21,7 +21,7 @@ public class LEDs extends SubsystemBase implements Loggable{
   public int r = 0;
   public int g = 0;
   public int b = 0;
-  public boolean rainbow = false;
+  public boolean rainbow = true;
   
   /** Creates a new LEDs. */
   public LEDs() {
@@ -78,9 +78,9 @@ public class LEDs extends SubsystemBase implements Loggable{
     for (int i = 0; i < m_LEDBuffer.getLength(); i++) {
       // Calculate the hue - hue is easier for rainbows because the color
       // shape is a circle so only one value needs to precess
-      // int hue = (m_rainbowFirstPixelHue + (i * 180 / m_LEDBuffer.getLength())) % 180;
+      int hue = (m_rainbowFirstPixelHue + (i * 180 / m_LEDBuffer.getLength())) % 180;
       // Set the value
-      m_LEDBuffer.setHSV(i, m_rainbowFirstPixelHue, 255, 255);
+      m_LEDBuffer.setHSV(i, hue, 255, 50);
     }
     // Increase by to make the rainbow "move"
     m_rainbowFirstPixelHue += 3;
@@ -105,9 +105,9 @@ public class LEDs extends SubsystemBase implements Loggable{
     this.b = b;
   }
 
-  @Config
-  public void doRainbowConfig(boolean input) {
-    this.rainbow = input;
-  }
+  // @Config
+  // public void doRainbowConfig(boolean input) {
+  //   this.rainbow = input;
+  // }
 
 }
