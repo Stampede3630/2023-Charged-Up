@@ -88,7 +88,7 @@ public class SwerveModule {
 
 
         if (RobotBase.isSimulation()) {
-            simModule = null; //new SwerveModuleSim(driveMotor, steeringMotor, steeringSensor);
+            simModule = new SwerveModuleSim(driveMotor, steeringMotor, steeringSensor);
         } else {
             simModule = null;
         }
