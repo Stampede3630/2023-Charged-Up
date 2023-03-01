@@ -172,6 +172,9 @@ public class SwerveModule {
     public void setModuleToCoast() {
         MotorOutputConfigs setCoast = new MotorOutputConfigs();
 
+        driveMotor.getConfigurator().refresh(setCoast);
+        steeringMotor.getConfigurator().refresh(setCoast);
+
         setCoast.NeutralMode = NeutralModeValue.Coast;
 
         driveMotor.getConfigurator().apply(setCoast);
@@ -180,6 +183,10 @@ public class SwerveModule {
 
     public void setModuleToBrake() {
         MotorOutputConfigs setBrake = new MotorOutputConfigs();
+
+        driveMotor.getConfigurator().refresh(setBrake);
+        steeringMotor.getConfigurator().refresh(setBrake);
+
         setBrake.NeutralMode = NeutralModeValue.Brake;
         driveMotor.getConfigurator().apply(setBrake);
         steeringMotor.getConfigurator().apply(setBrake);
