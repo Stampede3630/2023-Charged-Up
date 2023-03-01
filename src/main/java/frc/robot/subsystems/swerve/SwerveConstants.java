@@ -60,10 +60,10 @@ public final class SwerveConstants {
     // Give a positive input on the joystick or phoenix tuner
     // Switch this if it goes opposite the desired direction
     // Because of the gearing the convention could be reversed (GUESS AND CHECK)
-    public static InvertedValue FRInvertType = InvertedValue.Clockwise_Positive;
+    public static InvertedValue FRInvertType = InvertedValue.Clockwise_Positive; //Clockwise_Positive
     public static InvertedValue FLInvertType = InvertedValue.CounterClockwise_Positive;
-    public static InvertedValue BRInvertType = InvertedValue.Clockwise_Positive;
-    public static InvertedValue BLInvertType = InvertedValue.CounterClockwise_Positive;
+    public static InvertedValue BRInvertType = InvertedValue.Clockwise_Positive; //Clockwise_Positive
+    public static InvertedValue BLInvertType = InvertedValue.CounterClockwise_Positive; //CounterClockwise_Positive
 
     // Swerve Steering PIDs (kP, kI, kD)
     public static Gains FRSteerGains = new Gains(24.8, 0, 0);

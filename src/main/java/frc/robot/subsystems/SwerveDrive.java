@@ -103,7 +103,6 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
       VecBuilder.fill(0.001, 0.001, Units.degreesToRadians(.1)), 
       VecBuilder.fill(0.05, 0.05, Units.degreesToRadians(30)));
 
-      m_driveTrain.setToBrake();
     }
 
   @Override
