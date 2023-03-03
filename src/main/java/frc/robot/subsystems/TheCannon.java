@@ -149,6 +149,7 @@ new ArmFeedforward(
   public void setExtensionZero(){
     if (extensionHardStop.isPressed()){
       extensionEncoder.setPosition(0);
+      extensionInches = 0;
     }
   }
 
