@@ -1,4 +1,4 @@
-package frc.robot;
+package frc.robot.subsystems;
 
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.SparkMaxAbsoluteEncoder;
@@ -25,8 +25,8 @@ public class Lid extends SubsystemBase implements Loggable{
         m_lidAbsolute.setInverted(true);
         m_lidAbsolute.setPositionConversionFactor(360.0);
         m_lidAbsolute.setVelocityConversionFactor(360.0);
-        m_lidMotor.setSoftLimit(SoftLimitDirection.kForward, 240);
-        m_lidMotor.setSoftLimit(SoftLimitDirection.kReverse, 120);
+        m_lidMotor.setSoftLimit(SoftLimitDirection.kForward, 310);
+        m_lidMotor.setSoftLimit(SoftLimitDirection.kReverse, 90);
         m_lidAbsolute.setZeroOffset(360-47);
 
         m_lidMotor.setSmartCurrentLimit(20);
@@ -65,6 +65,10 @@ public class Lid extends SubsystemBase implements Loggable{
 
     public void setLipOut() {
         lidReference = 180;
+    }
+
+    public void setLid(double intakeLidAngle){
+        setLidReference(intakeLidAngle);
     }
 
     @Config(defaultValueNumeric = 180)

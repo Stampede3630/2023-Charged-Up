@@ -62,5 +62,117 @@
     "properties": {
       "persistent": true
     }
+  },
+  {
+    "name": "/Preferences/CannonKP",
+    "type": "double",
+    "value": 0.03333333333333333,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/CannonKI",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/CannonKD",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/ExtensionKP",
+    "type": "double",
+    "value": 0.16666666666666666,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/ExtensionKI",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/ExtensionPD",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/RotoClawKP",
+    "type": "double",
+    "value": 1.909859317102744,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/RotoClawKI",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/RotoClawPD",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/ClawKP",
+    "type": "double",
+    "value": 1.909859317102744,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/ClawKI",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/ClawKD",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/Wanna PID Roto",
+    "type": "boolean",
+    "value": false,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/Wanna PID Cannon",
+    "type": "boolean",
+    "value": false,
+    "properties": {
+      "persistent": true
+    }
   }
 ]

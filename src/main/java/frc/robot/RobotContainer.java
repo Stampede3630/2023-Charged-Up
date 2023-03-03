@@ -47,6 +47,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.NodePosition.NodeGrid;
 import frc.robot.NodePosition.NodeGroup;
 import frc.robot.subsystems.LEDs;
+import frc.robot.subsystems.Lid;
 import frc.robot.subsystems.SwerveDrive;
 import frc.robot.subsystems.TheCannon;
 import frc.robot.subsystems.swerve.SwerveConstants;
@@ -95,8 +96,12 @@ public class RobotContainer {
   private final Lid s_Lid = new Lid();
   private final Intake s_Intake = new Intake();
   
+  public double intakeCannonAngle;
+  public double intakeLidAngle;
+  public double intakeSpeed;
   public GamePieceType previousGamePieceOrientation;
   public GamePieceType gamePieceTypeLed;
+  public boolean facingOverrideButton;
   // private GamePieceType prev;  
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -164,15 +169,18 @@ public class RobotContainer {
 
     Shuffleboard.getTab("nodeSelector")
         .add("orientation", gamePieceTypeChooser)
-        .withWidget(BuiltInWidgets.kSplitButtonChooser);
+        .withWidget(BuiltInWidgets.kSplitButtonChooser)
+        .withPosition(0, 0)
+        .withSize(8, 3);
 
-    Shuffleboard.getTab("nodeSelector")
-        .add("Node Driver Station", nodeDriverStation)
-        .withWidget(BuiltInWidgets.kComboBoxChooser);
+
+    // Shuffleboard.getTab("nodeSelector")
+    //     .add("Node Driver Station", nodeDriverStation)
+    //     .withWidget(BuiltInWidgets.kComboBoxChooser);
       
-    Shuffleboard.getTab("nodeSelector")
-        .add("Arm Point Select", armTestSetPoints)
-        .withWidget(BuiltInWidgets.kComboBoxChooser);
+    // Shuffleboard.getTab("nodeSelector")
+    //     .add("Arm Point Select", armTestSetPoints)
+    //     .withWidget(BuiltInWidgets.kComboBoxChooser);
 
     Shuffleboard.getTab("nodeSelector")
       .add("Node Group Chooser", nodeGroupChooser)
@@ -295,12 +303,20 @@ public class RobotContainer {
     //           .andThen(Commands.runOnce(() -> s_Claw.prepareForGamePiece(gamePieceTypeChooser.getSelected()))), 
     //             s_Claw::haveGamePiece)));
     xBox.rightTrigger(.55).debounce(.1, DebounceType.kFalling)
-        .onTrue(Commands.runOnce(s_Intake::runIntake))
+        .onTrue(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle))
+          .andThen(Commands.runOnce(()-> s_Cannon.setCannonRotation(intakeCannonAngle)))
+          .andThen(Commands.runOnce(()-> s_Intake.setIntake(intakeSpeed)))
+          .andThen(Commands.waitUntil(s_Intake::haveGamePiece))
+          .andThen(Commands.runOnce(s_Intake::stopIntake)))
         .onFalse(Commands.runOnce(s_Intake::stopIntake));
     
     xBox.leftTrigger(.55).debounce(.1, DebounceType.kFalling)
-        .onTrue(Commands.runOnce(s_Intake::reverseIntake))
-        .onFalse(Commands.runOnce(s_Intake::stopIntake));
+        .onTrue(Commands.runOnce(()-> s_Intake.setIntake(-intakeSpeed)).alongWith(Commands.runOnce(s_Intake::leaveGamePiece)))
+        .onFalse(Commands.runOnce(s_Intake::stopIntake)
+          .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(3)))
+          .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
+          .andThen(Commands.runOnce(()-> s_Cannon.setCannonRotation(intakeCannonAngle)))
+          .andThen(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle))));
         
     //-> outtake trigger
     // xBox.leftTrigger(.55).debounce(.1, DebounceType.kFalling)
@@ -334,7 +350,7 @@ public class RobotContainer {
 
     //logic/no controller triggers
     new Trigger(s_Intake::haveGamePiece)
-      .onTrue(Commands.runOnce(()-> s_Cannon.setExtensionInches(1.37985 + 1))
+      .onTrue(Commands.runOnce(()-> s_Cannon.setExtensionInches(1.97985 + 1))
          .andThen(()-> s_Cannon.setCannonAngleSides(robotFacing(), 140))
           .andThen(() -> s_LEDs.rainbow = true))
       .onFalse(Commands.either(
@@ -344,10 +360,10 @@ public class RobotContainer {
 
     new Trigger(() -> robotFacing() != FacingPOI.NOTHING)
       .onTrue(Commands.either(
-        Commands.runOnce(this::setLip)
+        Commands.runOnce(this::setLid)
         .unless(xBox.rightTrigger(.5)),
         Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), 40)).unless(xBox.rightTrigger(.5)) // towards pickup
-          .andThen(Commands.runOnce(this::setLip)), 
+          .andThen(Commands.runOnce(this::setLid)), 
            s_Intake::haveGamePiece));
   
     xBox.a().onTrue(new
@@ -360,14 +376,147 @@ public class RobotContainer {
         Commands.runOnce(s_LEDs::bePurple), 
         Commands.runOnce(s_LEDs::beYellow), 
         () -> previousGamePieceOrientation.equals(GamePieceType.CUBE)))
-      .onTrue(Commands.runOnce(this::setLip));
+      .onTrue(Commands.runOnce(this::setLid));
 
   }
 
-  private void setLip() {
+  public void setIntakeParameters() {
+    if (robotFacing() == FacingPOI.HUMAN_PLAYER && pickupLocationChooser.getSelected()==PickupLocation.SHELF) {
+   
+
+    } else if (robotFacing() == FacingPOI.HUMAN_PLAYER && pickupLocationChooser.getSelected()==PickupLocation.CHUTE) {
+      
+    
+    } else {
+      //ground
+    if (robotFacing() == FacingPOI.COMMUNITY && !facingOverrideButton) {
+      switch (gamePieceTypeChooser.getSelected()) {
+        case CUBE:
+          intakeCannonAngle = -10.0;
+          intakeLidAngle = 275.0;
+          intakeSpeed = -1.0;
+          break;
+        case UPRIGHT_CONE:
+          intakeCannonAngle = -7.0;
+          intakeLidAngle = 206.0;
+          intakeSpeed = 1.0;
+          break;
+        case TIPPED_CONE:
+          intakeCannonAngle = 190.0;
+          intakeLidAngle = 244.0;
+          intakeSpeed = -1.0;
+          break;
+        case NOTHING:
+          intakeCannonAngle = 85.0;
+          break;
+      
+      }
+    } if (robotFacing() == FacingPOI.COMMUNITY && facingOverrideButton) {
+        //facing HPS
+        switch (gamePieceTypeChooser.getSelected()) {
+          case CUBE:
+          intakeCannonAngle = -10.0;
+          intakeLidAngle = 275.0;
+          intakeSpeed = -1.0;
+            break;
+          case UPRIGHT_CONE:
+            intakeCannonAngle = 175.0;
+            intakeLidAngle = 116.0;
+            intakeSpeed = -1.0;
+            break; 
+          case TIPPED_CONE:
+            intakeCannonAngle = 190.0;
+            intakeLidAngle = 244.0;
+            intakeSpeed = -1.0;
+            break; 
+          case NOTHING: 
+            intakeCannonAngle = 85.0;
+            break; 
+       
+      }
+    } if (robotFacing() == FacingPOI.HUMAN_PLAYER && !facingOverrideButton) {
+      //facing HPS
+      switch (gamePieceTypeChooser.getSelected()) {
+        case CUBE:
+        intakeCannonAngle = -10.0;
+          intakeLidAngle = 275.0;
+          intakeSpeed = -1.0;
+          break;
+        case UPRIGHT_CONE:
+          intakeCannonAngle = 175.0;
+          intakeLidAngle = 116.0;
+          intakeSpeed = -1.0;
+          break; 
+        case TIPPED_CONE:
+          intakeCannonAngle = 190.0;
+          intakeLidAngle = 244.0;
+          intakeSpeed = -1.0;
+          break; 
+        case NOTHING: 
+          intakeCannonAngle = 85.0;  
+          break;
+         
+        } 
+      
+      if (robotFacing() == FacingPOI.HUMAN_PLAYER && facingOverrideButton) {
+        //facing HPS
+        switch (gamePieceTypeChooser.getSelected()) {
+          case CUBE:
+            intakeCannonAngle = -10.0;
+            intakeLidAngle = 275.0;
+            intakeSpeed = -1.0;
+            break;
+          case UPRIGHT_CONE:
+            intakeCannonAngle = -7.0;
+            intakeLidAngle = 206.0;
+            intakeSpeed = 1.0;
+            break;
+          case TIPPED_CONE:
+            intakeCannonAngle = 190.0;
+            intakeLidAngle = 244.0;
+            intakeSpeed = -1.0;
+            break;
+          case NOTHING:
+            intakeCannonAngle = 85.0;  
+            break;
+        
+        }
+
+    } else {
+      //should never happen
+      switch (gamePieceTypeChooser.getSelected()) {
+        case CUBE:
+        intakeCannonAngle = -10.0;
+          intakeLidAngle = 275.0;
+          intakeSpeed = -1.0;
+          break;
+        case UPRIGHT_CONE:
+          intakeCannonAngle = 175.0;
+          intakeLidAngle = 116.0;
+          intakeSpeed = -1.0;
+          break; 
+        case TIPPED_CONE:
+          intakeCannonAngle = 190.0;
+          intakeLidAngle = 244.0;
+          intakeSpeed = -1.0;
+          break; 
+        case NOTHING: 
+          intakeCannonAngle = 85.0;
+          break; 
+    }
+  }
+
+  }
+
+    
+  }
+}
+
+  private void setLid() {
     if (robotFacing() == FacingPOI.HUMAN_PLAYER) {
       switch (pickupLocationChooser.getSelected()) {
-        case GROUND: case SHELF:
+        case GROUND: 
+        case SHELF:
           s_Lid.setLipOut();
           break;
         case CHUTE:
@@ -478,7 +627,7 @@ public class RobotContainer {
 
   public FacingPOI cannonFacing() {
     FacingPOI gyroFacing = robotFacing();
-    boolean cannonFacingGyroZero = s_Cannon.getCannonAngleEncoder() < 90;
+    boolean cannonFacingGyroZero = s_Cannon.getCannonAngleEncoder() < 90.0;
 
     if (gyroFacing == FacingPOI.NOTHING)
       return FacingPOI.NOTHING;
@@ -529,7 +678,7 @@ public class RobotContainer {
   // }
 
   public enum GamePieceType {
-    TIPPED_CONE, UPRIGHT_CONE, CUBE, NOTHING
+    TIPPED_CONE, UPRIGHT_CONE, CUBE, NOTHING;
   }
 
   public enum NodeDriverStation {
@@ -576,7 +725,7 @@ public class RobotContainer {
 
     private final double cannonAngle;
     private final double cannonExtension;
-
+   
     private PickupLocation(double cannonAngle, double cannonExtension){this.cannonAngle = cannonAngle; this.cannonExtension = cannonExtension;}
   }
   public double armTestSetPointsAngle(SendableChooser<ArmTestSetPoints> armTestSetPoints){
@@ -645,5 +794,10 @@ public class RobotContainer {
   //     return true;
   //   }
   // }
+  
+  @Config
+  public void facingOverrideButton(boolean input){
+    facingOverrideButton = input;
+  }
 
 }

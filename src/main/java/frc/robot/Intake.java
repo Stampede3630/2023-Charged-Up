@@ -44,14 +44,19 @@ public class Intake extends SubsystemBase implements Loggable{
     @Override
     public void periodic() {
         m_intakeMotor.set(speed);
+        haveGamePiece = getIntakeCurrent() > 55 ? true : haveGamePiece;
     }
 
     public void runIntake() {
-        speed = 0.75;
+        speed = 1;
     }
 
     public void reverseIntake() {
-        speed = -0.75;
+        speed = -1;
+    }
+
+    public void setIntake(double intakeSpeed) {
+        speed = intakeSpeed;
     }
 
     public void stopIntake() {
@@ -71,5 +76,9 @@ public class Intake extends SubsystemBase implements Loggable{
     @Log
     public boolean haveGamePiece() {
         return haveGamePiece;
+    }
+
+    public void leaveGamePiece(){
+        haveGamePiece = false;
     }
 }

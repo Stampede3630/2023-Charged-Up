@@ -8,6 +8,7 @@ import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.CANSparkMax.IdleMode;
+import com.revrobotics.CANSparkMax.SoftLimitDirection;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxLimitSwitch;
@@ -26,9 +27,9 @@ import io.github.oblarg.oblog.annotations.Log;
 public class TheCannon extends SubsystemBase implements Loggable {
   /** Creates a new TheCannon. */
 @Log
-public double extensionInches = 0.0;
+public double extensionInches = 3.0;
 @Log
-public double cannonRotation = 0.0;
+public double cannonRotation = 30.0;
 
 private CANSparkMax cannonRotLead = new CANSparkMax(4, MotorType.kBrushless);
 private CANSparkMax cannonRotFollow = new CANSparkMax(11, MotorType.kBrushless);
@@ -57,7 +58,7 @@ new ArmFeedforward(
     cannonAbsolute.setVelocityConversionFactor(360.0);
     cannonAbsolute.setZeroOffset(294.0);
 
-    cannonExtension.setSmartCurrentLimit(70);
+    cannonExtension.setSmartCurrentLimit(50);
     cannonRotLead.setSmartCurrentLimit(70);
     cannonRotFollow.setSmartCurrentLimit(70);
     
@@ -65,11 +66,14 @@ new ArmFeedforward(
     
     // cannonExtension.setInverted(true);
     //changed idle mode to help with troubleshooting    
-    cannonRotLead.setIdleMode(IdleMode.kCoast);
+    cannonRotLead.setIdleMode(IdleMode.kCoast); //I 
     cannonRotFollow.setIdleMode(IdleMode.kCoast);
     cannonExtension.setIdleMode(IdleMode.kCoast);
     cannonRotFollow.follow(cannonRotLead, true);
 
+    cannonRotLead.setSoftLimit(SoftLimitDirection.kForward, 195);
+    cannonRotLead.setSoftLimit(SoftLimitDirection.kReverse, -15);
+    
     cannonRotLeadPID.setFeedbackDevice(cannonAbsolute);
     cannonRotLeadPID.setPositionPIDWrappingEnabled(false);
 
@@ -97,7 +101,7 @@ new ArmFeedforward(
 
     setAdaptiveFeedForward();
 
-    cannonExtensionPID.setReference(-extensionInches, ControlType.kPosition); 
+    cannonExtensionPID.setReference(extensionInches, ControlType.kPosition); 
     cannonRotLeadPID.setReference(getRevReferenceAngleSetpoint(), ControlType.kPosition, 0, getArbitraryFeedForward(), ArbFFUnits.kVoltage);
 
     if (Preferences.getBoolean("Wanna PID Cannon", false)) {
@@ -139,6 +143,11 @@ new ArmFeedforward(
     cannonRotLead.setIdleMode(IdleMode.kBrake);
     cannonRotFollow.setIdleMode(IdleMode.kBrake);
     cannonExtension.setIdleMode(IdleMode.kBrake);
+  }
+
+  public void setCannonRotation(double intakeCannonAngle){
+    setCannonAngle(intakeCannonAngle);
+
   }
 
   @Log

@@ -33,11 +33,7 @@ public class NodePosition {
 
       LEFT(123.0,42.19),
       CENTER(123.0,66+42.19),
-      RIGHT(123.0,132+42.19),
-
-      DOUBLE_SUBSTATION(625.9843, 289.7638),
-      SINGLE_SUBSTATION(541.73228, 301.1811),
-      GROUND_PICKUP(0, 0);
+      RIGHT(123.0,132+42.19);
 
       public final double xCoord;
       public final double yCoord;

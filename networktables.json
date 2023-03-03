@@ -174,5 +174,37 @@
     "properties": {
       "persistent": true
     }
+  },
+  {
+    "name": "/Preferences/LidKP",
+    "type": "double",
+    "value": 0.03333333333333333,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/LidKI",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/LidKD",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/Wanna PID Lid",
+    "type": "boolean",
+    "value": false,
+    "properties": {
+      "persistent": true
+    }
   }
 ]

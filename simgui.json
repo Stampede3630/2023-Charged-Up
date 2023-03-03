@@ -3,7 +3,13 @@
     "types": {
       "/FMSInfo": "FMSInfo",
       "/Shuffleboard/RobotContainer/s_SwerveDrive": "Subsystem",
-      "/Shuffleboard/SwerveDrive/m_field": "Field2d"
+      "/Shuffleboard/SwerveDrive/m_field": "Field2d",
+      "/Shuffleboard/nodeSelector/Arm Point Select": "String Chooser",
+      "/Shuffleboard/nodeSelector/Node Driver Station": "String Chooser",
+      "/Shuffleboard/nodeSelector/Node Grid Chooser": "String Chooser",
+      "/Shuffleboard/nodeSelector/Node Group Chooser": "String Chooser",
+      "/Shuffleboard/nodeSelector/Pickup Location": "String Chooser",
+      "/Shuffleboard/nodeSelector/orientation": "String Chooser"
     }
   }
 }

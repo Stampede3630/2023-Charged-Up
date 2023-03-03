@@ -206,7 +206,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
     // if(RobotBase.isSimulation() || !gyro.isConnected()) {
       // return prevRobotPose.getRotation().rotateBy(new Rotation2d(m_driveTrain.m_kinematics.toChassisSpeeds(m_driveTrain.getModuleStates()).omegaRadiansPerSecond *deltaTime));   
     // }
-    return m_odometry.getEstimatedPosition().getRotation();
+    return gyro.getRotation2d();
   }
 
   @Log
