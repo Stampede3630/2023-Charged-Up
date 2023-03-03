@@ -536,6 +536,7 @@ public class RobotContainer {
           switch (gamePieceTypeChooser.getSelected()) {
             case TIPPED_CONE: break;
             case UPRIGHT_CONE: case CUBE: s_Lid.setLipIn();
+            case NOTHING: break;
           }
       }
     }
