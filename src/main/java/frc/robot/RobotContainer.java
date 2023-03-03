@@ -313,7 +313,7 @@ public class RobotContainer {
     xBox.leftTrigger(.55).debounce(.1, DebounceType.kFalling)
         .onTrue(Commands.runOnce(()-> s_Intake.setIntake(-intakeSpeed)).alongWith(Commands.runOnce(s_Intake::leaveGamePiece)))
         .onFalse(Commands.runOnce(s_Intake::stopIntake)
-          .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(3)))
+          .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(2)))
           .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
           .andThen(Commands.runOnce(()-> s_Cannon.setCannonRotation(intakeCannonAngle)))
           .andThen(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle))));
