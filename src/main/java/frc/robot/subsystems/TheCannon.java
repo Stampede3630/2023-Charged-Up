@@ -27,7 +27,7 @@ import io.github.oblarg.oblog.annotations.Log;
 public class TheCannon extends SubsystemBase implements Loggable {
   /** Creates a new TheCannon. */
 @Log
-public double extensionInches = 3.0;
+public double extensionInches = 0.0;
 @Log
 public double cannonRotation = 30.0;
 

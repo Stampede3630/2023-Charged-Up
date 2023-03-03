@@ -313,9 +313,9 @@ public class RobotContainer {
     xBox.leftTrigger(.55).debounce(.1, DebounceType.kFalling)
         .onTrue(Commands.runOnce(()-> s_Intake.setIntake(-intakeSpeed)).alongWith(Commands.runOnce(s_Intake::leaveGamePiece)))
         .onFalse(Commands.runOnce(s_Intake::stopIntake)
-          .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(2)))
+          .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(0)))
           .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
-          .andThen(Commands.runOnce(()-> s_Cannon.setCannonRotation(intakeCannonAngle)))
+          .andThen(Commands.runOnce(()-> s_Cannon.setCannonRotation(intakeCannonAngle))) //intakecannonangle
           .andThen(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle))));
 
     xBox.rightBumper()
@@ -444,7 +444,7 @@ public class RobotContainer {
       //facing HPS
       switch (gamePieceTypeChooser.getSelected()) {
         case CUBE:
-        intakeCannonAngle = -10.0;
+        intakeCannonAngle = 160.0;
           intakeLidAngle = 275.0;
           intakeSpeed = -1.0;
           break;
