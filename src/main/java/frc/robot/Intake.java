@@ -3,6 +3,7 @@ package frc.robot;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxAbsoluteEncoder;
+import com.revrobotics.SparkMaxLimitSwitch;
 import com.revrobotics.SparkMaxPIDController;
 import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.CANSparkMax.IdleMode;
@@ -19,12 +20,15 @@ public class Intake extends SubsystemBase implements Loggable{
     private CANSparkMax m_intakeMotor = new CANSparkMax(14, MotorType.kBrushless);
     private RelativeEncoder m_intakeEncoder = m_intakeMotor.getEncoder();
     private SparkMaxPIDController m_intakePid = m_intakeMotor.getPIDController();
+    private SparkMaxLimitSwitch intakeHardStop = m_intakeMotor.getReverseLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen);
 
     private double speed = 0;
     private boolean haveGamePiece = false;
     public Intake() {
 
         m_intakeMotor.setSmartCurrentLimit(70);
+
+
                 
         // cannonExtension.setInverted(true);
         //changed idle mode to help with troubleshooting    
@@ -61,6 +65,11 @@ public class Intake extends SubsystemBase implements Loggable{
 
     public void stopIntake() {
         speed = 0;
+    }
+
+    @Log
+    public boolean getIntakeHardStop(){
+      return intakeHardStop.isPressed();
     }
 
     @Config

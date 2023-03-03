@@ -27,7 +27,7 @@ public class Lid extends SubsystemBase implements Loggable{
         m_lidAbsolute.setVelocityConversionFactor(360.0);
         m_lidMotor.setSoftLimit(SoftLimitDirection.kForward, 310);
         m_lidMotor.setSoftLimit(SoftLimitDirection.kReverse, 90);
-        m_lidAbsolute.setZeroOffset(360-47);
+        m_lidAbsolute.setZeroOffset(360-87);
 
         m_lidMotor.setSmartCurrentLimit(20);
                 

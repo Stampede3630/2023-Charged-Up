@@ -305,9 +305,9 @@ public class RobotContainer {
     xBox.rightTrigger(.55).debounce(.1, DebounceType.kFalling)
         .onTrue(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle))
           .andThen(Commands.runOnce(()-> s_Cannon.setCannonRotation(intakeCannonAngle)))
-          .andThen(Commands.runOnce(()-> s_Intake.setIntake(intakeSpeed)))
-          .andThen(Commands.waitUntil(s_Intake::haveGamePiece))
-          .andThen(Commands.runOnce(s_Intake::stopIntake)))
+          .andThen(Commands.runOnce(()-> s_Intake.setIntake(intakeSpeed))))
+         // .andThen(Commands.waitUntil(s_Intake::haveGamePiece))
+         // .andThen(Commands.runOnce(s_Intake::stopIntake)))
         .onFalse(Commands.runOnce(s_Intake::stopIntake));
     
     xBox.leftTrigger(.55).debounce(.1, DebounceType.kFalling)
@@ -317,7 +317,13 @@ public class RobotContainer {
           .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
           .andThen(Commands.runOnce(()-> s_Cannon.setCannonRotation(intakeCannonAngle)))
           .andThen(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle))));
-        
+
+    xBox.rightBumper()
+        .onTrue(Commands.runOnce(()-> s_Intake.setIntake(1)))
+        .onFalse(Commands.runOnce(s_Intake::stopIntake));
+    xBox.rightBumper()
+        .onTrue(Commands.runOnce(()-> s_Intake.setIntake(-1)))
+        .onFalse(Commands.runOnce(s_Intake::stopIntake));
     //-> outtake trigger
     // xBox.leftTrigger(.55).debounce(.1, DebounceType.kFalling)
     //     .onTrue((Commands.runOnce(s_Claw::reverseClawtake)))
