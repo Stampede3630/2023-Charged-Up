@@ -5,6 +5,7 @@ import com.revrobotics.SparkMaxAbsoluteEncoder;
 import com.revrobotics.SparkMaxPIDController;
 import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.CANSparkMax.IdleMode;
+import com.revrobotics.CANSparkMax.SoftLimitDirection;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
 
@@ -24,6 +25,8 @@ public class Lid extends SubsystemBase implements Loggable{
         m_lidAbsolute.setInverted(true);
         m_lidAbsolute.setPositionConversionFactor(360.0);
         m_lidAbsolute.setVelocityConversionFactor(360.0);
+        m_lidMotor.setSoftLimit(SoftLimitDirection.kForward, 240);
+        m_lidMotor.setSoftLimit(SoftLimitDirection.kReverse, 120);
         m_lidAbsolute.setZeroOffset(360-47);
 
         m_lidMotor.setSmartCurrentLimit(20);
