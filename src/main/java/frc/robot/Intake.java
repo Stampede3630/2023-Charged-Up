@@ -33,6 +33,7 @@ public class Intake extends SubsystemBase implements Loggable{
         // cannonExtension.setInverted(true);
         //changed idle mode to help with troubleshooting    
         m_intakeMotor.setIdleMode(IdleMode.kBrake);
+        intakeHardStop.enableLimitSwitch(true);
 
         // m_intakePid.setFeedbackDevice(m_intakeEncoder);
         // m_intakePid.setPositionPIDWrappingEnabled(false);
@@ -42,7 +43,9 @@ public class Intake extends SubsystemBase implements Loggable{
         // m_intakePid.setD(Preferences.getDouble("IntakeKD", 0.0));
         // m_intakePid.setOutputRange(-.5, .5);
 
-        // m_lidMotor.burnFlash();
+        m_intakeMotor.burnFlash();
+        
+
     }
 
     @Override

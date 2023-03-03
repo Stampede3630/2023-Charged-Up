@@ -85,6 +85,8 @@ new ArmFeedforward(
     cannonExtensionPID.setP(Preferences.getDouble("ExtensionKP", 1.0 / 6.0));
     cannonExtensionPID.setI(Preferences.getDouble("ExtensionKI", 0.0));
     cannonExtensionPID.setD(Preferences.getDouble("ExtensionKD", 0.0));
+
+    extensionHardStop.enableLimitSwitch(true);
     
 
 
