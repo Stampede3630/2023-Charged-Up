@@ -47,7 +47,6 @@ private double kV = 2.44;
 private double kA = 0.06;
 
 private ArmFeedforward m_feedforward =
-
 new ArmFeedforward(
   kS, kG,
   kV, kA);

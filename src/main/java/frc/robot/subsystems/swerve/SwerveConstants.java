@@ -73,15 +73,15 @@ public final class SwerveConstants {
 
     // Swerve Driving PIDs (kP, kI, kD)
     // Once characterized the drive PIDs are meaningless
-    public static Gains FRDriveGains = new Gains(0.07, 0, 0, 1023.0 / 20660.0);
-    public static Gains FLDriveGains = new Gains(0.07, 0, 0, 1023.0 / 20660.0);
-    public static Gains BRDriveGains = new Gains(0.07, 0, 0, 1023.0 / 20660.0);
-    public static Gains BLDriveGains = new Gains(0.07, 0, 0, 1023.0 / 20660.0);
+    public static Gains FRDriveGains = new Gains(0.0007, 0, 0, 1023.0 / 20660.0);
+    public static Gains FLDriveGains = new Gains(0.0007, 0, 0, 1023.0 / 20660.0);
+    public static Gains BRDriveGains = new Gains(0.0007, 0, 0, 1023.0 / 20660.0);
+    public static Gains BLDriveGains = new Gains(0.0007, 0, 0, 1023.0 / 20660.0);
 
-    public static final double kS = 0.146;
-    public static final double kV = 0.72344;
-    public static final double kA = 0.19802;
-    public static final double kP = 0.001; //now better!
+    public static final double kS = 0.1882;
+    public static final double kV = 0.69334;
+    public static final double kA = 0.10209;
+    public static final double kP = 0.00062975; //now better!
 
     // CTRE CAN-based constants (shouldn't need to change these)
     public static final int kDefaultPIDSlotID = 0;
