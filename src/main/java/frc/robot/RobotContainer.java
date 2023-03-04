@@ -121,16 +121,16 @@ public class RobotContainer {
     Preferences.initDouble("pKPRotationController", SwerveConstants.kPRotationController);
     Preferences.initDouble("pKIRotationController", SwerveConstants.kDRotationController);
     Preferences.initDouble("pKDRotationController", SwerveConstants.kIRotationController);
-    Preferences.initDouble("CannonKP", 1.0 / 30.0);
-    Preferences.initDouble("CannonKI", 0.0);
-    Preferences.initDouble("CannonKD", 0.0);
-    Preferences.initDouble("ExtensionKP", 1.0 / 6.0);
-    Preferences.initDouble("ExtensionKI", 0.0);
-    Preferences.initDouble("ExtensionPD", 0.0);
+    Preferences.initDouble("CannonKP", CannonConstants.KP);
+    Preferences.initDouble("CannonKI", CannonConstants.KI);
+    Preferences.initDouble("CannonKD", CannonConstants.KD);
+    Preferences.initDouble("ExtensionKP", ExtendoConstants.KP);
+    Preferences.initDouble("ExtensionKI", ExtendoConstants.KI);
+    Preferences.initDouble("ExtensionPD", ExtendoConstants.KD);
 
-    Preferences.initDouble("LidKP", 1 / 30.0);
-    Preferences.initDouble("LidKI", 0.0);
-    Preferences.initDouble("LidKD", 0.0);
+    Preferences.initDouble("LidKP", LidConstants.KP);
+    Preferences.initDouble("LidKI", LidConstants.KI);
+    Preferences.initDouble("LidKD", LidConstants.KD);
     Preferences.initBoolean("Wanna PID Roto", false);
     Preferences.initBoolean("Wanna PID Cannon", false);
     Preferences.initBoolean("Wanna PID Lid", false);
