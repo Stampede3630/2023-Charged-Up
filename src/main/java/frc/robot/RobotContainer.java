@@ -93,6 +93,7 @@ public class RobotContainer {
   
   public double intakeCannonAngle;
   public double intakeLidAngle;
+  @Log
   public double intakeSpeed;
   public GamePieceType previousGamePieceOrientation;
   public GamePieceType gamePieceTypeLed;
@@ -281,7 +282,9 @@ public class RobotContainer {
     xBox.rightTrigger(.55).debounce(.1, DebounceType.kFalling)
         .onTrue(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle))
           .andThen(Commands.runOnce(()-> s_Cannon.setCannonRotation(intakeCannonAngle)))
-          .andThen(Commands.runOnce(()-> s_Intake.setIntake(intakeSpeed))))
+          .andThen(Commands.runOnce(()-> s_Intake.setIntake(intakeSpeed)))
+          .andThen(Commands.waitSeconds(.1).andThen(Commands.waitUntil(() -> s_Intake.checkForCurrentSpike()).until(xBox.rightTrigger().negate())))
+          .andThen(Commands.runOnce(s_Intake::stopIntake)))
          // .andThen(Commands.waitUntil(s_Intake::haveGamePiece))
          // .andThen(Commands.runOnce(s_Intake::stopIntake)))
         .onFalse(Commands.runOnce(s_Intake::stopIntake));
@@ -296,21 +299,24 @@ public class RobotContainer {
           .andThen(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle))));
     
     //MANUAL INTAKE
-    xBox.rightBumper()
-        .onTrue(Commands.runOnce(()-> s_Intake.setIntake(1)))
+    xBox.leftBumper().debounce(.1, DebounceType.kFalling)
+        .whileTrue(Commands.runOnce(()-> s_Intake.setIntake(1)))
         .onFalse(Commands.runOnce(s_Intake::stopIntake));
-    xBox.rightBumper()
-        .onTrue(Commands.runOnce(()-> s_Intake.setIntake(-1)))
+    xBox.rightBumper().debounce(.1, DebounceType.kFalling)
+        .whileTrue(Commands.runOnce(()-> s_Intake.setIntake(-1)))
         .onFalse(Commands.runOnce(s_Intake::stopIntake));
-
 
     //-> extension + cannonRot to setpoint
     xBox.y()
-        .onTrue((Commands.runOnce(()-> s_Cannon.setCannonAngleSides(robotFacing(), NodePosition.getNodePosition(nodeGroupChooser.getSelected(), nodeGridChooser.getSelected()).getCannonAngle())))
+        .onTrue((Commands.runOnce(()-> {
+          s_Cannon.setCannonAngleSides(robotFacing(), NodePosition.getNodePosition(nodeGroupChooser.getSelected(), nodeGridChooser.getSelected()).getCannonAngle());
+          // switch ()
+        }))
           .andThen(new SequentialCommandGroup(Commands.waitUntil(s_Cannon::cannonErrorWithinRange)),
-              Commands.runOnce(()-> s_Cannon.setExtensionInches(NodePosition.getNodePosition(nodeGroupChooser.getSelected(), nodeGridChooser.getSelected()).getExtension()))));
-
-
+              Commands.runOnce(()-> s_Cannon.setExtensionInches(NodePosition.getNodePosition(nodeGroupChooser.getSelected(), nodeGridChooser.getSelected()).getExtension())))
+          .andThen(Commands.runOnce(() -> {
+            if (gamePieceTypeChooser.getSelected() != GamePieceType.CUBE) s_Lid.setLidReference(244);
+          })));
 
     //logic/no controller triggers
     new Trigger(s_Intake::haveGamePiece)
@@ -341,69 +347,70 @@ public class RobotContainer {
         Commands.runOnce(s_LEDs::beYellow), 
         () -> previousGamePieceOrientation.equals(GamePieceType.CUBE)))
       .onTrue(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle)));
-
   }
 
   public void setIntakeParameters() {
-    if (robotFacing() == FacingPOI.HUMAN_PLAYER && pickupLocationChooser.getSelected()==PickupLocation.SHELF) {
+    if (pickupLocationChooser.getSelected()==PickupLocation.SHELF) {
    
 
-    } else if (robotFacing() == FacingPOI.HUMAN_PLAYER && pickupLocationChooser.getSelected()==PickupLocation.CHUTE) {
+    } else if (pickupLocationChooser.getSelected()==PickupLocation.CHUTE) {
       
     
-    } else {
+    } else if (pickupLocationChooser.getSelected() == PickupLocation.GROUND) { //either facing community or facing HP and picking up from gnd
       //ground
-      if (robotFacing() == FacingPOI.COMMUNITY && !facingOverrideButton) {
+      if (robotFacing() == FacingPOI.HUMAN_PLAYER) {
         switch (gamePieceTypeChooser.getSelected()) {
           case CUBE:
             intakeCannonAngle = -10.0;
             intakeLidAngle = 275.0;
-            intakeSpeed = -1.0;
+            intakeSpeed = 1.0;
             break;
           case UPRIGHT_CONE:
             intakeCannonAngle = -7.0;
             intakeLidAngle = 206.0;
             intakeSpeed = 1.0;
             break;
-          case TIPPED_CONE:
+          case TIPPED_CONE: // impossible
             intakeCannonAngle = 190.0;
             intakeLidAngle = 244.0;
-            intakeSpeed = -1.0;
+            intakeSpeed = 1.0;
             break;
           case NOTHING:
             intakeCannonAngle = 85.0;
             break;
         }
-      } else if (robotFacing() == FacingPOI.COMMUNITY && facingOverrideButton) {
-          //facing HPS
-          switch (gamePieceTypeChooser.getSelected()) {
-            case CUBE:
-            intakeCannonAngle = -10.0;
-            intakeLidAngle = 275.0;
-            intakeSpeed = -1.0;
-              break;
-            case UPRIGHT_CONE:
-              intakeCannonAngle = 175.0;
-              intakeLidAngle = 116.0;
-              intakeSpeed = -1.0;
-              break; 
-            case TIPPED_CONE:
-              intakeCannonAngle = 190.0;
-              intakeLidAngle = 244.0;
-              intakeSpeed = -1.0;
-              break; 
-            case NOTHING: 
-              intakeCannonAngle = 85.0;
-              break; 
+      }
+      //   }
+      // } else if (robotFacing() == FacingPOI.COMMUNITY && facingOverrideButton) {
+      //     //facing HPS
+      //     switch (gamePieceTypeChooser.getSelected()) {
+      //       case CUBE:
+      //       intakeCannonAngle = -10.0;
+      //       intakeLidAngle = 275.0;
+      //       intakeSpeed = -1.0;
+      //         break;
+      //       case UPRIGHT_CONE:
+      //         intakeCannonAngle = 175.0;
+      //         intakeLidAngle = 116.0;
+      //         intakeSpeed = -1.0;
+      //         break; 
+      //       case TIPPED_CONE:
+      //         intakeCannonAngle = 190.0;
+      //         intakeLidAngle = 244.0;
+      //         intakeSpeed = -1.0;
+      //         break; 
+      //       case NOTHING: 
+      //         intakeCannonAngle = 85.0;
+      //         break; 
         
-        }
-      } else if (robotFacing() == FacingPOI.HUMAN_PLAYER && !facingOverrideButton) {
+      //   }
+      else if (robotFacing() == FacingPOI.COMMUNITY) {
         //facing HPS
         switch (gamePieceTypeChooser.getSelected()) {
           case CUBE:
-          intakeCannonAngle = 160.0;
+            intakeCannonAngle = 160.0;
             intakeLidAngle = 275.0;
-            intakeSpeed = -1.0;
+            intakeSpeed = 1.0;
             break;
           case UPRIGHT_CONE:
             intakeCannonAngle = 175.0;
@@ -413,35 +420,36 @@ public class RobotContainer {
           case TIPPED_CONE:
             intakeCannonAngle = 190.0;
             intakeLidAngle = 244.0;
-            intakeSpeed = -1.0;
+            intakeSpeed = 1.0;
             break; 
           case NOTHING: 
             intakeCannonAngle = 85.0;  
             break;
           
           }
-      } else if (robotFacing() == FacingPOI.HUMAN_PLAYER && facingOverrideButton) {
-        switch (gamePieceTypeChooser.getSelected()) {
-          case CUBE:
-            intakeCannonAngle = -10.0;
-            intakeLidAngle = 275.0;
-            intakeSpeed = -1.0;
-            break;
-          case UPRIGHT_CONE:
-            intakeCannonAngle = -7.0;
-            intakeLidAngle = 206.0;
-            intakeSpeed = 1.0;
-            break;
-          case TIPPED_CONE:
-            intakeCannonAngle = 190.0;
-            intakeLidAngle = 244.0;
-            intakeSpeed = -1.0;
-            break;
-          case NOTHING:
-            intakeCannonAngle = 85.0;  
-            break;
         }
-      }
+      // } else if (robotFacing() == FacingPOI.HUMAN_PLAYER && facingOverrideButton) {
+      //   switch (gamePieceTypeChooser.getSelected()) {
+      //     case CUBE:
+      //       intakeCannonAngle = -10.0;
+      //       intakeLidAngle = 275.0;
+      //       intakeSpeed = -1.0;
+      //       break;
+      //     case UPRIGHT_CONE:
+      //       intakeCannonAngle = -7.0;
+      //       intakeLidAngle = 206.0;
+      //       intakeSpeed = 1.0;
+      //       break;
+      //     case TIPPED_CONE:
+      //       intakeCannonAngle = 190.0;
+      //       intakeLidAngle = 244.0;
+      //       intakeSpeed = -1.0;
+      //       break;
+      //     case NOTHING:
+      //       intakeCannonAngle = 85.0;  
+      //       break;
+      //   }
+      // }
     }
   }
 
@@ -518,9 +526,9 @@ public class RobotContainer {
 
   public FacingPOI robotFacing() {
     FacingPOI gyroFacing = FacingPOI.NOTHING;
-    if (Math.abs(MathUtil.inputModulus(s_SwerveDrive.getRobotAngle().getDegrees(), -180, 180))<50) // gyro facing community
+    if (Math.abs(s_SwerveDrive.getPose().getRotation().getDegrees())<50) // gyro facing community
       gyroFacing = FacingPOI.COMMUNITY;
-    else if (Math.abs(MathUtil.inputModulus(s_SwerveDrive.getRobotAngle().getDegrees(), -180, 180))>130) // gyro facing HP
+    else if (s_SwerveDrive.getPose().getRotation().getDegrees()>130) // gyro facing HP
       gyroFacing = FacingPOI.HUMAN_PLAYER;
     return gyroFacing;
   }

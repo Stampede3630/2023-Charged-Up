@@ -23,7 +23,7 @@ public final class Constants {
 
   public static final class CannonConstants{
     public static final int SPARK_MASTER_ID = 4;
-    public static final int SPARK_FOLLOWER_ID = 14;
+    public static final int SPARK_FOLLOWER_ID = 11;
 
     public static final double KP = 0.0013623; //used to be 1/30.0
     public static final double KI = 0;
@@ -47,7 +47,7 @@ public final class Constants {
   }
 
   public static final class ExtendoConstants{
-    public static final int SPARK_MAX_ID = 1;
+    public static final int SPARK_MAX_ID = 17;
     public static final double INITIALIZED_INCHES = 1.0;
     public static final int CURRENT_LIMIT = 40; //changed from 50
     public static final double MAGIC_TO_INCHES = 1.802406002431152;

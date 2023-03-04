@@ -18,11 +18,12 @@ import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
 
 public class Intake extends SubsystemBase implements Loggable{
-    private CANSparkMax m_intakeMotor = new CANSparkMax(14, MotorType.kBrushless);
+    private CANSparkMax m_intakeMotor = new CANSparkMax(IntakeConstants.SPARK_MAX_ID, MotorType.kBrushless);
     private RelativeEncoder m_intakeEncoder = m_intakeMotor.getEncoder();
     private SparkMaxPIDController m_intakePid = m_intakeMotor.getPIDController();
     private SparkMaxLimitSwitch intakeHardStop = m_intakeMotor.getReverseLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen);
 
+    @Log
     private double speed = 0;
     private boolean haveGamePiece = false;
     public Intake() {
@@ -33,7 +34,7 @@ public class Intake extends SubsystemBase implements Loggable{
                 
         // cannonExtension.setInverted(true);
         //changed idle mode to help with troubleshooting    
-        m_intakeMotor.setIdleMode(IdleMode.kBrake);
+        m_intakeMotor.setIdleMode(IdleMode.kCoast);
         intakeHardStop.enableLimitSwitch(true);
 
         // m_intakePid.setFeedbackDevice(m_intakeEncoder);
@@ -52,15 +53,6 @@ public class Intake extends SubsystemBase implements Loggable{
     @Override
     public void periodic() {
         m_intakeMotor.set(speed);
-        haveGamePiece = getIntakeCurrent() > IntakeConstants.GAME_PIECE_DETECTION_AMPS ? true : haveGamePiece;
-    }
-
-    public void runIntake() {
-        speed = 1;
-    }
-
-    public void reverseIntake() {
-        speed = -1;
     }
 
     public void setIntake(double intakeSpeed) {
@@ -76,11 +68,6 @@ public class Intake extends SubsystemBase implements Loggable{
       return intakeHardStop.isPressed();
     }
 
-    @Config
-    public void setSpeed(double input) {
-        this.speed = input;
-    }
-
     @Log
     public double getIntakeCurrent() {
         return m_intakeMotor.getOutputCurrent();
@@ -93,5 +80,10 @@ public class Intake extends SubsystemBase implements Loggable{
 
     public void leaveGamePiece(){
         haveGamePiece = false;
+    }
+
+    public boolean checkForCurrentSpike() {
+        haveGamePiece = getIntakeCurrent() > IntakeConstants.GAME_PIECE_DETECTION_AMPS ? true : haveGamePiece;
+        return haveGamePiece;
     }
 }

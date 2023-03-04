@@ -157,9 +157,9 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
   public CommandBase joystickDriveCommand(DoubleSupplier _x, DoubleSupplier _y, DoubleSupplier _rot){
     return Commands.run(
       () -> {
-        double x = -_x.getAsDouble();
-        double y = -_y.getAsDouble();
-        double rot = Math.pow(_rot.getAsDouble(), 3);
+        double x = -Math.pow(_x.getAsDouble(),5);
+        double y = -Math.pow(_y.getAsDouble(),5);
+        double rot = -Math.pow(_rot.getAsDouble(), 5);
         double joystickDriveGovernor = Preferences.getDouble("pDriveGovernor", DriverConstants.DRIVE_GOVERNOR);
         
         if (Preferences.getBoolean("pAccelInputs", DriverConstants.ACCELERATED_INPUTS)) {
@@ -173,7 +173,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
           new Translation2d(
             convertToMetersPerSecond(x)*joystickDriveGovernor,
             convertToMetersPerSecond(y)*joystickDriveGovernor), 
-          -convertToRadiansPerSecond(rot)* joystickDriveGovernor, 
+          convertToRadiansPerSecond(rot)* joystickDriveGovernor, 
           Preferences.getBoolean("pFieldRelative", DriverConstants.FIELD_RELATIVE));
         }, this);
   }
@@ -208,6 +208,15 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
       // return prevRobotPose.getRotation().rotateBy(new Rotation2d(m_driveTrain.m_kinematics.toChassisSpeeds(m_driveTrain.getModuleStates()).omegaRadiansPerSecond *deltaTime));   
     // }
     return gyro.getRotation2d();
+  }
+
+  public Pose2d getPose() {
+    return robotPose;
+  }
+
+  @Log
+  public double odometryDegrees() {
+    return getPose().getRotation().getDegrees();
   }
 
   @Log

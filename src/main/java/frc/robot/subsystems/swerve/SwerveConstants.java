@@ -52,10 +52,10 @@ public final class SwerveConstants {
     // CHANGE TO 0 first, reset the sensor,
     // PHYSICALLY zero out the motor
     // place the OPPOSITE of the value
-    public static double FRSensorOffset = -0.145752; // 121.904; test? values
-    public static double FLSensorOffset = -0.390381;// 40.869;
-    public static double BRSensorOffset = -0.376953;// 179.561;
-    public static double BLSensorOffset = -0.553223;// -24.873;
+    public static double FRSensorOffset = -0.165039 ; // 121.904; test? values
+    public static double FLSensorOffset = -0.398438 ;// 40.869;-.878174 
+    public static double BRSensorOffset = -0.361816 ;// 179.561; 
+    public static double BLSensorOffset = -0.578613  ;// -24.873; -.541992 
 
     // Give a positive input on the joystick or phoenix tuner
     // Switch this if it goes opposite the desired direction

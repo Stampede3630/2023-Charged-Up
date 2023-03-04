@@ -21,10 +21,12 @@ public class LEDs extends SubsystemBase implements Loggable{
   public int b = 0;
   public boolean rainbow = true;
   private final int HUE_CHANGE_PER_SEC = 60;
+  private final double CHASE_MOVE_PER_MS = 0.0333;
+
   private final double STROBE_TIME_MS = 500;
   private double previousTime = System.currentTimeMillis();
   private Color[] strobeColors = {new Color(0,0,255),new Color(255,255,0)};
-  private int chaseSeparator = 0; 
+  private double chaseSeparator = 0; 
   private LEDMode mode = LEDMode.CHASING;
   
   /** Creates a new LEDs. */
@@ -40,14 +42,14 @@ public class LEDs extends SubsystemBase implements Loggable{
 
   @Override
   public void periodic() {
-    switch (mode) {
-      case STROBE: break;
-      case CHASING: chaseColors(); break;
-      case SOLID: setEntireStrip(); break;
-      default: beWhoYouAre();
-    }
+    // switch (mode) {
+    //   case STROBE: break;
+    //   case CHASING: chaseColorsTwo(); break;
+    //   case SOLID: setEntireStrip(); break;
+    //   default: beWhoYouAre();
+    // }
     if (rainbow)
-      beWhoYouAre();
+      chaseColorsTwo();
     else
       setEntireStrip();
     // This method will be called once per scheduler run
@@ -103,13 +105,17 @@ public class LEDs extends SubsystemBase implements Loggable{
     }
     chaseSeparator++;
     chaseSeparator %= m_LEDBuffer.getLength();
+    m_led.setData(m_LEDBuffer);
+    m_led.start();
   }
 
   public void chaseColorsTwo() {
+    double currentTime = System.currentTimeMillis();
+    double timeElapsed = currentTime-previousTime;
     int length = m_LEDBuffer.getLength();
-    int delim1 = chaseSeparator;
+    int delim1 = (int) chaseSeparator;
     int delim2 = (int) (length/2.0+chaseSeparator);
-    for (int i = delim1; i < delim2+(delim1>delim2 ? length : 0); i++) { // wrap if 1 is further than 2
+     for (int i = delim1; i < delim2+(delim1>delim2 ? length : 0); i++) { // wrap if 1 is further than 2
       // Calculate the hue - hue is easier for rainbows because the color
       // shape is a circle so only one value needs to precess
       // Set the value to claw machine + bing chilling 
@@ -124,8 +130,11 @@ public class LEDs extends SubsystemBase implements Loggable{
       m_LEDBuffer.setLED(i%length, strobeColors[1]);
        
     }
-    chaseSeparator++;
+    chaseSeparator += CHASE_MOVE_PER_MS*timeElapsed;
     chaseSeparator %= m_LEDBuffer.getLength();
+    m_led.setData(m_LEDBuffer);
+    m_led.start();
+    previousTime = currentTime;
   }
   public void beWhoYouAre () {
     double currentTime = System.currentTimeMillis();

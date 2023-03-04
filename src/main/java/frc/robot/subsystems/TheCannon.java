@@ -61,6 +61,7 @@ private ArmFeedforward m_feedforward =
     cannonRotLead.setSmartCurrentLimit(CannonConstants.CURRENT_LIMIT);
     cannonRotFollow.setSmartCurrentLimit(CannonConstants.CURRENT_LIMIT);
     
+    cannonExtension.setInverted(true);
     extensionEncoder.setPositionConversionFactor(ExtendoConstants.MAGIC_TO_INCHES);
     
     // cannonExtension.setInverted(true);
@@ -78,14 +79,14 @@ private ArmFeedforward m_feedforward =
     cannonRotLeadPID.setP(Preferences.getDouble("CannonKP", CannonConstants.KP));
     cannonRotLeadPID.setI(Preferences.getDouble("CannonKI", CannonConstants.KI));
     cannonRotLeadPID.setD(Preferences.getDouble("CannonKD", CannonConstants.KD));
+    cannonRotLeadPID.setOutputRange(-1, 1);
     //cannonRotLeadPID.setOutputRange(-.5, .5); //KP Accounts for this I think
     
     cannonExtensionPID.setP(Preferences.getDouble("ExtensionKP", ExtendoConstants.KP));
     cannonExtensionPID.setI(Preferences.getDouble("ExtensionKI", ExtendoConstants.KI));
     cannonExtensionPID.setD(Preferences.getDouble("ExtensionKD", ExtendoConstants.KD));
-    
-
-
+    cannonExtensionPID.setOutputRange(-1, 1);
+  
     
     cannonRotLead.burnFlash();
     cannonRotFollow.burnFlash();
