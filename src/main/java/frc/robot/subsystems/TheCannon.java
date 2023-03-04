@@ -19,6 +19,8 @@ import com.revrobotics.SparkMaxPIDController.ArbFFUnits;
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.CannonConstants;
+import frc.robot.Constants.ExtendoConstants;
 import frc.robot.RobotContainer.FacingPOI;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Config;
@@ -27,13 +29,13 @@ import io.github.oblarg.oblog.annotations.Log;
 public class TheCannon extends SubsystemBase implements Loggable {
   /** Creates a new TheCannon. */
 @Log
-public double extensionInches = 0.0;
+public double extensionInches = ExtendoConstants.INITIALIZED_INCHES;
 @Log
-public double cannonRotation = 30.0;
+public double cannonRotation = CannonConstants.INITIALIZED_ANGLE;
 
-private CANSparkMax cannonRotLead = new CANSparkMax(4, MotorType.kBrushless);
-private CANSparkMax cannonRotFollow = new CANSparkMax(11, MotorType.kBrushless);
-private CANSparkMax cannonExtension = new CANSparkMax(17, MotorType.kBrushless);
+private CANSparkMax cannonRotLead = new CANSparkMax(CannonConstants.SPARK_MASTER_ID, MotorType.kBrushless);
+private CANSparkMax cannonRotFollow = new CANSparkMax(CannonConstants.SPARK_FOLLOWER_ID, MotorType.kBrushless);
+private CANSparkMax cannonExtension = new CANSparkMax(ExtendoConstants.SPARK_MAX_ID, MotorType.kBrushless);
 
 private AbsoluteEncoder cannonAbsolute = cannonRotLead.getAbsoluteEncoder(Type.kDutyCycle);
 private RelativeEncoder extensionEncoder = cannonExtension.getEncoder();
@@ -42,27 +44,24 @@ private SparkMaxLimitSwitch extensionHardStop = cannonExtension.getReverseLimitS
 private SparkMaxPIDController cannonRotLeadPID = cannonRotLead.getPIDController();
 private SparkMaxPIDController cannonExtensionPID = cannonExtension.getPIDController();
 
-private double kS = 0;
-private double kG = 0.73;
-private double kV = 2.44;
-private double kA = 0.06;
-
 private ArmFeedforward m_feedforward =
-new ArmFeedforward(
-  kS, kG,
-  kV, kA);
+  new ArmFeedforward(
+    CannonConstants.KS, 
+    CannonConstants.KG,
+    CannonConstants.KV, 
+    CannonConstants.KA);
   
   public TheCannon() {
     cannonAbsolute.setInverted(false);
-    cannonAbsolute.setPositionConversionFactor(360.0);
-    cannonAbsolute.setVelocityConversionFactor(360.0);
-    cannonAbsolute.setZeroOffset(294.0);
+    cannonAbsolute.setPositionConversionFactor(CannonConstants.CONVERSION_FACTOR);
+    cannonAbsolute.setVelocityConversionFactor(CannonConstants.CONVERSION_FACTOR);
+    cannonAbsolute.setZeroOffset(CannonConstants.ZERO_OFFSET);
 
-    cannonExtension.setSmartCurrentLimit(50);
-    cannonRotLead.setSmartCurrentLimit(70);
-    cannonRotFollow.setSmartCurrentLimit(70);
+    cannonExtension.setSmartCurrentLimit(ExtendoConstants.CURRENT_LIMIT);
+    cannonRotLead.setSmartCurrentLimit(CannonConstants.CURRENT_LIMIT);
+    cannonRotFollow.setSmartCurrentLimit(CannonConstants.CURRENT_LIMIT);
     
-    extensionEncoder.setPositionConversionFactor(1.802406002431152);
+    extensionEncoder.setPositionConversionFactor(ExtendoConstants.MAGIC_TO_INCHES);
     
     // cannonExtension.setInverted(true);
     //changed idle mode to help with troubleshooting    
@@ -70,23 +69,20 @@ new ArmFeedforward(
     cannonRotFollow.setIdleMode(IdleMode.kCoast);
     cannonExtension.setIdleMode(IdleMode.kCoast);
     cannonRotFollow.follow(cannonRotLead, true);
-
-    cannonRotLead.setSoftLimit(SoftLimitDirection.kForward, 195);
-    cannonRotLead.setSoftLimit(SoftLimitDirection.kReverse, -15);
+    cannonRotLead.setSoftLimit(SoftLimitDirection.kForward, CannonConstants.FORWARD_LIMIT);
+    cannonRotLead.setSoftLimit(SoftLimitDirection.kReverse, CannonConstants.REVERSE_LIMIT);
     
     cannonRotLeadPID.setFeedbackDevice(cannonAbsolute);
     cannonRotLeadPID.setPositionPIDWrappingEnabled(false);
 
-    cannonRotLeadPID.setP(Preferences.getDouble("CannonKP", 1.0/30.0));
-    cannonRotLeadPID.setI(Preferences.getDouble("CannonPI", 0.0));
-    cannonRotLeadPID.setD(Preferences.getDouble("CannonKD", 0.0));
-    cannonRotLeadPID.setOutputRange(-.5, .5);
+    cannonRotLeadPID.setP(Preferences.getDouble("CannonKP", CannonConstants.KP));
+    cannonRotLeadPID.setI(Preferences.getDouble("CannonKI", CannonConstants.KI));
+    cannonRotLeadPID.setD(Preferences.getDouble("CannonKD", CannonConstants.KD));
+    //cannonRotLeadPID.setOutputRange(-.5, .5); //KP Accounts for this I think
     
-    cannonExtensionPID.setP(Preferences.getDouble("ExtensionKP", 1.0 / 6.0));
-    cannonExtensionPID.setI(Preferences.getDouble("ExtensionKI", 0.0));
-    cannonExtensionPID.setD(Preferences.getDouble("ExtensionKD", 0.0));
-
-    extensionHardStop.enableLimitSwitch(true);
+    cannonExtensionPID.setP(Preferences.getDouble("ExtensionKP", ExtendoConstants.KP));
+    cannonExtensionPID.setI(Preferences.getDouble("ExtensionKI", ExtendoConstants.KI));
+    cannonExtensionPID.setD(Preferences.getDouble("ExtensionKD", ExtendoConstants.KD));
     
 
 
@@ -107,13 +103,13 @@ new ArmFeedforward(
     cannonRotLeadPID.setReference(getRevReferenceAngleSetpoint(), ControlType.kPosition, 0, getArbitraryFeedForward(), ArbFFUnits.kVoltage);
 
     if (Preferences.getBoolean("Wanna PID Cannon", false)) {
-      cannonRotLeadPID.setP(Preferences.getDouble("CannonKP", 1.0/30.0));
-      cannonRotLeadPID.setI(Preferences.getDouble("CannonPI", 0.0));
-      cannonRotLeadPID.setD(Preferences.getDouble("CannonKD", 0.0));
+      cannonRotLeadPID.setP(Preferences.getDouble("CannonKP", CannonConstants.KP));
+      cannonRotLeadPID.setI(Preferences.getDouble("CannonKI", CannonConstants.KI));
+      cannonRotLeadPID.setD(Preferences.getDouble("CannonKD", CannonConstants.KD));
 
-      cannonExtensionPID.setP(Preferences.getDouble("ExtensionKP", 1.0 / 6.0));
-      cannonExtensionPID.setI(Preferences.getDouble("ExtensionKI", 0.0));
-      cannonExtensionPID.setD(Preferences.getDouble("ExtensionKD", 0.0));
+    cannonExtensionPID.setP(Preferences.getDouble("ExtensionKP", ExtendoConstants.KP));
+    cannonExtensionPID.setI(Preferences.getDouble("ExtensionKI", ExtendoConstants.KI));
+    cannonExtensionPID.setD(Preferences.getDouble("ExtensionKD", ExtendoConstants.KD));
       Preferences.setBoolean("Wanna PID Cannon", false);
     }
 
@@ -125,13 +121,14 @@ new ArmFeedforward(
 
   //TODO: max extension 47inches, 0 is actually 13 inches
   public void setAdaptiveFeedForward() {
-
-    kS = 0;
-    kA = (7.71E-3) * extensionEncoder.getPosition() - 0.133;
-    kG = (0.0289) * extensionEncoder.getPosition() + (8.57E-3);
-    kV = 2.44;
-    m_feedforward = new ArmFeedforward(kS, kG, kV, kA);
-
+    double extensionPosition = extensionEncoder.getPosition();
+    m_feedforward = 
+      new ArmFeedforward(
+        CannonConstants.KS,
+        CannonConstants.KGM * extensionPosition + CannonConstants.KGB,
+        CannonConstants.KV,
+        CannonConstants.KAM * extensionPosition + CannonConstants.KAB
+      );
   }
 
   public void setCannonToCoast(){
@@ -166,12 +163,12 @@ new ArmFeedforward(
 
   @Log
   public boolean cannonErrorWithinRange (){
-    return Math.abs(cannonRotation - getCannonAngleEncoder()) < 10.0; 
+    return Math.abs(cannonRotation - getCannonAngleEncoder()) < CannonConstants.ERROR; 
   }
 
   @Log
   public boolean extensionErrorWithinRange(){
-    return Math.abs(extensionInches - getExtensionEncoder()) < 5.0;
+    return Math.abs(extensionInches - getExtensionEncoder()) < ExtendoConstants.ERROR;
   }
 
   // public void stowMode() {

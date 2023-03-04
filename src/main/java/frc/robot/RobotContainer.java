@@ -4,11 +4,10 @@
 
 package frc.robot;
 
+import java.sql.Driver;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.opencv.core.Scalar;
 
 import com.pathplanner.lib.PathConstraints;
 import com.pathplanner.lib.PathPlanner;
@@ -23,29 +22,25 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj.shuffleboard.WidgetType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.ProxyCommand;
 import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.NodePosition.NodeGrid;
 import frc.robot.NodePosition.NodeGroup;
+import static frc.robot.Constants.*;
 import frc.robot.subsystems.LEDs;
 import frc.robot.subsystems.Lid;
 import frc.robot.subsystems.SwerveDrive;
@@ -119,9 +114,9 @@ public class RobotContainer {
      * Preferences are cool. they store the values in the roborio flash memory so
      * they don't necessarily get reset to default.
      */
-    Preferences.initBoolean("pFieldRelative", Constants.fieldRelative);
-    Preferences.initBoolean("pAccelInputs", Constants.acceleratedInputs);
-    Preferences.initDouble("pDriveGovernor", Constants.driveGovernor);
+    Preferences.initBoolean("pFieldRelative", DriverConstants.FIELD_RELATIVE);
+    Preferences.initBoolean("pAccelInputs", DriverConstants.ACCELERATED_INPUTS);
+    Preferences.initDouble("pDriveGovernor", DriverConstants.DRIVE_GOVERNOR);
     Preferences.initBoolean("pOptimizeSteering", SwerveConstants.OPTIMIZESTEERING);
     Preferences.initDouble("pKPRotationController", SwerveConstants.kPRotationController);
     Preferences.initDouble("pKIRotationController", SwerveConstants.kDRotationController);
@@ -132,12 +127,7 @@ public class RobotContainer {
     Preferences.initDouble("ExtensionKP", 1.0 / 6.0);
     Preferences.initDouble("ExtensionKI", 0.0);
     Preferences.initDouble("ExtensionPD", 0.0);
-    Preferences.initDouble("RotoClawKP", 6.0 / Math.PI);
-    Preferences.initDouble("RotoClawKI", 0.0);
-    Preferences.initDouble("RotoClawPD", 0.0);
-    Preferences.initDouble("ClawKP", 6.0 / Math.PI);
-    Preferences.initDouble("ClawKI", 0.0);
-    Preferences.initDouble("ClawKD", 0.0);
+
     Preferences.initDouble("LidKP", 1 / 30.0);
     Preferences.initDouble("LidKI", 0.0);
     Preferences.initDouble("LidKD", 0.0);
@@ -366,10 +356,10 @@ public class RobotContainer {
 
     new Trigger(() -> robotFacing() != FacingPOI.NOTHING)
       .onTrue(Commands.either(
-        Commands.runOnce(this::setLid)
+        Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle))
         .unless(xBox.rightTrigger(.5)),
         Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), 40)).unless(xBox.rightTrigger(.5)) // towards pickup
-          .andThen(Commands.runOnce(this::setLid)), 
+          .andThen(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle))), 
            s_Intake::haveGamePiece));
   
     xBox.a().onTrue(new
@@ -382,7 +372,7 @@ public class RobotContainer {
         Commands.runOnce(s_LEDs::bePurple), 
         Commands.runOnce(s_LEDs::beYellow), 
         () -> previousGamePieceOrientation.equals(GamePieceType.CUBE)))
-      .onTrue(Commands.runOnce(this::setLid));
+      .onTrue(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle)));
 
   }
 
@@ -518,29 +508,29 @@ public class RobotContainer {
   }
 }
 
-  private void setLid() {
-    if (robotFacing() == FacingPOI.HUMAN_PLAYER) {
-      switch (pickupLocationChooser.getSelected()) {
-        case GROUND: 
-        case SHELF:
-          s_Lid.setLipOut();
-          break;
-        case CHUTE:
-          s_Lid.setLipIn();
-      }
-    } else if (robotFacing() == FacingPOI.COMMUNITY) {
-      switch (pickupLocationChooser.getSelected()) {
-        case SHELF: break;
-        case CHUTE: s_Lid.setLipIn();
-        case GROUND:
-          switch (gamePieceTypeChooser.getSelected()) {
-            case TIPPED_CONE: break;
-            case UPRIGHT_CONE: case CUBE: s_Lid.setLipIn();
-            case NOTHING: break;
-          }
-      }
-    }
-  }
+  // private void setLid() {
+  //   if (robotFacing() == FacingPOI.HUMAN_PLAYER) {
+  //     switch (pickupLocationChooser.getSelected()) {
+  //       case GROUND: 
+  //       case SHELF:
+  //         s_Lid.setLipOut();
+  //         break;
+  //       case CHUTE:
+  //         s_Lid.setLipIn();
+  //     }
+  //   } else if (robotFacing() == FacingPOI.COMMUNITY) {
+  //     switch (pickupLocationChooser.getSelected()) {
+  //       case SHELF: break;
+  //       case CHUTE: s_Lid.setLipIn();
+  //       case GROUND:
+  //         switch (gamePieceTypeChooser.getSelected()) {
+  //           case TIPPED_CONE: break;
+  //           case UPRIGHT_CONE: case CUBE: s_Lid.setLipIn();
+  //           case NOTHING: break;
+  //         }
+  //     }
+  //   }
+  // }
 
   public Command getAutonomousCommand() {
     return autoBuilder.fullAuto(autoPathGroup).withName("chargeSimpleRed");

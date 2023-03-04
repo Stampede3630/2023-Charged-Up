@@ -11,25 +11,26 @@ import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
 
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.LidConstants;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
 
 public class Lid extends SubsystemBase implements Loggable{
-    private CANSparkMax m_lidMotor = new CANSparkMax(19, MotorType.kBrushless);
+    private CANSparkMax m_lidMotor = new CANSparkMax(LidConstants.SPARK_MAX_ID, MotorType.kBrushless);
     private SparkMaxAbsoluteEncoder m_lidAbsolute = m_lidMotor.getAbsoluteEncoder(Type.kDutyCycle);
     private SparkMaxPIDController m_lidPid = m_lidMotor.getPIDController();
-    public double lidReference = 180;
+    public double lidReference = LidConstants.INITIALIZED_ANGLE;
 
     public Lid() {
         m_lidAbsolute.setInverted(true);
-        m_lidAbsolute.setPositionConversionFactor(360.0);
-        m_lidAbsolute.setVelocityConversionFactor(360.0);
-        m_lidMotor.setSoftLimit(SoftLimitDirection.kForward, 310);
-        m_lidMotor.setSoftLimit(SoftLimitDirection.kReverse, 90);
-        m_lidAbsolute.setZeroOffset(360-87);
+        m_lidAbsolute.setPositionConversionFactor(LidConstants.CONVERSION_FACTOR);
+        m_lidAbsolute.setVelocityConversionFactor(LidConstants.CONVERSION_FACTOR);
+        m_lidMotor.setSoftLimit(SoftLimitDirection.kForward, LidConstants.FORWARD_LIMIT);
+        m_lidMotor.setSoftLimit(SoftLimitDirection.kReverse, LidConstants.REVERSE_LIMIT);
+        m_lidAbsolute.setZeroOffset(LidConstants.ZERO_OFFSET);
 
-        m_lidMotor.setSmartCurrentLimit(20);
+        m_lidMotor.setSmartCurrentLimit(LidConstants.CURRENT_LIMIT);
                 
         // cannonExtension.setInverted(true);
         //changed idle mode to help with troubleshooting    
@@ -38,9 +39,9 @@ public class Lid extends SubsystemBase implements Loggable{
         m_lidPid.setFeedbackDevice(m_lidAbsolute);
         m_lidPid.setPositionPIDWrappingEnabled(false);
 
-        m_lidPid.setP(Preferences.getDouble("LidKP", 1.0/30.0));
-        m_lidPid.setI(Preferences.getDouble("LidKI", 0.0));
-        m_lidPid.setD(Preferences.getDouble("LidKD", 0.0));
+        m_lidPid.setP(Preferences.getDouble("LidKP", LidConstants.KP));
+        m_lidPid.setI(Preferences.getDouble("LidKI", LidConstants.KI));
+        m_lidPid.setD(Preferences.getDouble("LidKD", LidConstants.KD));
         m_lidPid.setOutputRange(-1 , 1);
 
         m_lidMotor.burnFlash();
@@ -51,20 +52,12 @@ public class Lid extends SubsystemBase implements Loggable{
         m_lidPid.setReference(lidReference, ControlType.kPosition);
 
         if (Preferences.getBoolean("Wanna PID Lid", false)) {
-            m_lidPid.setP(Preferences.getDouble("LidKP", 1.0/10.0));
-            m_lidPid.setI(Preferences.getDouble("LidKI", 0.0));
-            m_lidPid.setD(Preferences.getDouble("LidKD", 0.0));
+            m_lidPid.setP(Preferences.getDouble("LidKP", LidConstants.KP));
+            m_lidPid.setI(Preferences.getDouble("LidKI", LidConstants.KI));
+            m_lidPid.setD(Preferences.getDouble("LidKD", LidConstants.KD));
     
             Preferences.setBoolean("Wanna PID Lid", false);
         }
-    }
-
-    public void setLipIn() {
-        lidReference = 70;
-    }
-
-    public void setLipOut() {
-        lidReference = 180;
     }
 
     public void setLid(double intakeLidAngle){

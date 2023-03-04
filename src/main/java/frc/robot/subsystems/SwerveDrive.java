@@ -40,6 +40,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.Constants.DriverConstants;
 import frc.robot.subsystems.swerve.QuadFalconSwerveDrive;
 import frc.robot.subsystems.swerve.SwerveConstants;
 import frc.robot.subsystems.swerve.SwerveModule;
@@ -149,9 +150,9 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
    * @param _x
    * @param _y
    * @param _rot
-   * @param driveGovernor
-   * @param fieldRelative
-   * @param acceleratedInputs
+   * @param DRIVE_GOVERNOR
+   * @param FIELD_RELATIVE
+   * @param ACCELERATED_INPUTS
    */
   public CommandBase joystickDriveCommand(DoubleSupplier _x, DoubleSupplier _y, DoubleSupplier _rot){
     return Commands.run(
@@ -159,9 +160,9 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
         double x = -_x.getAsDouble();
         double y = -_y.getAsDouble();
         double rot = Math.pow(_rot.getAsDouble(), 3);
-        double joystickDriveGovernor = Preferences.getDouble("pDriveGovernor", Constants.driveGovernor);
+        double joystickDriveGovernor = Preferences.getDouble("pDriveGovernor", DriverConstants.DRIVE_GOVERNOR);
         
-        if (Preferences.getBoolean("pAccelInputs", Constants.acceleratedInputs)) {
+        if (Preferences.getBoolean("pAccelInputs", DriverConstants.ACCELERATED_INPUTS)) {
 
         } else {
           x = Math.signum(x) * Math.sqrt(Math.abs(x));
@@ -173,7 +174,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
             convertToMetersPerSecond(x)*joystickDriveGovernor,
             convertToMetersPerSecond(y)*joystickDriveGovernor), 
           -convertToRadiansPerSecond(rot)* joystickDriveGovernor, 
-          Preferences.getBoolean("pFieldRelative", Constants.fieldRelative));
+          Preferences.getBoolean("pFieldRelative", DriverConstants.FIELD_RELATIVE));
         }, this);
   }
 

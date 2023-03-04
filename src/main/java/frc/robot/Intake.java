@@ -12,6 +12,7 @@ import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
 
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.IntakeConstants;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
@@ -51,7 +52,7 @@ public class Intake extends SubsystemBase implements Loggable{
     @Override
     public void periodic() {
         m_intakeMotor.set(speed);
-        haveGamePiece = getIntakeCurrent() > 55 ? true : haveGamePiece;
+        haveGamePiece = getIntakeCurrent() > IntakeConstants.GAME_PIECE_DETECTION_AMPS ? true : haveGamePiece;
     }
 
     public void runIntake() {
