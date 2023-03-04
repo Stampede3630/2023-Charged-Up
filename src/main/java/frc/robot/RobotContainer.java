@@ -76,7 +76,7 @@ public class RobotContainer {
   // global event map
 
   SendableChooser<NodeDriverStation> nodeDriverStation = new SendableChooser<>();
-  SendableChooser<ArmTestSetPoints> armTestSetPoints = new SendableChooser<>();
+  SendableChooser<ScoringSetPoints> scoringSetPoints = new SendableChooser<>();
   SendableChooser<GamePieceType> gamePieceTypeChooser = new SendableChooser<>();
   SendableChooser<frc.robot.NodePosition.NodeGroup> nodeGroupChooser = new SendableChooser<>();
   SendableChooser<NodeGrid> nodeGridChooser = new SendableChooser<>();
@@ -104,8 +104,8 @@ public class RobotContainer {
   public RobotContainer() {
 
 
-    for (ArmTestSetPoints setPoint : ArmTestSetPoints.values()) {
-      armTestSetPoints.addOption(setPoint.testPointName, setPoint);
+    for (ScoringSetPoints setPoint : ScoringSetPoints.values()) {
+      scoringSetPoints.addOption(setPoint.setPointName, setPoint);
     }
     for (NodeDriverStation ds : NodeDriverStation.values()) {
       nodeDriverStation.addOption(ds.dsFriendlyName, ds);
@@ -237,17 +237,17 @@ public class RobotContainer {
 
     new Trigger(DriverStation::isDisabled)
         .whileTrue(Commands.repeatingSequence(Commands.runOnce(s_SwerveDrive::setToCoast)).ignoringDisable(true))
-        .whileTrue((Commands.runOnce(s_Cannon::setCannonToCoast))
-        // .alongWith(Commands.runOnce(s_Claw::setRotoCoast))
+        .whileTrue((Commands.runOnce(s_Cannon::setCannonToCoast)).ignoringDisable(true)
         .alongWith(Commands.runOnce(s_LEDs::beWhoYouAre).ignoringDisable(true))
             .withName("SetToCoast"));
+
     new Trigger(DriverStation::isEnabled)
           .onTrue(Commands.runOnce(s_SwerveDrive::setToBrake)
           .alongWith(Commands.runOnce(s_Cannon::setCannonToBrake)));
-          // .alongWith(Commands.runOnce(s_Claw::setRotoBrake))
+
 
     /**
-     * next two triggers are to "toggle" rotation HOLD mode and set a heading
+     * HOLD HEADING mode and set a heading
      */
 
     new Trigger(() -> Math.abs(xBox.getRightX()) < .1)
@@ -265,33 +265,19 @@ public class RobotContainer {
                 xBox::getRightX)
                 .withName("StandardOperatorDrive"));
 
-    //testing triggers    
+    //-> Manual Cannon and Extension triggers    
     xBox.povUp()
         .whileTrue(new RepeatCommand(Commands.runOnce(s_Cannon::manRotUp)));
     xBox.povDown()
         .whileTrue(new RepeatCommand(Commands.runOnce(s_Cannon::manRotDown)));
-    xBox.povRight()
+    xBox.povRight().debounce(.2)
         .whileTrue(new RepeatCommand(Commands.runOnce(s_Cannon::manExtend, s_Cannon)));
-    xBox.povLeft()
+    xBox.povLeft().debounce(.2)
         .whileTrue(new RepeatCommand(Commands.runOnce(s_Cannon::manRetract, s_Cannon)));
 
-    //combined triggers
+    // combined triggers
 
     //-> intake trigger
-    // xBox.rightTrigger(.55).debounce(.1, DebounceType.kFalling)
-    //     .onTrue(Commands.runOnce(s_Claw::runClawtake)
-    //       .alongWith(Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), pickupLocationChooser.getSelected().cannonAngle))
-    //       .alongWith(Commands.waitUntil(s_Cannon::cannonErrorWithinRange)
-    //         .andThen(() -> s_Cannon.setExtensionInches(pickupLocationChooser.getSelected().cannonExtension)))
-    //         )) //.alongWith(Commands.runOnce(s_Claw::closeClaw))
-    //     .onFalse(Commands.runOnce(s_Claw::stopClawTake)
-    //       .andThen(Commands.runOnce(() -> s_Cannon.setExtensionInches(4)))
-    //         .andThen(Commands.either(
-    //         Commands.runOnce(() -> s_Claw.faceCommunitySides(s_Cannon.setCannonAngleSides(robotFacing(), 140)))
-    //         .unless(xBox.rightTrigger(.5)),
-    //         Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), 40)).unless(xBox.rightTrigger(.5)) // towards pickup
-    //           .andThen(Commands.runOnce(() -> s_Claw.prepareForGamePiece(gamePieceTypeChooser.getSelected()))), 
-    //             s_Claw::haveGamePiece)));
     xBox.rightTrigger(.55).debounce(.1, DebounceType.kFalling)
         .onTrue(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle))
           .andThen(Commands.runOnce(()-> s_Cannon.setCannonRotation(intakeCannonAngle)))
@@ -300,27 +286,23 @@ public class RobotContainer {
          // .andThen(Commands.runOnce(s_Intake::stopIntake)))
         .onFalse(Commands.runOnce(s_Intake::stopIntake));
     
+    //-> Outtake trigger
     xBox.leftTrigger(.55).debounce(.1, DebounceType.kFalling)
         .onTrue(Commands.runOnce(()-> s_Intake.setIntake(-intakeSpeed)).alongWith(Commands.runOnce(s_Intake::leaveGamePiece)))
         .onFalse(Commands.runOnce(s_Intake::stopIntake)
-          .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(0)))
+          .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(1)))
           .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
           .andThen(Commands.runOnce(()-> s_Cannon.setCannonRotation(intakeCannonAngle))) //intakecannonangle
           .andThen(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle))));
-
+    
+    //MANUAL INTAKE
     xBox.rightBumper()
         .onTrue(Commands.runOnce(()-> s_Intake.setIntake(1)))
         .onFalse(Commands.runOnce(s_Intake::stopIntake));
     xBox.rightBumper()
         .onTrue(Commands.runOnce(()-> s_Intake.setIntake(-1)))
         .onFalse(Commands.runOnce(s_Intake::stopIntake));
-    //-> outtake trigger
-    // xBox.leftTrigger(.55).debounce(.1, DebounceType.kFalling)
-    //     .onTrue((Commands.runOnce(s_Claw::reverseClawtake)))
-    //     .onFalse(Commands.runOnce(s_Claw::stopClawTake)
-    //       .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(5.0))
-    //         .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange)
-    //           .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngleSides(robotFacing(), 150))))));
+
 
     //-> extension + cannonRot to setpoint
     xBox.y()
@@ -328,25 +310,11 @@ public class RobotContainer {
           .andThen(new SequentialCommandGroup(Commands.waitUntil(s_Cannon::cannonErrorWithinRange)),
               Commands.runOnce(()-> s_Cannon.setExtensionInches(NodePosition.getNodePosition(nodeGroupChooser.getSelected(), nodeGridChooser.getSelected()).getExtension()))));
 
-    //single object triggers
 
-    // //->claw
-    // xBox.rightBumper().debounce(.1, DebounceType.kFalling)
-    //     .onTrue(Commands.repeatingSequence(Commands.runOnce(() -> s_Claw.setClawReference(s_Claw.getClampAngle()+5))))
-    //     .onFalse(Commands.runOnce(s_Claw::stopClawMotor));
-    // xBox.leftBumper().debounce(.1, DebounceType.kFalling)
-    //     .onTrue(Commands.repeatingSequence(Commands.runOnce(() -> s_Claw.setClawReference(s_Claw.getClampAngle()-5))))
-    //     .onFalse(Commands.runOnce(s_Claw::stopClawMotor));
-
-    // xBox.x().debounce(.1)
-    //     .onTrue(Commands.repeatingSequence(Commands.runOnce(() -> s_Claw.setRotoAngle(s_Claw.getRotoAngle() + 5))));      
-        
-    // xBox.b().debounce(.1)
-        // .onTrue(Commands.repeatingSequence(Commands.runOnce(() -> s_Claw.setRotoAngle(s_Claw.getRotoAngle() - 5))));
 
     //logic/no controller triggers
     new Trigger(s_Intake::haveGamePiece)
-      .onTrue(Commands.runOnce(()-> s_Cannon.setExtensionInches(1.97985 + 1))
+      .onTrue(Commands.runOnce(()-> s_Cannon.setExtensionInches(1))
          .andThen(()-> s_Cannon.setCannonAngleSides(robotFacing(), 140))
           .andThen(() -> s_LEDs.rainbow = true))
       .onFalse(Commands.either(
@@ -385,35 +353,57 @@ public class RobotContainer {
     
     } else {
       //ground
-    if (robotFacing() == FacingPOI.COMMUNITY && !facingOverrideButton) {
-      switch (gamePieceTypeChooser.getSelected()) {
-        case CUBE:
-          intakeCannonAngle = -10.0;
-          intakeLidAngle = 275.0;
-          intakeSpeed = -1.0;
-          break;
-        case UPRIGHT_CONE:
-          intakeCannonAngle = -7.0;
-          intakeLidAngle = 206.0;
-          intakeSpeed = 1.0;
-          break;
-        case TIPPED_CONE:
-          intakeCannonAngle = 190.0;
-          intakeLidAngle = 244.0;
-          intakeSpeed = -1.0;
-          break;
-        case NOTHING:
-          intakeCannonAngle = 85.0;
-          break;
-      
-      }
-    } if (robotFacing() == FacingPOI.COMMUNITY && facingOverrideButton) {
+      if (robotFacing() == FacingPOI.COMMUNITY && !facingOverrideButton) {
+        switch (gamePieceTypeChooser.getSelected()) {
+          case CUBE:
+            intakeCannonAngle = -10.0;
+            intakeLidAngle = 275.0;
+            intakeSpeed = -1.0;
+            break;
+          case UPRIGHT_CONE:
+            intakeCannonAngle = -7.0;
+            intakeLidAngle = 206.0;
+            intakeSpeed = 1.0;
+            break;
+          case TIPPED_CONE:
+            intakeCannonAngle = 190.0;
+            intakeLidAngle = 244.0;
+            intakeSpeed = -1.0;
+            break;
+          case NOTHING:
+            intakeCannonAngle = 85.0;
+            break;
+        }
+      } else if (robotFacing() == FacingPOI.COMMUNITY && facingOverrideButton) {
+          //facing HPS
+          switch (gamePieceTypeChooser.getSelected()) {
+            case CUBE:
+            intakeCannonAngle = -10.0;
+            intakeLidAngle = 275.0;
+            intakeSpeed = -1.0;
+              break;
+            case UPRIGHT_CONE:
+              intakeCannonAngle = 175.0;
+              intakeLidAngle = 116.0;
+              intakeSpeed = -1.0;
+              break; 
+            case TIPPED_CONE:
+              intakeCannonAngle = 190.0;
+              intakeLidAngle = 244.0;
+              intakeSpeed = -1.0;
+              break; 
+            case NOTHING: 
+              intakeCannonAngle = 85.0;
+              break; 
+        
+        }
+      } else if (robotFacing() == FacingPOI.HUMAN_PLAYER && !facingOverrideButton) {
         //facing HPS
         switch (gamePieceTypeChooser.getSelected()) {
           case CUBE:
-          intakeCannonAngle = -10.0;
-          intakeLidAngle = 275.0;
-          intakeSpeed = -1.0;
+          intakeCannonAngle = 160.0;
+            intakeLidAngle = 275.0;
+            intakeSpeed = -1.0;
             break;
           case UPRIGHT_CONE:
             intakeCannonAngle = 175.0;
@@ -426,36 +416,11 @@ public class RobotContainer {
             intakeSpeed = -1.0;
             break; 
           case NOTHING: 
-            intakeCannonAngle = 85.0;
-            break; 
-       
-      }
-    } if (robotFacing() == FacingPOI.HUMAN_PLAYER && !facingOverrideButton) {
-      //facing HPS
-      switch (gamePieceTypeChooser.getSelected()) {
-        case CUBE:
-        intakeCannonAngle = 160.0;
-          intakeLidAngle = 275.0;
-          intakeSpeed = -1.0;
-          break;
-        case UPRIGHT_CONE:
-          intakeCannonAngle = 175.0;
-          intakeLidAngle = 116.0;
-          intakeSpeed = -1.0;
-          break; 
-        case TIPPED_CONE:
-          intakeCannonAngle = 190.0;
-          intakeLidAngle = 244.0;
-          intakeSpeed = -1.0;
-          break; 
-        case NOTHING: 
-          intakeCannonAngle = 85.0;  
-          break;
-         
-        } 
-      
-      if (robotFacing() == FacingPOI.HUMAN_PLAYER && facingOverrideButton) {
-        //facing HPS
+            intakeCannonAngle = 85.0;  
+            break;
+          
+          }
+      } else if (robotFacing() == FacingPOI.HUMAN_PLAYER && facingOverrideButton) {
         switch (gamePieceTypeChooser.getSelected()) {
           case CUBE:
             intakeCannonAngle = -10.0;
@@ -475,62 +440,10 @@ public class RobotContainer {
           case NOTHING:
             intakeCannonAngle = 85.0;  
             break;
-        
         }
-
-    } else {
-      //should never happen
-      switch (gamePieceTypeChooser.getSelected()) {
-        case CUBE:
-        intakeCannonAngle = -10.0;
-          intakeLidAngle = 275.0;
-          intakeSpeed = -1.0;
-          break;
-        case UPRIGHT_CONE:
-          intakeCannonAngle = 175.0;
-          intakeLidAngle = 116.0;
-          intakeSpeed = -1.0;
-          break; 
-        case TIPPED_CONE:
-          intakeCannonAngle = 190.0;
-          intakeLidAngle = 244.0;
-          intakeSpeed = -1.0;
-          break; 
-        case NOTHING: 
-          intakeCannonAngle = 85.0;
-          break; 
+      }
     }
   }
-
-  }
-
-    
-  }
-}
-
-  // private void setLid() {
-  //   if (robotFacing() == FacingPOI.HUMAN_PLAYER) {
-  //     switch (pickupLocationChooser.getSelected()) {
-  //       case GROUND: 
-  //       case SHELF:
-  //         s_Lid.setLipOut();
-  //         break;
-  //       case CHUTE:
-  //         s_Lid.setLipIn();
-  //     }
-  //   } else if (robotFacing() == FacingPOI.COMMUNITY) {
-  //     switch (pickupLocationChooser.getSelected()) {
-  //       case SHELF: break;
-  //       case CHUTE: s_Lid.setLipIn();
-  //       case GROUND:
-  //         switch (gamePieceTypeChooser.getSelected()) {
-  //           case TIPPED_CONE: break;
-  //           case UPRIGHT_CONE: case CUBE: s_Lid.setLipIn();
-  //           case NOTHING: break;
-  //         }
-  //     }
-  //   }
-  // }
 
   public Command getAutonomousCommand() {
     return autoBuilder.fullAuto(autoPathGroup).withName("chargeSimpleRed");
@@ -688,29 +601,29 @@ public class RobotContainer {
     }
   }
 
-  public static enum ArmTestSetPoints {
+  public static enum ScoringSetPoints {
     HIGH("for high node", 40, 40),
     MID("for mid node", 40, 20),
     LOW("for low/hybrid node", 0, 10),
     UP("straight up", 90, 0),
     ZERO("straight out", 0, 0);
 
-    public final String testPointName;
-    public final double testCannonAngle;
-    public final double testCannonExtention;
+    public final String setPointName;
+    public final double cannonAngle;
+    public final double cannonExtention;
 
-    private ArmTestSetPoints(String testPointName, double testCannonAngle, double testCannonExtention){
-      this.testPointName = testPointName;
-      this.testCannonAngle = testCannonAngle;
-      this.testCannonExtention = testCannonExtention;
+    private ScoringSetPoints(String setPointName, double cannonAngle, double cannonExtention){
+      this.setPointName = setPointName;
+      this.cannonAngle = cannonAngle;
+      this.cannonExtention = cannonExtention;
     }
 
     public double getTestCannonExtension(){
-      return testCannonExtention;
+      return cannonExtention;
     }
 
-    public double getTestCannonAngle(){
-      return testCannonAngle;
+    public double getCannonAngle(){
+      return cannonAngle;
     }
 
   }
@@ -725,9 +638,9 @@ public class RobotContainer {
    
     private PickupLocation(double cannonAngle, double cannonExtension){this.cannonAngle = cannonAngle; this.cannonExtension = cannonExtension;}
   }
-  public double armTestSetPointsAngle(SendableChooser<ArmTestSetPoints> armTestSetPoints){
+  public double armTestSetPointsAngle(SendableChooser<ScoringSetPoints> armTestSetPoints){
   
-    return armTestSetPoints.getSelected().getTestCannonAngle();
+    return armTestSetPoints.getSelected().getCannonAngle();
   }
 
   public boolean listenForOrientationChange(){
@@ -755,20 +668,6 @@ public class RobotContainer {
     return new Rotation2d(-Math.atan(oOfOA/aOfOA));
   }
 
-  // public boolean listenForGamePieceLED(){
-  //
-  //   gamePieceTypeLed = gamePieceTypeChooser.getSelected().getGamePieceType();
-  //
-  //   if (gamePieceTypeChooser.getSelected().getGamePieceType() != gamePieceTypeLed) {
-  //     gamePieceTypeLed = gamePieceTypeChooser.getSelected().getGamePieceType();
-  //     System.out.println("a thing happened");
-  //     return true;
-  //   } else{
-  //     System.out.println("a thing did not happen");
-  //     return false;
-  //   }
-  // }
-
   public boolean isCone(){
     return gamePieceTypeChooser.getSelected() == GamePieceType.TIPPED_CONE || gamePieceTypeChooser.getSelected() == GamePieceType.UPRIGHT_CONE;
 
@@ -784,14 +683,7 @@ public class RobotContainer {
     //Not necessary because isNoThing is never true 6:13 PM Friday, February 24 (=^-w-^=), :3, UwU, >wO
   }
 
-  // public boolean beDesiredPieceColorR(){
-  //   if (gamePieceType == gamePieceTypeChooser.getSelected().getGamePieceType().CONE){
-  //     return false;
-  //   } else {
-  //     return true;
-  //   }
-  // }
-  
+
   @Config
   public void facingOverrideButton(boolean input){
     facingOverrideButton = input;
