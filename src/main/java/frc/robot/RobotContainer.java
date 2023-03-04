@@ -46,6 +46,7 @@ import frc.robot.subsystems.Lid;
 import frc.robot.subsystems.SwerveDrive;
 import frc.robot.subsystems.TheCannon;
 import frc.robot.subsystems.swerve.SwerveConstants;
+import frc.robot.util.SendableChooserWrapper;
 import io.github.oblarg.oblog.Logger;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
@@ -77,7 +78,7 @@ public class RobotContainer {
 
   SendableChooser<NodeDriverStation> nodeDriverStation = new SendableChooser<>();
   SendableChooser<ScoringSetPoints> scoringSetPoints = new SendableChooser<>();
-  SendableChooser<GamePieceType> gamePieceTypeChooser = new SendableChooser<>();
+  SendableChooserWrapper<GamePieceType> gamePieceTypeChooser = new SendableChooserWrapper<>();
   SendableChooser<frc.robot.NodePosition.NodeGroup> nodeGroupChooser = new SendableChooser<>();
   SendableChooser<NodeGrid> nodeGridChooser = new SendableChooser<>();
   SendableChooser<PickupLocation> pickupLocationChooser = new SendableChooser<>();
@@ -95,8 +96,6 @@ public class RobotContainer {
   public double intakeLidAngle;
   @Log
   public double intakeSpeed;
-  public GamePieceType previousGamePieceOrientation;
-  public GamePieceType gamePieceTypeLed;
   public boolean facingOverrideButton;
   // private GamePieceType prev;  
   /**
@@ -283,7 +282,7 @@ public class RobotContainer {
         .onTrue(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle))
           .andThen(Commands.runOnce(()-> s_Cannon.setCannonRotation(intakeCannonAngle)))
           .andThen(Commands.runOnce(()-> s_Intake.setIntake(intakeSpeed)))
-          .andThen(Commands.waitSeconds(.1).andThen(Commands.waitUntil(() -> s_Intake.checkForCurrentSpike()).until(xBox.rightTrigger().negate())))
+          .andThen(Commands.waitSeconds(.1).andThen(Commands.waitUntil(s_Intake::checkForCurrentSpike).until(xBox.rightTrigger().negate())))
           .andThen(Commands.runOnce(s_Intake::stopIntake)))
          // .andThen(Commands.waitUntil(s_Intake::haveGamePiece))
          // .andThen(Commands.runOnce(s_Intake::stopIntake)))
@@ -322,7 +321,7 @@ public class RobotContainer {
     new Trigger(s_Intake::haveGamePiece)
       .onTrue(Commands.runOnce(()-> s_Cannon.setExtensionInches(1))
          .andThen(()-> s_Cannon.setCannonAngleSides(robotFacing(), 140))
-          .andThen(() -> s_LEDs.rainbow = true))
+          .alongWith(Commands.runOnce(() -> s_LEDs.setMode(LEDs.LEDMode.CHASING)))) // chasing leds because we have a game piece
       .onFalse(Commands.either(
         Commands.runOnce(s_LEDs::bePurple), 
         Commands.runOnce(s_LEDs::beYellow), 
@@ -341,11 +340,11 @@ public class RobotContainer {
     .beforeStarting(new
     InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
 
-    new Trigger(()->listenForOrientationChange()).and(s_Intake::haveGamePiece).negate()
+    new Trigger(gamePieceTypeChooser::didValueChange).and(new Trigger(s_Intake::haveGamePiece).negate())
       .onTrue(Commands.either(
         Commands.runOnce(s_LEDs::bePurple), 
         Commands.runOnce(s_LEDs::beYellow), 
-        () -> previousGamePieceOrientation.equals(GamePieceType.CUBE)))
+        () -> gamePieceTypeChooser.getSelected().equals(GamePieceType.CUBE)))
       .onTrue(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle)));
   }
 
@@ -566,35 +565,6 @@ public class RobotContainer {
     COMMUNITY, HUMAN_PLAYER, NOTHING
   }
 
-  // public enum GamePieceOrientation {
-  //   TIPPED("|>", 90, GamePieceType.CONE),
-  //   UPRIGHT("/\\", 0, GamePieceType.CONE),
-  //   CUBE("口", 90, GamePieceType.CUBE);
-
-  //   private String friendlyName;
-  //   private double rotOrientationAngle;
-  //   private GamePieceType gamePieceType;
-
-  //   public String getFriendlyName() {
-  //     return friendlyName;
-  //   }
-
-  //   public double getRotOrientForRoto() {
-  //     return rotOrientationAngle;
-  //   }
-
-  //   public GamePieceType getGamePieceType() {
-  //     return gamePieceType;
-  //   }
-
-  //   private GamePieceOrientation(String friendlyName, double rotOrientationAngle, GamePieceType gamePieceType) {
-  //     this.friendlyName = friendlyName;
-  //     this.rotOrientationAngle = rotOrientationAngle;
-  //     this.gamePieceType = gamePieceType;
-  //   }
-
-  // }
-
   public enum GamePieceType {
     TIPPED_CONE, UPRIGHT_CONE, CUBE, NOTHING;
   }
@@ -620,7 +590,7 @@ public class RobotContainer {
     public final double cannonAngle;
     public final double cannonExtention;
 
-    private ScoringSetPoints(String setPointName, double cannonAngle, double cannonExtention){
+    ScoringSetPoints(String setPointName, double cannonAngle, double cannonExtention){
       this.setPointName = setPointName;
       this.cannonAngle = cannonAngle;
       this.cannonExtention = cannonExtention;
@@ -651,19 +621,6 @@ public class RobotContainer {
     return armTestSetPoints.getSelected().getCannonAngle();
   }
 
-  public boolean listenForOrientationChange(){
-
-    previousGamePieceOrientation = gamePieceTypeChooser.getSelected();
-
-    if (gamePieceTypeChooser.getSelected() != previousGamePieceOrientation) {
-      previousGamePieceOrientation = gamePieceTypeChooser.getSelected();
-
-      return true;
-    } else{
-
-      return false;
-    }
-  }
 
   public Rotation2d calculateHeading(){
     Pose2d roboTranslationX = s_SwerveDrive.getOdometryPose();
@@ -674,21 +631,6 @@ public class RobotContainer {
     double aOfOA = roboTranslationX.getY() - desiredTranslationY;
     
     return new Rotation2d(-Math.atan(oOfOA/aOfOA));
-  }
-
-  public boolean isCone(){
-    return gamePieceTypeChooser.getSelected() == GamePieceType.TIPPED_CONE || gamePieceTypeChooser.getSelected() == GamePieceType.UPRIGHT_CONE;
-
-  }
-
-  public boolean isCube(){
-    return gamePieceTypeChooser.getSelected().equals(GamePieceType.CUBE);
-
-  }
-
-  public boolean isNoThing(){
-    return gamePieceTypeChooser.getSelected().equals(GamePieceType.NOTHING);
-    //Not necessary because isNoThing is never true 6:13 PM Friday, February 24 (=^-w-^=), :3, UwU, >wO
   }
 
 

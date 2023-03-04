@@ -19,13 +19,12 @@ public class LEDs extends SubsystemBase implements Loggable{
   public int r = 0;
   public int g = 0;
   public int b = 0;
-  public boolean rainbow = true;
   private final int HUE_CHANGE_PER_SEC = 60;
   private final double CHASE_MOVE_PER_MS = 0.0333;
 
   private final double STROBE_TIME_MS = 500;
   private double previousTime = System.currentTimeMillis();
-  private Color[] strobeColors = {new Color(0,0,255),new Color(255,255,0)};
+  private final Color[] strobeColors = {new Color(0,0,255),new Color(255,255,0)};
   private double chaseSeparator = 0; 
   private LEDMode mode = LEDMode.CHASING;
   
@@ -42,24 +41,28 @@ public class LEDs extends SubsystemBase implements Loggable{
 
   @Override
   public void periodic() {
-    // switch (mode) {
-    //   case STROBE: break;
-    //   case CHASING: chaseColorsTwo(); break;
-    //   case SOLID: setEntireStrip(); break;
-    //   default: beWhoYouAre();
-    // }
-    if (rainbow)
-      chaseColorsTwo();
-    else
-      setEntireStrip();
+     switch (mode) {
+       case STROBE: break;
+       case CHASING: chaseColorsTwo(); break;
+       case SOLID: setEntireStrip(); break;
+       case RAINBOW: beWhoYouAre(); break;
+       default: off();
+     }
     // This method will be called once per scheduler run
+  }
+
+  public void setMode(LEDMode mode) {
+    this.mode = mode;
   }
 
   public void setRGB(int r, int g, int b) {
     this.r = r;
     this.g = g;
     this.b = b;
-    mode = LEDMode.SOLID;
+  }
+
+  public void off() {
+    setRGB(0,0,0);
   }
 
   private void setEntireStrip() {
@@ -74,18 +77,13 @@ public class LEDs extends SubsystemBase implements Loggable{
 
   public void bePurple () {
     setRGB(162, 0, 255);
-  
+    setMode(LEDMode.SOLID);
   }
 
   public void beYellow () {
     setRGB(255, 243, 0);
-
+    setMode(LEDMode.SOLID);
   }
-
-  public void beIndecisive () {
-   setRGB(0, 255, 251);
-  }
-
   public void chaseColors() {
 
     for (int i = 0; i < chaseSeparator; i++) {
@@ -172,7 +170,7 @@ public class LEDs extends SubsystemBase implements Loggable{
   }
 
   public enum LEDMode {
-    STROBE, CHASING, RAINBOW, SOLID;
+    STROBE, CHASING, RAINBOW, SOLID, OFF;
   }
 
   // @Config
