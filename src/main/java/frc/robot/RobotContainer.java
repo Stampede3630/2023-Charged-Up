@@ -24,8 +24,10 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -65,9 +67,8 @@ public class RobotContainer {
   /* Controller setup. For simulations google: x360CE */
   private final CommandXboxController xBox = new CommandXboxController(0);
 
-  private boolean isIntegratedSteering = true;
   SwerveAutoBuilder autoBuilder;
-  ArrayList<PathPlannerTrajectory> autoPathGroup, leftPathGroup, rightPathGroup;
+  ArrayList<PathPlannerTrajectory> chargeSimpleAuto;
   
   // This is just an example event map. It would be better to have a constant,
   // global event map
@@ -82,6 +83,8 @@ public class RobotContainer {
   SendableChooser<frc.robot.NodePosition.NodeGroup> nodeGroupChooser = new SendableChooser<>();
   SendableChooser<NodeGrid> nodeGridChooser = new SendableChooser<>();
   SendableChooser<PickupLocation> pickupLocationChooser = new SendableChooser<>();
+  SendableChooser<Command> autoSelect = new SendableChooser<>();
+  PowerDistribution pdh = new PowerDistribution(1,ModuleType.kRev);
 
   @Log
   private final SwerveDrive s_SwerveDrive = new SwerveDrive();
@@ -110,6 +113,13 @@ public class RobotContainer {
     for (NodeDriverStation ds : NodeDriverStation.values()) {
       nodeDriverStation.addOption(ds.dsFriendlyName, ds);
     }
+
+    chargeSimpleAuto = (ArrayList<PathPlannerTrajectory>) PathPlanner.loadPathGroup("chargeSimple",
+    new PathConstraints(.5, .5));
+
+    autoSelect.addOption("chargeSimple", autoBuilder.fullAuto(chargeSimpleAuto));
+
+    
     /**
      * Preferences are cool. they store the values in the roborio flash memory so
      * they don't necessarily get reset to default.
@@ -135,11 +145,13 @@ public class RobotContainer {
     Preferences.initBoolean("Wanna PID Cannon", false);
     Preferences.initBoolean("Wanna PID Lid", false);
 
+    Shuffleboard.getTab("pdh")
+      .add("PDH", pdh)
+      .withWidget(BuiltInWidgets.kPowerDistribution);
 
 
-    autoPathGroup = (ArrayList<PathPlannerTrajectory>) PathPlanner.loadPathGroup("chargeSimpleRed",
-        new PathConstraints(.5, .5));
 
+    
     for (GamePieceType orientation : GamePieceType.values()) {
       gamePieceTypeChooser.addOption(orientation.name(), orientation);
     }
@@ -162,6 +174,12 @@ public class RobotContainer {
         .withWidget(BuiltInWidgets.kSplitButtonChooser)
         .withPosition(0, 0)
         .withSize(8, 3);
+
+    Shuffleboard.getTab("nodeSelector")
+        .add("Auto Selector", autoSelect)
+        .withWidget(BuiltInWidgets.kComboBoxChooser)
+        .withPosition(5, 5)
+        .withSize(3, 1);
 
 
     // Shuffleboard.getTab("nodeSelector")
@@ -453,16 +471,11 @@ public class RobotContainer {
   }
 
   public Command getAutonomousCommand() {
-    return autoBuilder.fullAuto(autoPathGroup).withName("chargeSimpleRed");
-  }
-
-  @Config(defaultValueBoolean = true)
-  public void isIntegratedSteering(boolean input) {
-    isIntegratedSteering = input;
+    return autoSelect.getSelected();
   }
 
   public ArrayList<PathPlannerTrajectory> autoPathGroupOnTheFly() {
-    ArrayList<PathPlannerTrajectory> PGOTF = new ArrayList<PathPlannerTrajectory>(autoPathGroup);
+    ArrayList<PathPlannerTrajectory> PGOTF = new ArrayList<PathPlannerTrajectory>(chargeSimpleAuto);
     PGOTF.add(0,
         PathPlanner.generatePath(
             new PathConstraints(4, 3),
@@ -475,49 +488,6 @@ public class RobotContainer {
     return PGOTF;
   }
 
-  public ArrayList<PathPlannerTrajectory> goToNearestGoal() {
-    ArrayList<PathPlannerTrajectory> PGOTF = new ArrayList<PathPlannerTrajectory>();
-    if (Math.abs(leftPathGroup.get(leftPathGroup.size() - 1).getEndState().poseMeters.getY()
-        - s_SwerveDrive.getOdometryPose().getY()) < 4) {
-      if (Math.abs(leftPathGroup.get(leftPathGroup.size() - 1).getEndState().poseMeters.getX()
-          - s_SwerveDrive.getOdometryPose().getX()) < 8) {
-        PGOTF.add(PathPlanner.generatePath(
-            new PathConstraints(4, 3),
-            new PathPoint(s_SwerveDrive.getOdometryPose().getTranslation(), s_SwerveDrive.getRobotAngle()),
-            new PathPoint(leftPathGroup.get(leftPathGroup.size() - 1).getEndState().poseMeters.getTranslation(),
-                leftPathGroup.get(leftPathGroup.size() - 1).getEndState().poseMeters.getRotation(),
-                leftPathGroup.get(leftPathGroup.size() - 1).getEndState().holonomicRotation)));
-      } else {
-        PGOTF.add(
-            PathPlanner.generatePath(
-                new PathConstraints(4, 3),
-                new PathPoint(s_SwerveDrive.getOdometryPose().getTranslation(), s_SwerveDrive.getRobotAngle()),
-                new PathPoint(leftPathGroup.get(0).getInitialHolonomicPose().getTranslation(),
-                    leftPathGroup.get(0).getInitialPose().getRotation(),
-                    leftPathGroup.get(0).getInitialHolonomicPose().getRotation())));
-        PGOTF.addAll(leftPathGroup);
-      }
-    } else if (Math.abs(rightPathGroup.get(rightPathGroup.size() - 1).getEndState().poseMeters.getX()
-        - s_SwerveDrive.getOdometryPose().getX()) < 8) {
-      PGOTF.add(PathPlanner.generatePath(
-          new PathConstraints(4, 3),
-          new PathPoint(s_SwerveDrive.getOdometryPose().getTranslation(), s_SwerveDrive.getRobotAngle()),
-          new PathPoint(rightPathGroup.get(rightPathGroup.size() - 1).getEndState().poseMeters.getTranslation(),
-              rightPathGroup.get(rightPathGroup.size() - 1).getEndState().poseMeters.getRotation(),
-              rightPathGroup.get(rightPathGroup.size() - 1).getEndState().holonomicRotation)));
-    } else {
-      PathPlanner.generatePath(
-          new PathConstraints(4, 3),
-          new PathPoint(s_SwerveDrive.getOdometryPose().getTranslation(), s_SwerveDrive.getRobotAngle()),
-          new PathPoint(rightPathGroup.get(0).getInitialHolonomicPose().getTranslation(),
-              calculateHeading(),
-              rightPathGroup.get(0).getInitialHolonomicPose().getRotation()));
-      PGOTF.addAll(rightPathGroup);
-    }
-
-    return PGOTF;
-  }
-
   @Log
   public double getYOffset() {
     return NodePosition.getNodePosition(nodeGroupChooser.getSelected(), nodeGridChooser.getSelected()).getYCoord();
@@ -526,9 +496,9 @@ public class RobotContainer {
   public FacingPOI robotFacing() {
     FacingPOI gyroFacing = FacingPOI.NOTHING;
     if (Math.abs(s_SwerveDrive.getPose().getRotation().getDegrees())<50) // gyro facing community
-      gyroFacing = FacingPOI.COMMUNITY;
-    else if (s_SwerveDrive.getPose().getRotation().getDegrees()>130) // gyro facing HP
       gyroFacing = FacingPOI.HUMAN_PLAYER;
+    else if (s_SwerveDrive.getPose().getRotation().getDegrees()>130) // gyro facing HP
+      gyroFacing = FacingPOI.COMMUNITY;
     return gyroFacing;
   }
 

@@ -69,7 +69,7 @@ private ArmFeedforward m_feedforward =
     cannonRotLead.setIdleMode(IdleMode.kCoast); //I 
     cannonRotFollow.setIdleMode(IdleMode.kCoast);
     cannonExtension.setIdleMode(IdleMode.kCoast);
-    cannonRotFollow.follow(cannonRotLead, true);
+    cannonRotFollow.follow(cannonRotLead, false);
     cannonRotLead.setSoftLimit(SoftLimitDirection.kForward, CannonConstants.FORWARD_LIMIT);
     cannonRotLead.setSoftLimit(SoftLimitDirection.kReverse, CannonConstants.REVERSE_LIMIT);
     
