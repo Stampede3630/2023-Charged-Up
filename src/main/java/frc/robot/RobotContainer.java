@@ -7,6 +7,7 @@ package frc.robot;
 import java.sql.Driver;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.pathplanner.lib.PathConstraints;
@@ -68,14 +69,7 @@ public class RobotContainer {
   private final CommandXboxController xBox = new CommandXboxController(0);
 
   SwerveAutoBuilder autoBuilder;
-  ArrayList<PathPlannerTrajectory> chargeSimpleAuto;
-  ArrayList<PathPlannerTrajectory> onePieceConeGrabAuto;
-  ArrayList<PathPlannerTrajectory> onePieceCubeGrabAuto;
-  ArrayList<PathPlannerTrajectory> twoPieceCubeAuto;
-  ArrayList<PathPlannerTrajectory> twoPieceConeAuto;
-  ArrayList<PathPlannerTrajectory> LZTwoPieceCone;
-  ArrayList<PathPlannerTrajectory> LZTwoPieceCube;
-  ArrayList<PathPlannerTrajectory> LZTwoPieceCubeCharge;
+  public final String[] AUTOS_TO_LOAD = {"chargeSimple", "onePieceConeGrab","onePieceCubeGrab","twoPieceCube","twoPieceCone","LZTwoPieceCone","LZTwoPieceCube","LZTwoPieceCubeCharge"};
 
 
   // This is just an example event map. It would be better to have a constant,
@@ -91,7 +85,7 @@ public class RobotContainer {
   SendableChooser<frc.robot.NodePosition.NodeGroup> nodeGroupChooser = new SendableChooser<>();
   SendableChooser<NodeGrid> nodeGridChooser = new SendableChooser<>();
   SendableChooser<PickupLocation> pickupLocationChooser = new SendableChooser<>();
-  SendableChooser<Command> autoSelect = new SendableChooser<>();
+  SendableChooser<List<PathPlannerTrajectory>> autoSelect = new SendableChooser<>();
   PowerDistribution pdh = new PowerDistribution(1,ModuleType.kRev);
 
   @Log
@@ -233,39 +227,11 @@ public class RobotContainer {
         s_SwerveDrive // The drive subsystem. Used to properly set the requirements of path following
                       // commands
     );
-    chargeSimpleAuto = (ArrayList<PathPlannerTrajectory>) PathPlanner.loadPathGroup("chargeSimple",
-    new PathConstraints(.5, .5));
 
-    onePieceConeGrabAuto = (ArrayList<PathPlannerTrajectory>) PathPlanner.loadPathGroup("onePieceConeGrab",
-    new PathConstraints(.5, .5));
-
-    onePieceCubeGrabAuto =(ArrayList<PathPlannerTrajectory>) PathPlanner.loadPathGroup("onePieceCubeGrab",
-    new PathConstraints(.5, .5));
-    
-    twoPieceCubeAuto =(ArrayList<PathPlannerTrajectory>) PathPlanner.loadPathGroup("twoPieceCube",
-    new PathConstraints(.5, .5));
-   
-    twoPieceConeAuto =(ArrayList<PathPlannerTrajectory>) PathPlanner.loadPathGroup("twoPieceCone",
-    new PathConstraints(.5, .5));
-
-    LZTwoPieceCone =(ArrayList<PathPlannerTrajectory>) PathPlanner.loadPathGroup("LZTwoPieceCone",
-    new PathConstraints(.5, .5));
-
-    LZTwoPieceCube =(ArrayList<PathPlannerTrajectory>) PathPlanner.loadPathGroup("LZTwoPieceCube",
-    new PathConstraints(.5, .5));
-
-    LZTwoPieceCubeCharge =(ArrayList<PathPlannerTrajectory>) PathPlanner.loadPathGroup("LZTwoPieceCubeCharge",
-    new PathConstraints(.5, .5));
-
-    autoSelect.addOption("chargeSimple", autoBuilder.fullAuto(chargeSimpleAuto));
-    autoSelect.addOption("onePieceConeGrab", autoBuilder.fullAuto(onePieceConeGrabAuto));
-    autoSelect.addOption("onePieceCubeGrab", autoBuilder.fullAuto(onePieceCubeGrabAuto));
-    autoSelect.addOption("twoPieceCube", autoBuilder.fullAuto(twoPieceCubeAuto));
-    autoSelect.addOption("twoPieceCone", autoBuilder.fullAuto(twoPieceConeAuto));
-    autoSelect.addOption("LZTwoPieceCone", autoBuilder.fullAuto(LZTwoPieceCone));
-    autoSelect.addOption("LZTwoPieceCube", autoBuilder.fullAuto(LZTwoPieceCube));
-    autoSelect.addOption("LZTwoPieceCubeCharge", autoBuilder.fullAuto(LZTwoPieceCubeCharge));
-
+    for (String autoName : AUTOS_TO_LOAD) { // load all autos dynamically
+      autoSelect.addOption(autoName, PathPlanner.loadPathGroup(autoName,
+        new PathConstraints(.5, .5)));
+    }
 
 
     s_SwerveDrive.setDefaultCommand(
@@ -514,11 +480,11 @@ public class RobotContainer {
   }
 
   public Command getAutonomousCommand() {
-    return autoSelect.getSelected();
+    return autoBuilder.fullAuto(autoSelect.getSelected());
   }
 
-  public ArrayList<PathPlannerTrajectory> autoPathGroupOnTheFly() {
-    ArrayList<PathPlannerTrajectory> PGOTF = new ArrayList<PathPlannerTrajectory>(chargeSimpleAuto);
+  public List<PathPlannerTrajectory> autoPathGroupOnTheFly() {
+    List<PathPlannerTrajectory> PGOTF = autoSelect.getSelected();
     PGOTF.add(0,
         PathPlanner.generatePath(
             new PathConstraints(4, 3),
