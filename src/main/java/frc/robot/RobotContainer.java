@@ -69,7 +69,15 @@ public class RobotContainer {
 
   SwerveAutoBuilder autoBuilder;
   ArrayList<PathPlannerTrajectory> chargeSimpleAuto;
-  
+  ArrayList<PathPlannerTrajectory> onePieceConeGrabAuto;
+  ArrayList<PathPlannerTrajectory> onePieceCubeGrabAuto;
+  ArrayList<PathPlannerTrajectory> twoPieceCubeAuto;
+  ArrayList<PathPlannerTrajectory> twoPieceConeAuto;
+  ArrayList<PathPlannerTrajectory> LZTwoPieceCone;
+  ArrayList<PathPlannerTrajectory> LZTwoPieceCube;
+  ArrayList<PathPlannerTrajectory> LZTwoPieceCubeCharge;
+
+
   // This is just an example event map. It would be better to have a constant,
   // global event map
   // in your code that will be used by all path following commands.
@@ -113,11 +121,6 @@ public class RobotContainer {
     for (NodeDriverStation ds : NodeDriverStation.values()) {
       nodeDriverStation.addOption(ds.dsFriendlyName, ds);
     }
-
-    chargeSimpleAuto = (ArrayList<PathPlannerTrajectory>) PathPlanner.loadPathGroup("chargeSimple",
-    new PathConstraints(.5, .5));
-
-    autoSelect.addOption("chargeSimple", autoBuilder.fullAuto(chargeSimpleAuto));
 
     
     /**
@@ -178,7 +181,7 @@ public class RobotContainer {
     Shuffleboard.getTab("nodeSelector")
         .add("Auto Selector", autoSelect)
         .withWidget(BuiltInWidgets.kComboBoxChooser)
-        .withPosition(5, 5)
+        .withPosition(17, 0)
         .withSize(3, 1);
 
 
@@ -192,7 +195,9 @@ public class RobotContainer {
 
     Shuffleboard.getTab("nodeSelector")
       .add("Node Group Chooser", nodeGroupChooser)
-      .withWidget(BuiltInWidgets.kSplitButtonChooser);
+      .withWidget(BuiltInWidgets.kSplitButtonChooser)
+      .withPosition(0, 6)
+      .withSize(8, 3);
       
     Shuffleboard.getTab("nodeSelector")
       .add("Node Grid Chooser", nodeGridChooser)
@@ -200,11 +205,15 @@ public class RobotContainer {
       .withProperties(Map.of("Cone Image","C:\\Users\\Mustangs\\Documents\\evanArtwork\\cone.png",
       "Cube Image","C:\\Users\\Mustangs\\Documents\\evanArtwork\\cube.png",
       "Hybrid Image","C:\\Users\\Mustangs\\Documents\\evanArtwork\\hybrid.png",
-      "R", 1));
+      "R", 1))
+      .withPosition(8, 0)
+      .withSize(9, 9);
 
     Shuffleboard.getTab("nodeSelector")
       .add("Pickup Location", pickupLocationChooser)
-      .withWidget(BuiltInWidgets.kSplitButtonChooser);
+      .withWidget(BuiltInWidgets.kSplitButtonChooser)
+      .withPosition(0, 3)
+      .withSize(8, 3);
 
     HashMap<String, Command> eventMap = new HashMap<>();
     eventMap.put("1stBallPickup", new WaitCommand(2));
@@ -224,6 +233,40 @@ public class RobotContainer {
         s_SwerveDrive // The drive subsystem. Used to properly set the requirements of path following
                       // commands
     );
+    chargeSimpleAuto = (ArrayList<PathPlannerTrajectory>) PathPlanner.loadPathGroup("chargeSimple",
+    new PathConstraints(.5, .5));
+
+    onePieceConeGrabAuto = (ArrayList<PathPlannerTrajectory>) PathPlanner.loadPathGroup("onePieceConeGrab",
+    new PathConstraints(.5, .5));
+
+    onePieceCubeGrabAuto =(ArrayList<PathPlannerTrajectory>) PathPlanner.loadPathGroup("onePieceCubeGrab",
+    new PathConstraints(.5, .5));
+    
+    twoPieceCubeAuto =(ArrayList<PathPlannerTrajectory>) PathPlanner.loadPathGroup("twoPieceCube",
+    new PathConstraints(.5, .5));
+   
+    twoPieceConeAuto =(ArrayList<PathPlannerTrajectory>) PathPlanner.loadPathGroup("twoPieceCone",
+    new PathConstraints(.5, .5));
+
+    LZTwoPieceCone =(ArrayList<PathPlannerTrajectory>) PathPlanner.loadPathGroup("LZTwoPieceCone",
+    new PathConstraints(.5, .5));
+
+    LZTwoPieceCube =(ArrayList<PathPlannerTrajectory>) PathPlanner.loadPathGroup("LZTwoPieceCube",
+    new PathConstraints(.5, .5));
+
+    LZTwoPieceCubeCharge =(ArrayList<PathPlannerTrajectory>) PathPlanner.loadPathGroup("LZTwoPieceCubeCharge",
+    new PathConstraints(.5, .5));
+
+    autoSelect.addOption("chargeSimple", autoBuilder.fullAuto(chargeSimpleAuto));
+    autoSelect.addOption("onePieceConeGrab", autoBuilder.fullAuto(onePieceConeGrabAuto));
+    autoSelect.addOption("onePieceCubeGrab", autoBuilder.fullAuto(onePieceCubeGrabAuto));
+    autoSelect.addOption("twoPieceCube", autoBuilder.fullAuto(twoPieceCubeAuto));
+    autoSelect.addOption("twoPieceCone", autoBuilder.fullAuto(twoPieceConeAuto));
+    autoSelect.addOption("LZTwoPieceCone", autoBuilder.fullAuto(LZTwoPieceCone));
+    autoSelect.addOption("LZTwoPieceCube", autoBuilder.fullAuto(LZTwoPieceCube));
+    autoSelect.addOption("LZTwoPieceCubeCharge", autoBuilder.fullAuto(LZTwoPieceCubeCharge));
+
+
 
     s_SwerveDrive.setDefaultCommand(
         s_SwerveDrive.joystickDriveCommand(

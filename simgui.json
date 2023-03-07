@@ -5,11 +5,40 @@
       "/Shuffleboard/RobotContainer/s_SwerveDrive": "Subsystem",
       "/Shuffleboard/SwerveDrive/m_field": "Field2d",
       "/Shuffleboard/nodeSelector/Arm Point Select": "String Chooser",
+      "/Shuffleboard/nodeSelector/Auto Selector": "String Chooser",
       "/Shuffleboard/nodeSelector/Node Driver Station": "String Chooser",
       "/Shuffleboard/nodeSelector/Node Grid Chooser": "String Chooser",
       "/Shuffleboard/nodeSelector/Node Group Chooser": "String Chooser",
       "/Shuffleboard/nodeSelector/Pickup Location": "String Chooser",
       "/Shuffleboard/nodeSelector/orientation": "String Chooser"
     }
+  },
+  "NetworkTables": {
+    "transitory": {
+      "Shuffleboard": {
+        "nodeSelector": {
+          "Node Grid Chooser": {
+            "open": true
+          },
+          "Node Group Chooser": {
+            "open": true
+          },
+          "open": true
+        },
+        "open": true
+      }
+    }
+  },
+  "NetworkTables Info": {
+    "Connections": {
+      "open": true
+    },
+    "Server": {
+      "Publishers": {
+        "open": true
+      },
+      "open": true
+    },
+    "visible": true
   }
 }
