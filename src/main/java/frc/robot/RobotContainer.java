@@ -178,15 +178,6 @@ public class RobotContainer {
         .withPosition(17, 0)
         .withSize(3, 1);
 
-
-    // Shuffleboard.getTab("nodeSelector")
-    //     .add("Node Driver Station", nodeDriverStation)
-    //     .withWidget(BuiltInWidgets.kComboBoxChooser);
-      
-    // Shuffleboard.getTab("nodeSelector")
-    //     .add("Arm Point Select", armTestSetPoints)
-    //     .withWidget(BuiltInWidgets.kComboBoxChooser);
-
     Shuffleboard.getTab("nodeSelector")
       .add("Node Group Chooser", nodeGroupChooser)
       .withWidget(BuiltInWidgets.kSplitButtonChooser)
@@ -406,30 +397,6 @@ public class RobotContainer {
             break;
         }
       }
-      //   }
-      // } else if (robotFacing() == FacingPOI.COMMUNITY && facingOverrideButton) {
-      //     //facing HPS
-      //     switch (gamePieceTypeChooser.getSelected()) {
-      //       case CUBE:
-      //       intakeCannonAngle = -10.0;
-      //       intakeLidAngle = 275.0;
-      //       intakeSpeed = -1.0;
-      //         break;
-      //       case UPRIGHT_CONE:
-      //         intakeCannonAngle = 175.0;
-      //         intakeLidAngle = 116.0;
-      //         intakeSpeed = -1.0;
-      //         break; 
-      //       case TIPPED_CONE:
-      //         intakeCannonAngle = 190.0;
-      //         intakeLidAngle = 244.0;
-      //         intakeSpeed = -1.0;
-      //         break; 
-      //       case NOTHING: 
-      //         intakeCannonAngle = 85.0;
-      //         break; 
-        
-      //   }
       else if (robotFacing() == FacingPOI.COMMUNITY) {
         //facing HPS
         switch (gamePieceTypeChooser.getSelected()) {
@@ -454,28 +421,6 @@ public class RobotContainer {
           
           }
         }
-      // } else if (robotFacing() == FacingPOI.HUMAN_PLAYER && facingOverrideButton) {
-      //   switch (gamePieceTypeChooser.getSelected()) {
-      //     case CUBE:
-      //       intakeCannonAngle = -10.0;
-      //       intakeLidAngle = 275.0;
-      //       intakeSpeed = -1.0;
-      //       break;
-      //     case UPRIGHT_CONE:
-      //       intakeCannonAngle = -7.0;
-      //       intakeLidAngle = 206.0;
-      //       intakeSpeed = 1.0;
-      //       break;
-      //     case TIPPED_CONE:
-      //       intakeCannonAngle = 190.0;
-      //       intakeLidAngle = 244.0;
-      //       intakeSpeed = -1.0;
-      //       break;
-      //     case NOTHING:
-      //       intakeCannonAngle = 85.0;  
-      //       break;
-      //   }
-      // }
     }
   }
 
@@ -610,12 +555,6 @@ public class RobotContainer {
     double aOfOA = roboTranslationX.getY() - desiredTranslationY;
     
     return new Rotation2d(-Math.atan(oOfOA/aOfOA));
-  }
-
-
-  @Config
-  public void facingOverrideButton(boolean input){
-    facingOverrideButton = input;
   }
 
 }
