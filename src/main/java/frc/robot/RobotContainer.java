@@ -352,11 +352,11 @@ public class RobotContainer {
         Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), 40)).unless(xBox.rightTrigger(.5)) // towards pickup
           .andThen(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle))), 
            s_Intake::haveGamePiece));
-  
-    xBox.a().onTrue(new
-    ProxyCommand(()->autoBuilder.followPathGroup(autoPathGroupOnTheFly()))
-    .beforeStarting(new
-    InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
+// //TODO: Commented this out because it's not ready  
+    // xBox.a().onTrue(new
+    // ProxyCommand(()->autoBuilder.followPathGroup(autoPathGroupOnTheFly()))
+    // .beforeStarting(new
+    // InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
 
     new Trigger(gamePieceTypeChooser::didValueChange).and(new Trigger(s_Intake::haveGamePiece).negate())
       .onTrue(Commands.either(
@@ -427,20 +427,20 @@ public class RobotContainer {
   public Command getAutonomousCommand() {
     return autoBuilder.fullAuto(autoSelect.getSelected());
   }
+// //TODO: Commented this out because it's not ready
+  // public List<PathPlannerTrajectory> autoPathGroupOnTheFly() {
+  //   List<PathPlannerTrajectory> PGOTF = autoSelect.getSelected();
+  //   PGOTF.add(0,
+  //       PathPlanner.generatePath(
+  //           new PathConstraints(4, 3),
+  //           new PathPoint(s_SwerveDrive.getOdometryPose().getTranslation(), s_SwerveDrive.getOdometryPose().getRotation()),
+  //           new PathPoint(new Translation2d(Units.inchesToMeters(nodeGroupChooser.getSelected().xCoord), 
+  //             Units.inchesToMeters(nodeGroupChooser.getSelected().yCoord) + Units.inchesToMeters(getYOffset())), 
+  //             new Rotation2d(robotFacing() == FacingPOI.COMMUNITY ? 0:180), 
+  //             new Rotation2d(robotFacing() == FacingPOI.COMMUNITY ? 0:180))));
 
-  public List<PathPlannerTrajectory> autoPathGroupOnTheFly() {
-    List<PathPlannerTrajectory> PGOTF = autoSelect.getSelected();
-    PGOTF.add(0,
-        PathPlanner.generatePath(
-            new PathConstraints(4, 3),
-            new PathPoint(s_SwerveDrive.getOdometryPose().getTranslation(), s_SwerveDrive.getOdometryPose().getRotation()),
-            new PathPoint(new Translation2d(Units.inchesToMeters(nodeGroupChooser.getSelected().xCoord), 
-              Units.inchesToMeters(nodeGroupChooser.getSelected().yCoord) + Units.inchesToMeters(getYOffset())), 
-              new Rotation2d(robotFacing() == FacingPOI.COMMUNITY ? 0:180), 
-              new Rotation2d(robotFacing() == FacingPOI.COMMUNITY ? 0:180))));
-
-    return PGOTF;
-  }
+  //   return PGOTF;
+  // }
 
   @Log
   public double getYOffset() {
