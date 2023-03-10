@@ -6,8 +6,8 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 public class NodePosition {
     private final double xCoord;
     private final double yCoord;
-    private final double extension;
-    private final double cannonAngle;
+    private final NodeGrid nodeGrid;
+    private final NodeGroup nodeGroup;
 
     public double getXCoord() {
         return xCoord;
@@ -15,19 +15,13 @@ public class NodePosition {
     public double getYCoord() {
         return yCoord;
     }
-    public double getExtension() {
-        return extension;
-    }
-    public double getCannonAngle(){
-      return cannonAngle;
 
-    }
-
-    private NodePosition(double xCoord, double yCoord, double extension, double cannonAngle) {
+    private NodePosition(double xCoord, double yCoord, NodeGrid nodeGrid, NodeGroup nodeGroup) {
       this.xCoord = xCoord;
       this.yCoord = yCoord;
-      this.extension = extension;
-      this.cannonAngle = cannonAngle;
+      this.nodeGrid = nodeGrid;
+      this.nodeGroup = nodeGroup;
+
     }
     public enum NodeGroup{
 
@@ -55,46 +49,60 @@ public class NodePosition {
     * R 132 + 42.19
     */
     public enum NodeGrid {
-      LOW_LEFT(0, -22, 0, "leftLow", 180, 37.5),
-      LOW_CENTER(0, 0, 0, "midLow", 180, 100),
-      LOW_RIGHT(0, 22, 0,"rightLow", 180, 37.5),
+      LOW_LEFT(0, -22, 0, "leftLow", 180, 37.5, 0.0, 150.0),
+      LOW_CENTER(0, 0, 0, "midLow", 180, 100, 0, 100),
+      LOW_RIGHT(0, 22, 0,"rightLow", 180, 37.5, 0.0, 150.0),
   
-      MID_LEFT( 9.7, -22, 0, "leftMid", 139.5, 37.5),
-      MID_CENTER(7.5, 0, 0, "midMid", 154.3, 100),
-      MID_RIGHT(19.7, 22, 0,"rightMid", 139.5, 37.5),
+      MID_LEFT(19.7, -22, 0, "leftMid", 139.5, 37.5, 26.0, 150),
+      MID_CENTER(7.5, 0, 0, "midMid", 154.3, 100.0, 25.7, 100.0),
+      MID_RIGHT(19.7, 22, 0,"rightMid", 139.5, 37.5, 26.0, 150),
   
   
-      HIGH_LEFT(40, -22, 0, "leftHigh", 141.3, 37.5),
-      HIGH_CENTER(38.0, 0, 0, "midHigh", 141.3, 100),
-      HIGH_RIGHT(40, 22, 0, "rightHigh", 141.3, 37.5);
+      HIGH_LEFT(40, -22, 0, "leftHigh", 141.3, 37.5, 23.6, 150),
+      HIGH_CENTER(38.0, 0, 0, "midHigh", 141.3, 100.0, 38.7, 100.0),
+      HIGH_RIGHT(40, 22, 0, "rightHigh", 141.3, 37.5, 23.6, 150);
       
   
       public final double extension;
       public final double xOffset;
       public final double yOffset;
       public final String widgetName;
-      public final double cannonAngle;
-      public final double lidPosition;
-      private NodeGrid(double extension, double yOffset, double xOffset, String widgetName, double cannonAngle, double lidPosition) {
+      public final double lidDownCannonAngle;
+      public final double lidDownLidPosition;
+      public final double lidUpCannonAngle;
+      public final double lidUpLidPosition;
+      private NodeGrid(double extension, double yOffset, double xOffset, String widgetName, double lidDownCannonAngle, double lidDownLidPosition, double lidUpCannonAngle, double lidUpLidPosition) {
         this.extension = extension;
         this.xOffset = xOffset;
         this.yOffset = yOffset;
-        this.cannonAngle = cannonAngle;
+        this.lidDownCannonAngle = lidDownCannonAngle;
         this.widgetName = widgetName;
-        this.lidPosition = lidPosition;
+        this.lidDownLidPosition = lidDownLidPosition;
+        this.lidUpCannonAngle = lidUpCannonAngle;
+        this.lidUpLidPosition = lidUpLidPosition;
       }
 
-      public double getNodeCannonAngle(){
-        return cannonAngle;
+      public double getNodeCannonAngleLidDown(){
+        return lidDownCannonAngle;
       }
 
-      public double getNodeLidPosition(){
-        return lidPosition;
+      public double getNodeLidPositionLidDown(){
+        return lidDownLidPosition;
+      }
+      public double getNodeCannonAngleLidUp(){
+        return lidUpCannonAngle;
+      }
+
+      public double getNodeLidPositionLidUp(){
+        return lidUpLidPosition;
+      }
+      public double getExtension(){
+        return extension;
       }
     }
 
   public static NodePosition getNodePosition(NodeGroup nodeGroup, NodeGrid nodeGrid) {
       double x = nodeGroup.xCoord + nodeGrid.xOffset + (DriverStation.getAlliance() == Alliance.Blue ? 99.86 : 0);
-      return new NodePosition(x, nodeGroup.yCoord + nodeGrid.yOffset, nodeGrid.extension, nodeGrid.cannonAngle);
+      return new NodePosition(x, nodeGroup.yCoord + nodeGrid.yOffset, nodeGrid, nodeGroup);
   }
 }

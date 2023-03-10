@@ -70,7 +70,7 @@ public class RobotContainer {
   private final CommandXboxController xBox = new CommandXboxController(0);
 
   SwerveAutoBuilder autoBuilder;
-  public final String[] AUTOS_TO_LOAD = {"chargeSimple", "onePieceConeGrab","onePieceCubeGrab","twoPieceCube","twoPieceCone","LZTwoPieceCone","LZTwoPieceCube","LZTwoPieceCubeCharge"};
+  public final String[] AUTOS_TO_LOAD = {"chargeScoreCube", "onePieceConeGrab","onePieceCubeGrab","twoPieceCube","twoPieceCone","LZTwoPieceCone","LZTwoPieceCube","LZTwoPieceCubeCharge"};
 
 
   // This is just an example event map. It would be better to have a constant,
@@ -103,6 +103,8 @@ public class RobotContainer {
   @Log
   public double intakeSpeed;
   public boolean facingOverrideButton;
+
+  private double intakeExtensionInches;
   // private GamePieceType prev;  
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -203,8 +205,10 @@ public class RobotContainer {
 
     HashMap<String, Command> eventMap = new HashMap<>();
     eventMap.put("1stBallPickup", new WaitCommand(2));
-    eventMap.put("scorePieceHigh", autoScoreHigh());
-    eventMap.put("intake", autoIntake());
+    eventMap.put("autoScoreHigh", autoScoreHighCube());
+    eventMap.put("autoScoreHighCone", autoScoreHighCone());
+    eventMap.put("autoIntake", autoIntake());
+    eventMap.put("autoBalance", s_SwerveDrive.autoBalanceCommand());
 
     autoBuilder = new SwerveAutoBuilder(
         s_SwerveDrive::getOdometryPose, // Pose2d supplier
@@ -298,9 +302,18 @@ public class RobotContainer {
 
     //-> intake trigger
     xBox.rightTrigger(.55).debounce(.1, DebounceType.kFalling)
-        .onTrue(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle))
-        // .onTrue(Commands.runOnce(()->{})
-          .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(intakeCannonAngle)))
+        .onTrue(
+          Commands.either(
+            Commands.runOnce(()-> s_Cannon.setCannonAngle(intakeCannonAngle))
+              .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
+              .andThen(Commands.runOnce(() -> s_Cannon.setExtensionInches(intakeExtensionInches)))
+              .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange)),
+            Commands.runOnce(() -> s_Cannon.setExtensionInches(intakeExtensionInches))
+              .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
+              .andThen(Commands.runOnce(() -> s_Cannon.setCannonAngle(intakeCannonAngle))
+              .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))),
+            () -> s_Cannon.getExtensionEncoder() < 10) // "dangerous" or not
+          .andThen(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle)))
           .andThen(Commands.runOnce(()-> s_Intake.setIntake(intakeSpeed)))
           .andThen(Commands.waitSeconds(.1).andThen(Commands.waitUntil(s_Intake::checkForCurrentSpike).until(xBox.rightTrigger().negate())))
           .andThen(Commands.runOnce(s_Intake::stopIntake)))
@@ -312,6 +325,7 @@ public class RobotContainer {
         .onFalse(Commands.runOnce(s_Intake::stopIntake)
           .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(1)))
           .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
+          .andThen(Commands.runOnce(()-> s_Lid.setLid(60.0)))
           );
           // .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(intakeCannonAngle))) //intakecannonangle
           // .andThen(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle))));
@@ -327,19 +341,25 @@ public class RobotContainer {
     //-> extension + cannonRot to setpoint
     xBox.y()
         .onTrue((Commands.runOnce(()-> {
-          s_Cannon.setCannonAngleSides(robotFacing(), NodePosition.getNodePosition(nodeGroupChooser.getSelected(), nodeGridChooser.getSelected()).getCannonAngle());
+          if (robotFacing()==FacingPOI.HUMAN_PLAYER){
+            s_Lid.setLidReference(nodeGridChooser.getSelected().getNodeLidPositionLidUp());
+            s_Cannon.setCannonAngle(nodeGridChooser.getSelected().getNodeCannonAngleLidUp());
+          }
+          else {
+            s_Lid.setLidReference(nodeGridChooser.getSelected().getNodeLidPositionLidDown());
+            s_Cannon.setCannonAngle(nodeGridChooser.getSelected().getNodeCannonAngleLidDown());
+          }
+          //s_Cannon.setCannonAngleSides(robotFacing(), NodePosition.getNodePosition(nodeGroupChooser.getSelected(), nodeGridChooser.getSelected()).getCannonAngle());
           // switch ()
         }))
           .andThen(new SequentialCommandGroup(Commands.waitUntil(s_Cannon::cannonErrorWithinRange)),
-              Commands.runOnce(()-> s_Cannon.setExtensionInches(NodePosition.getNodePosition(nodeGroupChooser.getSelected(), nodeGridChooser.getSelected()).getExtension())))
-          .andThen(Commands.runOnce(() -> {
-            if (gamePieceTypeChooser.getSelected() != GamePieceType.CUBE) s_Lid.setLidReference(244);
-          })));
+              Commands.runOnce(()-> s_Cannon.setExtensionInches(nodeGridChooser.getSelected().getExtension()))));
 
     //logic/no controller triggers
     new Trigger(s_Intake::haveGamePiece)
       .onTrue(Commands.runOnce(()-> s_Cannon.setExtensionInches(1))
-         .andThen(()-> s_Cannon.setCannonAngleSides(robotFacing(), 40.0))
+        .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
+         .andThen(()-> s_Cannon.setCannonAngleSides(robotFacing(), 50.0))
           .alongWith(Commands.runOnce(() -> s_LEDs.setMode(LEDs.LEDMode.CHASING)))) // chasing leds because we have a game piece
       .onFalse(Commands.either(
         Commands.runOnce(s_LEDs::bePurple), 
@@ -370,44 +390,47 @@ public class RobotContainer {
   public void setIntakeParameters() {
     if (pickupLocationChooser.getSelected()==PickupLocation.SHELF) {
       switch (gamePieceTypeChooser.getSelected()) {
-        case CUBE://fill in
-          intakeCannonAngle = 0.0;
-          intakeLidAngle = 275.0;
-          intakeSpeed = -1.0;
+        case CUBE://impossible
           break;
-        case UPRIGHT_CONE://fill in, should be same as tipped
-          intakeCannonAngle = -7.0;
-          intakeLidAngle = 206.0;
+        case UPRIGHT_CONE://revise, should be same as tipped
+          intakeCannonAngle = 140.0;
+          intakeLidAngle = 37.5;
           intakeSpeed = 1.0;
+          intakeExtensionInches = 32.5;
           break;
-        case TIPPED_CONE: // fill in, should be same as upright
-          intakeCannonAngle = 10.0;
-          intakeLidAngle = 180.0;
+        case TIPPED_CONE: //revise, should be same as upright
+          intakeCannonAngle = 140.0;
+          intakeLidAngle = 37.5;
           intakeSpeed = 1.0;
+          intakeExtensionInches = 32.5;
           break;
         case NOTHING:
           intakeCannonAngle = 90.0;
-          intakeLidAngle = 180.0;
+          intakeLidAngle = 60.0;
           intakeSpeed = 0.0;
           break;
       }
 
-    } else if (pickupLocationChooser.getSelected()==PickupLocation.CHUTE) {
+    } else if (pickupLocationChooser.getSelected()==PickupLocation.CHUTE) {     
       switch (gamePieceTypeChooser.getSelected()) {
-        case CUBE://fill in
-          intakeCannonAngle = 0.0;
-          intakeLidAngle = 275.0;
+        case CUBE:
+          intakeCannonAngle = 130.0;
+          intakeLidAngle = 55.0;
           intakeSpeed = -1.0;
           break;
         case TIPPED_CONE:
-        case UPRIGHT_CONE://fill in, should be same as tipped
+          intakeCannonAngle = 133.0;
+          intakeLidAngle = 66.7;
+          intakeSpeed = 1.0;
+          break;
+        case UPRIGHT_CONE://should be same as tipped
           intakeCannonAngle = 133;
           intakeLidAngle = 66.65;
           intakeSpeed = 1.0;
           break;
         case NOTHING:
           intakeCannonAngle = 90.0;
-          intakeLidAngle = 180.0;
+          intakeLidAngle = 60.0;
           intakeSpeed = 0.0;
           break;
       } 
@@ -417,10 +440,11 @@ public class RobotContainer {
       if (robotFacing() == FacingPOI.COMMUNITY) {
         //facing community, lid up, not able to get tipped cones
         switch (gamePieceTypeChooser.getSelected()) {
-          case CUBE://fill in
+          case CUBE://unfavorable cubbe intake!! BOOOOOOO
             intakeCannonAngle = -11.0;
             intakeLidAngle = 60.0;
             intakeSpeed = -1.0;
+            intakeExtensionInches = 3.0;
             break;
           case UPRIGHT_CONE://fill in
             intakeCannonAngle = -7.0;
@@ -434,7 +458,7 @@ public class RobotContainer {
             break;
           case NOTHING:
             intakeCannonAngle = 90.0;
-            intakeLidAngle = 180.0;
+            intakeLidAngle = 60.0;
             intakeSpeed = 0.0;
             break;
         }
@@ -446,6 +470,7 @@ public class RobotContainer {
             intakeCannonAngle = 193.0;//only fix
             intakeLidAngle = 40.0;
             intakeSpeed = -1.0;
+            intakeExtensionInches = 0.0;
             break;
           case UPRIGHT_CONE:
             intakeCannonAngle = 173.5;
@@ -459,7 +484,7 @@ public class RobotContainer {
             break; 
           case NOTHING: 
             intakeCannonAngle = 90.0;
-            intakeLidAngle = 180.0;
+            intakeLidAngle = 60.0;
             intakeSpeed = 0.0;
               
             break;
@@ -602,17 +627,35 @@ public class RobotContainer {
     return new Rotation2d(-Math.atan(oOfOA/aOfOA));
   }
 
-  public Command autoScoreHigh() {
-    return (Commands.runOnce(()-> 
-      s_Cannon.setCannonAngleSides(robotFacing(), 40)
-      // switch ()
-    ))
-      .andThen(new SequentialCommandGroup(Commands.waitUntil(s_Cannon::cannonErrorWithinRange)),
-          Commands.runOnce(()-> s_Cannon.setExtensionInches(35.0)))
-      .andThen(Commands.runOnce(() -> 
-        s_Lid.setLidReference(244)
-      ));
+  public Command autoScoreHighCube() {
+    return Commands.runOnce(()->s_Lid.setLid(NodePosition.NodeGrid.HIGH_CENTER.getNodeLidPositionLidUp()))
+      .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(NodePosition.NodeGrid.HIGH_CENTER.getNodeCannonAngleLidUp())))
+      .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
+      .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(NodePosition.NodeGrid.HIGH_CENTER.getNodeCannonAngleLidUp())))
+      .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
+      .andThen(()->s_Intake.setIntake(1.0))
+      .andThen(Commands.waitSeconds(0.5))
+      .andThen(Commands.runOnce(s_Intake::stopIntake))
+      .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(1.0)))
+      .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
+      .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(77.5)));
   }
+
+  public Command autoScoreHighCone() {
+    return Commands.runOnce(()->s_Lid.setLid(NodePosition.NodeGrid.HIGH_LEFT.getNodeLidPositionLidUp()))
+      .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(NodePosition.NodeGrid.HIGH_LEFT.getNodeCannonAngleLidUp())))
+      .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
+      .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(NodePosition.NodeGrid.HIGH_LEFT.getNodeCannonAngleLidUp())))
+      .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
+      .andThen(()->s_Intake.setIntake(-1.0))
+      .andThen(Commands.waitSeconds(0.5))
+      .andThen(Commands.runOnce(s_Intake::stopIntake))
+      .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(1.0)))
+      .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
+      .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(77.5)));
+  }
+
+
 
   public Command autoIntake() {
     return (Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle))

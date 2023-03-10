@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Config;
+import io.github.oblarg.oblog.annotations.Log;
 
 public class LEDs extends SubsystemBase implements Loggable{
 
@@ -53,6 +54,11 @@ public class LEDs extends SubsystemBase implements Loggable{
 
   public void setMode(LEDMode mode) {
     this.mode = mode;
+  }
+
+  @Log
+  public String getMode() {
+      return mode.name();
   }
 
   public void setRGB(int r, int g, int b) {

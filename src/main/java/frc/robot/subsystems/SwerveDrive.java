@@ -425,12 +425,13 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
       m_driveTrain.activateDefensiveStop(getPose().getRotation());
       balanced = true;
     } else {
-      double roll = getRoll(); //will need to flip plus and minus
-      double pitch = getPitch();
-      double kP = 0.03;
-      setDriveSpeeds(new Translation2d(roll*kP, pitch*kP), deltaTime, aprilTagDetectedBack);
+      setDriveSpeeds(new Translation2d(trapPitchAutoBalance(),trapRollAutoBalance()), 0, false);
       balanced= false;
     }
+  }
+
+  public Command autoBalanceCommand(){
+    return Commands.run(()->autoBalance());
   }
 
   public boolean isBalanced() {
