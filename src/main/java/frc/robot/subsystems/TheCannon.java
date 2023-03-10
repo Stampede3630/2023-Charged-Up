@@ -6,6 +6,7 @@ package frc.robot.subsystems;
 
 import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.EncoderType;
 import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMax.SoftLimitDirection;
@@ -79,14 +80,17 @@ private ArmFeedforward m_feedforward =
     cannonRotLeadPID.setP(Preferences.getDouble("CannonKP", CannonConstants.KP));
     cannonRotLeadPID.setI(Preferences.getDouble("CannonKI", CannonConstants.KI));
     cannonRotLeadPID.setD(Preferences.getDouble("CannonKD", CannonConstants.KD));
-    cannonRotLeadPID.setOutputRange(-1, 1);
-    //cannonRotLeadPID.setOutputRange(-.5, .5); //KP Accounts for this I think
+    cannonRotLeadPID.setOutputRange(-.8, .8);
+
+    //cannonRotLeadPID.setOutputRange(-.5, .5); //P Accounts for this I thinkK
     
     cannonExtensionPID.setP(Preferences.getDouble("ExtensionKP", ExtendoConstants.KP));
     cannonExtensionPID.setI(Preferences.getDouble("ExtensionKI", ExtendoConstants.KI));
     cannonExtensionPID.setD(Preferences.getDouble("ExtensionKD", ExtendoConstants.KD));
-    cannonExtensionPID.setOutputRange(-1, 1);
-  
+    cannonExtensionPID.setOutputRange(-.5, 1);
+
+    cannonExtension.setSoftLimit(SoftLimitDirection.kForward, 40);
+    cannonExtension.setSoftLimit(SoftLimitDirection.kReverse, 2);
     
     cannonRotLead.burnFlash();
     cannonRotFollow.burnFlash();
@@ -143,11 +147,6 @@ private ArmFeedforward m_feedforward =
     cannonRotLead.setIdleMode(IdleMode.kBrake);
     cannonRotFollow.setIdleMode(IdleMode.kBrake);
     cannonExtension.setIdleMode(IdleMode.kBrake);
-  }
-
-  public void setCannonRotation(double intakeCannonAngle){
-    setCannonAngle(intakeCannonAngle);
-
   }
 
   @Log
@@ -225,11 +224,11 @@ private ArmFeedforward m_feedforward =
     return extensionEncoder.getPosition();
   }
 
-  @Config
+  @Config.NumberSlider(max=45,min=0)
   public void setExtensionInches(double input){
     extensionInches = input;
   }
-  @Config
+  @Config.NumberSlider(max = 200, min = -20, defaultValue = CannonConstants.INITIALIZED_ANGLE)
   public void setCannonAngle(double input){
     cannonRotation = input;
   }

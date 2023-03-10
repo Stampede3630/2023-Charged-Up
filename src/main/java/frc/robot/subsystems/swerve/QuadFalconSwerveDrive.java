@@ -6,6 +6,7 @@ import com.ctre.phoenixpro.*;
 import com.ctre.phoenixpro.controls.DutyCycleOut;
 import com.ctre.phoenixpro.signals.NeutralModeValue;
 
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -63,19 +64,12 @@ public class QuadFalconSwerveDrive {
         FrontRightSwerveModule.steerMode;
   }
 
-  // public void activateDefensiveStop() {
-  //   FrontLeftSwerveModule.setSteeringAngle(0); // 45
-  //   FrontLeftSwerveModule.driveMotor.set(ControlMode.PercentOutput, 0);
-
-  //   FrontRightSwerveModule.setSteeringAngle(0); // 135
-  //   FrontRightSwerveModule.driveMotor.set(ControlMode.PercentOutput, 0);
-
-  //   BackLeftSwerveModule.setSteeringAngle(0); // 135
-  //   BackLeftSwerveModule.driveMotor.set(ControlMode.PercentOutput, 0);
-
-  //   BackRightSwerveModule.setSteeringAngle(0); // 45
-  //   BackRightSwerveModule.driveMotor.setControl(ControlMode.DutyCycleOut, 0);
-  // }
+  public void activateDefensiveStop(Rotation2d robotAngle) {
+    FrontLeftSwerveModule.setDesiredState(new SwerveModuleState(0, robotAngle.rotateBy(Rotation2d.fromDegrees(90))));
+    FrontRightSwerveModule.setDesiredState(new SwerveModuleState(0, robotAngle.rotateBy(Rotation2d.fromDegrees(90))));
+    BackLeftSwerveModule.setDesiredState(new SwerveModuleState(0, robotAngle.rotateBy(Rotation2d.fromDegrees(90))));
+    BackRightSwerveModule.setDesiredState(new SwerveModuleState(0, robotAngle.rotateBy(Rotation2d.fromDegrees(90)))); 
+  }
 
   public void setModuleSpeeds(SwerveModuleState[] _swerveModuleStates) {
     FrontLeftSwerveModule.setDesiredState(_swerveModuleStates[0]);

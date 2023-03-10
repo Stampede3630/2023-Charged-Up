@@ -26,7 +26,7 @@ public class LEDs extends SubsystemBase implements Loggable{
   private double previousTime = System.currentTimeMillis();
   private final Color[] strobeColors = {new Color(0,0,255),new Color(255,255,0)};
   private double chaseSeparator = 0; 
-  private LEDMode mode = LEDMode.CHASING;
+  private LEDMode mode = LEDMode.RAINBOW;
   
   /** Creates a new LEDs. */
   public LEDs() {

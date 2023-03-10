@@ -1,6 +1,5 @@
 package frc.robot.subsystems.swerve;
 
-import com.ctre.phoenix.motorcontrol.InvertType;
 import com.ctre.phoenixpro.signals.InvertedValue;
 
 public final class SwerveConstants {
@@ -52,10 +51,10 @@ public final class SwerveConstants {
     // CHANGE TO 0 first, reset the sensor,
     // PHYSICALLY zero out the motor
     // place the OPPOSITE of the value
-    public static double FRSensorOffset = -0.165039 ; // 121.904; test? values
-    public static double FLSensorOffset = -0.398438 ;// 40.869;-.878174 
-    public static double BRSensorOffset = -0.361816 ;// 179.561; 
-    public static double BLSensorOffset = -0.578613  ;// -24.873; -.541992 
+    public static double FRSensorOffset = -0.661377 ; // 121.904; test? values
+    public static double FLSensorOffset = -0.882812 ;// 40.869;-.878174 
+    public static double BRSensorOffset = -0.870850 ;// 179.561; 
+    public static double BLSensorOffset = -0.063232  ;// -24.873; -.541992 
 
     // Give a positive input on the joystick or phoenix tuner
     // Switch this if it goes opposite the desired direction
@@ -78,10 +77,10 @@ public final class SwerveConstants {
     public static Gains BRDriveGains = new Gains(0.0007, 0, 0, 1023.0 / 20660.0);
     public static Gains BLDriveGains = new Gains(0.0007, 0, 0, 1023.0 / 20660.0);
 
-    public static final double kS = 0.1882;
-    public static final double kV = 0.69334;
-    public static final double kA = 0.10209;
-    public static final double kP = 0.00062975; //now better!
+    public static final double kS = 0.21355;
+    public static final double kV = 0.7013;
+    public static final double kA = 0.14234;
+    public static final double kP = 0.54897; //now better!
 
     // CTRE CAN-based constants (shouldn't need to change these)
     public static final int kDefaultPIDSlotID = 0;

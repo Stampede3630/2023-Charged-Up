@@ -68,7 +68,7 @@ public class Intake extends SubsystemBase implements Loggable{
       return intakeHardStop.isPressed();
     }
 
-    @Log
+    @Log.Graph
     public double getIntakeCurrent() {
         return m_intakeMotor.getOutputCurrent();
     }
@@ -83,7 +83,7 @@ public class Intake extends SubsystemBase implements Loggable{
     }
 
     public boolean checkForCurrentSpike() {
-        haveGamePiece = getIntakeCurrent() > IntakeConstants.GAME_PIECE_DETECTION_AMPS ? true : haveGamePiece;
+        haveGamePiece = (getIntakeCurrent() > IntakeConstants.GAME_PIECE_DETECTION_AMPS) || (intakeHardStop.isPressed()) ? true : haveGamePiece;
         return haveGamePiece;
     }
 }

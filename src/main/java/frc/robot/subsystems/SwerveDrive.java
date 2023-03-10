@@ -12,6 +12,7 @@ import java.util.function.DoubleSupplier;
 import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.hal.AllianceStationID;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
@@ -32,6 +33,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.interfaces.Gyro;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandBase;
@@ -44,6 +46,7 @@ import frc.robot.Constants.DriverConstants;
 import frc.robot.subsystems.swerve.QuadFalconSwerveDrive;
 import frc.robot.subsystems.swerve.SwerveConstants;
 import frc.robot.subsystems.swerve.SwerveModule;
+import frc.robot.subsystems.swerve.SwerveModule.DriveMotor;
 import frc.robot.util.SimGyroSensorModel;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Config;
@@ -64,16 +67,22 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
   double holdHeadingAngle = 0;
   @Log
   boolean holdHeadingEnabled = false;
-  ProfiledPIDController rotationController;
+  ProfiledPIDController rotationController, rollRotationController, pitchRotationController;
   double rotationControllerOutput;
 
   boolean aprilTagDetectedFront = false;
   boolean aprilTagDetectedBack = false;
 
+  boolean balanced=false;
+
   @Log
   public Field2d m_field;
 
   public SwerveDrive() {
+    rollRotationController =new ProfiledPIDController(5.4/15, 0, 0, 
+      new TrapezoidProfile.Constraints(5.4,5.4));
+    pitchRotationController = new ProfiledPIDController(5.4/15, 0, 0, 
+      new TrapezoidProfile.Constraints(5.4,5.4));
     rotationController = new ProfiledPIDController(
       Preferences.getDouble("pKPRotationController", SwerveConstants.kPRotationController),
       Preferences.getDouble("pIPRotationController", SwerveConstants.kIRotationController),
@@ -157,9 +166,9 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
   public CommandBase joystickDriveCommand(DoubleSupplier _x, DoubleSupplier _y, DoubleSupplier _rot){
     return Commands.run(
       () -> {
-        double x = -Math.pow(_x.getAsDouble(),5);
-        double y = -Math.pow(_y.getAsDouble(),5);
-        double rot = -Math.pow(_rot.getAsDouble(), 5);
+        double x = -(Math.abs(_x.getAsDouble()) < .1 ? 0 : _x.getAsDouble());
+        double y = -(Math.abs(_y.getAsDouble()) < .1 ? 0 : _y.getAsDouble());
+        double rot = Math.pow((Math.abs(_rot.getAsDouble()) < .1 ? 0 : _rot.getAsDouble()), 3);
         double joystickDriveGovernor = Preferences.getDouble("pDriveGovernor", DriverConstants.DRIVE_GOVERNOR);
         
         if (Preferences.getBoolean("pAccelInputs", DriverConstants.ACCELERATED_INPUTS)) {
@@ -399,5 +408,53 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
       gyro.reset();
     }
   }
+
+  @Log
+  public double  trapRollAutoBalance(){
+    return rollRotationController.calculate(gyro.getRoll(), new State(0,0));
+  }
+
+  @Log
+  public double  trapPitchAutoBalance(){
+    return rollRotationController.calculate(gyro.getRoll(), new State(0,0));
+  }
+
+  public void autoBalance(){
+    if((Math.abs(gyro.getPitch()) < 2) && (Math.abs(gyro.getRoll()) < 2)){
+      setDriveSpeeds(new Translation2d(0, 0), 0, false);
+      m_driveTrain.activateDefensiveStop(getPose().getRotation());
+      balanced = true;
+    } else {
+      double roll = getRoll(); //will need to flip plus and minus
+      double pitch = getPitch();
+      double kP = 0.03;
+      setDriveSpeeds(new Translation2d(roll*kP, pitch*kP), deltaTime, aprilTagDetectedBack);
+      balanced= false;
+    }
+  }
+
+  public boolean isBalanced() {
+      return balanced;
+  }
+
+  @Log
+  public double getRoll() {
+    return gyro.getRoll();
+  }
+
+  @Log
+  public double getPitch() {
+    return gyro.getPitch();
+  }
+  
+  /* 
+   * if pitch is negative, go forward +y
+   * if pitch is positive, go backward -y
+   * if roll is positive, go right +x
+   * if roll is negative, go left -x
+   */
   
 }
+
+  
+

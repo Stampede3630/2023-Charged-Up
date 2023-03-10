@@ -35,6 +35,7 @@ public class Lid extends SubsystemBase implements Loggable{
         // cannonExtension.setInverted(true);
         //changed idle mode to help with troubleshooting    
         m_lidMotor.setIdleMode(IdleMode.kBrake);
+        m_lidMotor.setInverted(true);
 
         m_lidPid.setFeedbackDevice(m_lidAbsolute);
         m_lidPid.setPositionPIDWrappingEnabled(false);
@@ -64,7 +65,7 @@ public class Lid extends SubsystemBase implements Loggable{
         setLidReference(intakeLidAngle);
     }
 
-    @Config(defaultValueNumeric = 180)
+    @Config.NumberSlider(defaultValue = 180, max = 260, min = 35, blockIncrement = 1)
     public void setLidReference(double input) {
         this.lidReference = input;
     }

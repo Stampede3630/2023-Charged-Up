@@ -33,6 +33,7 @@ import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ProxyCommand;
@@ -202,8 +203,8 @@ public class RobotContainer {
 
     HashMap<String, Command> eventMap = new HashMap<>();
     eventMap.put("1stBallPickup", new WaitCommand(2));
-    eventMap.put("2ndBallPickup", new WaitCommand(2));
-    eventMap.put("3rdBallPickup", new WaitCommand(2));
+    eventMap.put("scorePieceHigh", autoScoreHigh());
+    eventMap.put("intake", autoIntake());
 
     autoBuilder = new SwerveAutoBuilder(
         s_SwerveDrive::getOdometryPose, // Pose2d supplier
@@ -230,7 +231,7 @@ public class RobotContainer {
             xBox::getLeftY,
             xBox::getLeftX,
             xBox::getRightX).withName("DefaultDrive"));
-
+    
     // Configure the button bindings
     configureButtonBindings();
     Logger.configureLoggingAndConfig(this, false);
@@ -298,12 +299,11 @@ public class RobotContainer {
     //-> intake trigger
     xBox.rightTrigger(.55).debounce(.1, DebounceType.kFalling)
         .onTrue(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle))
-          .andThen(Commands.runOnce(()-> s_Cannon.setCannonRotation(intakeCannonAngle)))
+        // .onTrue(Commands.runOnce(()->{})
+          .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(intakeCannonAngle)))
           .andThen(Commands.runOnce(()-> s_Intake.setIntake(intakeSpeed)))
           .andThen(Commands.waitSeconds(.1).andThen(Commands.waitUntil(s_Intake::checkForCurrentSpike).until(xBox.rightTrigger().negate())))
           .andThen(Commands.runOnce(s_Intake::stopIntake)))
-         // .andThen(Commands.waitUntil(s_Intake::haveGamePiece))
-         // .andThen(Commands.runOnce(s_Intake::stopIntake)))
         .onFalse(Commands.runOnce(s_Intake::stopIntake));
     
     //-> Outtake trigger
@@ -312,8 +312,9 @@ public class RobotContainer {
         .onFalse(Commands.runOnce(s_Intake::stopIntake)
           .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(1)))
           .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
-          .andThen(Commands.runOnce(()-> s_Cannon.setCannonRotation(intakeCannonAngle))) //intakecannonangle
-          .andThen(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle))));
+          );
+          // .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(intakeCannonAngle))) //intakecannonangle
+          // .andThen(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle))));
     
     //MANUAL INTAKE
     xBox.leftBumper().debounce(.1, DebounceType.kFalling)
@@ -338,7 +339,7 @@ public class RobotContainer {
     //logic/no controller triggers
     new Trigger(s_Intake::haveGamePiece)
       .onTrue(Commands.runOnce(()-> s_Cannon.setExtensionInches(1))
-         .andThen(()-> s_Cannon.setCannonAngleSides(robotFacing(), 140))
+         .andThen(()-> s_Cannon.setCannonAngleSides(robotFacing(), 40.0))
           .alongWith(Commands.runOnce(() -> s_LEDs.setMode(LEDs.LEDMode.CHASING)))) // chasing leds because we have a game piece
       .onFalse(Commands.either(
         Commands.runOnce(s_LEDs::bePurple), 
@@ -368,55 +369,99 @@ public class RobotContainer {
 
   public void setIntakeParameters() {
     if (pickupLocationChooser.getSelected()==PickupLocation.SHELF) {
-   
+      switch (gamePieceTypeChooser.getSelected()) {
+        case CUBE://fill in
+          intakeCannonAngle = 0.0;
+          intakeLidAngle = 275.0;
+          intakeSpeed = -1.0;
+          break;
+        case UPRIGHT_CONE://fill in, should be same as tipped
+          intakeCannonAngle = -7.0;
+          intakeLidAngle = 206.0;
+          intakeSpeed = 1.0;
+          break;
+        case TIPPED_CONE: // fill in, should be same as upright
+          intakeCannonAngle = 10.0;
+          intakeLidAngle = 180.0;
+          intakeSpeed = 1.0;
+          break;
+        case NOTHING:
+          intakeCannonAngle = 90.0;
+          intakeLidAngle = 180.0;
+          intakeSpeed = 0.0;
+          break;
+      }
 
     } else if (pickupLocationChooser.getSelected()==PickupLocation.CHUTE) {
-      
+      switch (gamePieceTypeChooser.getSelected()) {
+        case CUBE://fill in
+          intakeCannonAngle = 0.0;
+          intakeLidAngle = 275.0;
+          intakeSpeed = -1.0;
+          break;
+        case TIPPED_CONE:
+        case UPRIGHT_CONE://fill in, should be same as tipped
+          intakeCannonAngle = 133;
+          intakeLidAngle = 66.65;
+          intakeSpeed = 1.0;
+          break;
+        case NOTHING:
+          intakeCannonAngle = 90.0;
+          intakeLidAngle = 180.0;
+          intakeSpeed = 0.0;
+          break;
+      } 
     
     } else if (pickupLocationChooser.getSelected() == PickupLocation.GROUND) { //either facing community or facing HP and picking up from gnd
       //ground
-      if (robotFacing() == FacingPOI.HUMAN_PLAYER) {
+      if (robotFacing() == FacingPOI.COMMUNITY) {
+        //facing community, lid up, not able to get tipped cones
         switch (gamePieceTypeChooser.getSelected()) {
-          case CUBE:
-            intakeCannonAngle = -10.0;
-            intakeLidAngle = 275.0;
-            intakeSpeed = 1.0;
+          case CUBE://fill in
+            intakeCannonAngle = -11.0;
+            intakeLidAngle = 60.0;
+            intakeSpeed = -1.0;
             break;
-          case UPRIGHT_CONE:
+          case UPRIGHT_CONE://fill in
             intakeCannonAngle = -7.0;
             intakeLidAngle = 206.0;
             intakeSpeed = 1.0;
             break;
           case TIPPED_CONE: // impossible
-            intakeCannonAngle = 190.0;
-            intakeLidAngle = 244.0;
+            intakeCannonAngle = 4.0;
+            intakeLidAngle = 180.0;
             intakeSpeed = 1.0;
             break;
           case NOTHING:
-            intakeCannonAngle = 85.0;
+            intakeCannonAngle = 90.0;
+            intakeLidAngle = 180.0;
+            intakeSpeed = 0.0;
             break;
         }
       }
-      else if (robotFacing() == FacingPOI.COMMUNITY) {
-        //facing HPS
+      else if (robotFacing() == FacingPOI.HUMAN_PLAYER) {
+        //facing HPS, lid down
         switch (gamePieceTypeChooser.getSelected()) {
-          case CUBE:
-            intakeCannonAngle = 160.0;
-            intakeLidAngle = 275.0;
-            intakeSpeed = 1.0;
+          case CUBE://fill in
+            intakeCannonAngle = 193.0;//only fix
+            intakeLidAngle = 40.0;
+            intakeSpeed = -1.0;
             break;
           case UPRIGHT_CONE:
-            intakeCannonAngle = 175.0;
-            intakeLidAngle = 116.0;
-            intakeSpeed = -1.0;
+            intakeCannonAngle = 173.5;
+            intakeLidAngle = 40.0;
+            intakeSpeed = 1.0;
             break; 
           case TIPPED_CONE:
-            intakeCannonAngle = 190.0;
-            intakeLidAngle = 244.0;
+            intakeCannonAngle = 189.4;
+            intakeLidAngle = 112.0;
             intakeSpeed = 1.0;
             break; 
           case NOTHING: 
-            intakeCannonAngle = 85.0;  
+            intakeCannonAngle = 90.0;
+            intakeLidAngle = 180.0;
+            intakeSpeed = 0.0;
+              
             break;
           
           }
@@ -556,5 +601,31 @@ public class RobotContainer {
     
     return new Rotation2d(-Math.atan(oOfOA/aOfOA));
   }
+
+  public Command autoScoreHigh() {
+    return (Commands.runOnce(()-> 
+      s_Cannon.setCannonAngleSides(robotFacing(), 40)
+      // switch ()
+    ))
+      .andThen(new SequentialCommandGroup(Commands.waitUntil(s_Cannon::cannonErrorWithinRange)),
+          Commands.runOnce(()-> s_Cannon.setExtensionInches(35.0)))
+      .andThen(Commands.runOnce(() -> 
+        s_Lid.setLidReference(244)
+      ));
+  }
+
+  public Command autoIntake() {
+    return (Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle))
+    .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(intakeCannonAngle)))
+    .andThen(Commands.runOnce(()-> s_Intake.setIntake(intakeSpeed)))
+    .andThen(Commands.waitSeconds(.1).andThen(Commands.waitUntil(s_Intake::checkForCurrentSpike).until(xBox.rightTrigger().negate())))
+    .andThen(Commands.runOnce(s_Intake::stopIntake)));
+  }
+
+  public Command autoBalanceCmd() {
+    return Commands.runOnce(s_SwerveDrive::autoBalance).until(s_SwerveDrive::isBalanced);
+    
+  }
+
 
 }

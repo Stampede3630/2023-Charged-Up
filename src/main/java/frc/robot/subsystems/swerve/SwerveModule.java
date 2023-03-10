@@ -101,7 +101,7 @@ public class SwerveModule {
         driveMotor.getConfigurator().refresh(driveTalonConfig);
         final Slot0Configs DriveMotorGains = new Slot0Configs();
 
-        DriveMotorGains.kP = 0;
+        DriveMotorGains.kP = SwerveConstants.kP;
         DriveMotorGains.kI = 0;
         DriveMotorGains.kD = 0;
         DriveMotorGains.kS = SwerveConstants.kS;
