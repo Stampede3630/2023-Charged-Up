@@ -55,18 +55,18 @@ public class NodePosition {
     * R 132 + 42.19
     */
     public enum NodeGrid {
-      LOW_LEFT(0, -22, 0, "leftLow", 180),
-      LOW_CENTER(0, 0, 0, "midLow", 180),
-      LOW_RIGHT(0, 22, 0,"rightLow", 180),
+      LOW_LEFT(0, -22, 0, "leftLow", 180, 37.5),
+      LOW_CENTER(0, 0, 0, "midLow", 180, 100),
+      LOW_RIGHT(0, 22, 0,"rightLow", 180, 37.5),
   
-      MID_LEFT(45-27, -22, 0, "leftMid", 140),
-      MID_CENTER(45-27, 0, 0, "midMid", 140),
-      MID_RIGHT(45-27, 22, 0,"rightMid", 140),
+      MID_LEFT( 9.7, -22, 0, "leftMid", 139.5, 37.5),
+      MID_CENTER(7.5, 0, 0, "midMid", 154.3, 100),
+      MID_RIGHT(19.7, 22, 0,"rightMid", 139.5, 37.5),
   
   
-      HIGH_LEFT(60-27, -22, 0, "leftHigh", 140),
-      HIGH_CENTER(60-27, 0, 0, "midHigh", 140),
-      HIGH_RIGHT(60-27, 22, 0, "rightHigh", 140);
+      HIGH_LEFT(40, -22, 0, "leftHigh", 141.3, 37.5),
+      HIGH_CENTER(38.0, 0, 0, "midHigh", 141.3, 100),
+      HIGH_RIGHT(40, 22, 0, "rightHigh", 141.3, 37.5);
       
   
       public final double extension;
@@ -74,12 +74,22 @@ public class NodePosition {
       public final double yOffset;
       public final String widgetName;
       public final double cannonAngle;
-      private NodeGrid(double extension, double yOffset, double xOffset, String widgetName, double cannonAngle) {
+      public final double lidPosition;
+      private NodeGrid(double extension, double yOffset, double xOffset, String widgetName, double cannonAngle, double lidPosition) {
         this.extension = extension;
         this.xOffset = xOffset;
         this.yOffset = yOffset;
         this.cannonAngle = cannonAngle;
         this.widgetName = widgetName;
+        this.lidPosition = lidPosition;
+      }
+
+      public double getNodeCannonAngle(){
+        return cannonAngle;
+      }
+
+      public double getNodeLidPosition(){
+        return lidPosition;
       }
     }
 
