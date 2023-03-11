@@ -70,7 +70,7 @@ public class Intake extends SubsystemBase implements Loggable{
         return m_intakeMotor.getOutputCurrent();
     }
 
-    @Log
+    @Log(tabName = "nodeSelector")
     public boolean haveGamePiece() {
         return haveGamePiece;
     }
@@ -83,7 +83,7 @@ public class Intake extends SubsystemBase implements Loggable{
         haveGamePiece = (getIntakeCurrent() > IntakeConstants.GAME_PIECE_DETECTION_AMPS) || (intakeHardStop.isPressed()) ? true : haveGamePiece;
         return haveGamePiece;
     }
-  @Config
+  @Config(tabName = "nodeSelector")
   public void setHaveGamePiece(boolean input) {
       this.haveGamePiece = input;
   }
