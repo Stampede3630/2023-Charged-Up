@@ -62,12 +62,12 @@ public final class Constants {
   public static final class IntakeConstants{
     public static final int SPARK_MAX_ID = 14;
     public static final int CURRENT_LIMIT = 40;
-    public static final double GAME_PIECE_DETECTION_AMPS = 40;
+    public static final double GAME_PIECE_DETECTION_AMPS = 32;
   }
 
   public static final class LidConstants{
     public static final int SPARK_MAX_ID = 19;
-    public static final double INITIALIZED_ANGLE = 180;
+    public static final double INITIALIZED_ANGLE = 100;
     public static final double CONVERSION_FACTOR = 360;
     public static final float FORWARD_LIMIT = 260.0f;
     public static final float REVERSE_LIMIT = 35.0f;
@@ -78,7 +78,6 @@ public final class Constants {
     public static final double KI = 0.0;
     public static final double KD = 0.0; //used to be 0
   }
-
 
   public static final Translation2d blueScorePos[] = new Translation2d[] {
     new Translation2d(0, 0),

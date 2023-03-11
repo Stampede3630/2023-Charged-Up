@@ -63,9 +63,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
   AHRS gyro;
   SimGyroSensorModel simNavx; 
   SwerveDrivePoseEstimator m_odometry; 
-  @Log
   double holdHeadingAngle = 0;
-  @Log
   boolean holdHeadingEnabled = false;
   ProfiledPIDController rotationController, rollRotationController, pitchRotationController;
   double rotationControllerOutput;
@@ -75,14 +73,13 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
 
   boolean balanced=false;
 
-  @Log
   public Field2d m_field;
 
   public SwerveDrive() {
-    rollRotationController =new ProfiledPIDController(5.4/15, 0, 0, 
+    rollRotationController =new ProfiledPIDController(5.4/67, 0, 0, 
       new TrapezoidProfile.Constraints(5.4,5.4));
-    pitchRotationController = new ProfiledPIDController(5.4/15, 0, 0, 
-      new TrapezoidProfile.Constraints(5.4,5.4));
+    pitchRotationController = new ProfiledPIDController(5.4/67, 0, 0, 
+      new TrapezoidProfile.Constraints(.7,.7));
     rotationController = new ProfiledPIDController(
       Preferences.getDouble("pKPRotationController", SwerveConstants.kPRotationController),
       Preferences.getDouble("pIPRotationController", SwerveConstants.kIRotationController),
@@ -203,7 +200,6 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
     }
   }
 
-  @Log
   public boolean getAtGoal(){
     return rotationController.atGoal();
   }
@@ -228,7 +224,6 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
     return getPose().getRotation().getDegrees();
   }
 
-  @Log
   public double getRobotAngleDegrees() {
     return getRobotAngle().getDegrees();
   }
@@ -385,7 +380,6 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
 
   }
 
-  @Log
   public double limelightLatencyFront(){
     double vLatency = 0;
     vLatency = NetworkTableInstance.getDefault().getTable("limelight-front").getEntry("tl").getDouble(vLatency);
@@ -393,7 +387,6 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
     return (vLatency * 0.001) + (11 * 0.001);
   }
 
-  @Log
   public double limelightLatencyBack(){
     double vLatency = 0;
     vLatency = NetworkTableInstance.getDefault().getTable("limelight-back").getEntry("tl").getDouble(vLatency);
@@ -404,19 +397,19 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
   @Config(defaultValueBoolean = false)
   public void zeroOdometry(boolean input){
     if(input){
-      m_odometry.resetPosition(new Rotation2d(), m_driveTrain.getModulePositions(), new Pose2d());
+      m_odometry.resetPosition(gyro.getRotation2d(), m_driveTrain.getModulePositions(), new Pose2d());
       gyro.reset();
     }
   }
 
-  @Log
+  @Log // using @Log to run something periodically
   public double  trapRollAutoBalance(){
     return rollRotationController.calculate(gyro.getRoll(), new State(0,0));
   }
 
   @Log
   public double  trapPitchAutoBalance(){
-    return rollRotationController.calculate(gyro.getRoll(), new State(0,0));
+    return -pitchRotationController.calculate(gyro.getPitch(), new State(0,0));
   }
 
   public void autoBalance(){
@@ -427,6 +420,9 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
     } else {
       setDriveSpeeds(new Translation2d(trapPitchAutoBalance(),trapRollAutoBalance()), 0, false);
       balanced= false;
+    }
+    if (DriverStation.getMatchTime() < 0.2) { // activate defensive if running out of time
+      m_driveTrain.activateDefensiveStop(getPose().getRotation());
     }
   }
 

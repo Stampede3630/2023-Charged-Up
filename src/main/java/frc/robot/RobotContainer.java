@@ -36,6 +36,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.ProxyCommand;
 import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -70,7 +71,7 @@ public class RobotContainer {
   private final CommandXboxController xBox = new CommandXboxController(0);
 
   SwerveAutoBuilder autoBuilder;
-  public final String[] AUTOS_TO_LOAD = {"chargeScoreCube", "onePieceConeGrab","onePieceCubeGrab","twoPieceCube","twoPieceCone","LZTwoPieceCone","LZTwoPieceCube","LZTwoPieceCubeCharge"};
+  public final String[] AUTOS_TO_LOAD = {"onlyScoreCube", "chargeScoreCube", "onePieceConeGrab","onePieceCubeGrab","twoPieceCube","twoPieceCone","LZTwoPieceCone","LZTwoPieceCube","LZTwoPieceCubeCharge"};
 
 
   // This is just an example event map. It would be better to have a constant,
@@ -89,7 +90,6 @@ public class RobotContainer {
   SendableChooser<List<PathPlannerTrajectory>> autoSelect = new SendableChooser<>();
   PowerDistribution pdh = new PowerDistribution(1,ModuleType.kRev);
 
-  @Log
   private final SwerveDrive s_SwerveDrive = new SwerveDrive();
   // The robot's subsystems and commands are defined here...
   private final TheCannon s_Cannon = new TheCannon();
@@ -100,11 +100,12 @@ public class RobotContainer {
   
   public double intakeCannonAngle;
   public double intakeLidAngle;
-  @Log
   public double intakeSpeed;
   public boolean facingOverrideButton;
 
   private double intakeExtensionInches;
+
+  private boolean sniperMode;
   // private GamePieceType prev;  
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -214,7 +215,7 @@ public class RobotContainer {
         s_SwerveDrive::getOdometryPose, // Pose2d supplier
         s_SwerveDrive::resetOdometry, // Pose2d consumer, used to reset odometry at the beginning of auto
         s_SwerveDrive.getKinematics(), // SwerveDriveKinematics
-        new PIDConstants(SwerveConstants.kP, 0.0, 0.0), // PID constants to correct for translation error (used to create the X and Y
+        new PIDConstants(1, 0.0, 0.0), // PID constants to correct for translation error (used to create the X and Y
                                        // PID controllers)
         new PIDConstants(1, 0.0, 0.0), // PID constants to correct for rotation error (used to create the rotation
                                        // controller)
@@ -226,15 +227,17 @@ public class RobotContainer {
 
     for (String autoName : AUTOS_TO_LOAD) { // load all autos dynamically
       autoSelect.addOption(autoName, PathPlanner.loadPathGroup(autoName,
-        new PathConstraints(.5, .5)));
+        new PathConstraints(1, 1)));
     }
+    autoSelect.setDefaultOption("chargeScoreCube", PathPlanner.loadPathGroup("chargeScoreCube", new PathConstraints(1, 1)));
 
 
     s_SwerveDrive.setDefaultCommand(
         s_SwerveDrive.joystickDriveCommand(
-            xBox::getLeftY,
-            xBox::getLeftX,
-            xBox::getRightX).withName("DefaultDrive"));
+            () -> xBox.getLeftY() * (sniperMode ? 0.5 : 1),
+            () -> xBox.getLeftX() * (sniperMode ? 0.5 : 1),
+            () -> xBox.getRightX() * (sniperMode ? 0.5 : 1))
+        .withName("DefaultDrive"));
     
     // Configure the button bindings
     configureButtonBindings();
@@ -273,6 +276,10 @@ public class RobotContainer {
      * HOLD HEADING mode and set a heading
      */
 
+    xBox.rightStick()
+      .debounce(.1)
+      .onTrue(Commands.runOnce(() -> sniperMode = true))
+      .onFalse(Commands.runOnce(() -> sniperMode = false));
     new Trigger(() -> Math.abs(xBox.getRightX()) < .1)
         .and(s_SwerveDrive::getHoldHeadingFlag)
         .and(new Trigger(s_SwerveDrive::getAtGoal).negate())
@@ -315,13 +322,16 @@ public class RobotContainer {
             () -> s_Cannon.getExtensionEncoder() < 10) // "dangerous" or not
           .andThen(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle)))
           .andThen(Commands.runOnce(()-> s_Intake.setIntake(intakeSpeed)))
-          .andThen(Commands.waitSeconds(.1).andThen(Commands.waitUntil(s_Intake::checkForCurrentSpike).until(xBox.rightTrigger().negate())))
+          .alongWith(new PrintCommand("I'm Intaking with: " + intakeSpeed + "!"))
+          .andThen(Commands.waitSeconds(.1)
+            .andThen(Commands.waitUntil(s_Intake::checkForCurrentSpike)
+            .until(xBox.rightTrigger().debounce(.1, DebounceType.kFalling).negate())))
           .andThen(Commands.runOnce(s_Intake::stopIntake)))
         .onFalse(Commands.runOnce(s_Intake::stopIntake));
     
     //-> Outtake trigger
     xBox.leftTrigger(.55).debounce(.1, DebounceType.kFalling)
-        .onTrue(Commands.runOnce(()-> s_Intake.setIntake(-intakeSpeed)).alongWith(Commands.runOnce(s_Intake::leaveGamePiece)))
+        .onTrue(Commands.runOnce(()-> s_Intake.setIntake(-intakeSpeed/4)).alongWith(Commands.runOnce(s_Intake::leaveGamePiece)))
         .onFalse(Commands.runOnce(s_Intake::stopIntake)
           .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(1)))
           .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
@@ -337,7 +347,6 @@ public class RobotContainer {
     xBox.rightBumper().debounce(.1, DebounceType.kFalling)
         .whileTrue(Commands.runOnce(()-> s_Intake.setIntake(-1)))
         .onFalse(Commands.runOnce(s_Intake::stopIntake));
-
     //-> extension + cannonRot to setpoint
     xBox.y()
         .onTrue((Commands.runOnce(()-> {
@@ -408,6 +417,7 @@ public class RobotContainer {
           intakeCannonAngle = 90.0;
           intakeLidAngle = 60.0;
           intakeSpeed = 0.0;
+          intakeExtensionInches = 0;
           break;
       }
 
@@ -417,21 +427,25 @@ public class RobotContainer {
           intakeCannonAngle = 130.0;
           intakeLidAngle = 55.0;
           intakeSpeed = -1.0;
+          intakeExtensionInches = 0;
           break;
         case TIPPED_CONE:
-          intakeCannonAngle = 133.0;
+          intakeCannonAngle = 128.0;
           intakeLidAngle = 66.7;
           intakeSpeed = 1.0;
+          intakeExtensionInches = 0;
           break;
         case UPRIGHT_CONE://should be same as tipped
-          intakeCannonAngle = 133;
-          intakeLidAngle = 66.65;
+          intakeCannonAngle = 128.0;
+          intakeLidAngle = 66.7;
           intakeSpeed = 1.0;
+          intakeExtensionInches = 0;
           break;
         case NOTHING:
           intakeCannonAngle = 90.0;
           intakeLidAngle = 60.0;
           intakeSpeed = 0.0;
+          intakeExtensionInches = 0;
           break;
       } 
     
@@ -444,49 +458,54 @@ public class RobotContainer {
             intakeCannonAngle = -11.0;
             intakeLidAngle = 60.0;
             intakeSpeed = -1.0;
-            intakeExtensionInches = 3.0;
+            intakeExtensionInches = 1.5;
             break;
           case UPRIGHT_CONE://fill in
             intakeCannonAngle = -7.0;
             intakeLidAngle = 206.0;
             intakeSpeed = 1.0;
+            intakeExtensionInches = 0;
             break;
           case TIPPED_CONE: // impossible
             intakeCannonAngle = 4.0;
             intakeLidAngle = 180.0;
             intakeSpeed = 1.0;
+            intakeExtensionInches = 0;
             break;
           case NOTHING:
             intakeCannonAngle = 90.0;
             intakeLidAngle = 60.0;
             intakeSpeed = 0.0;
+            intakeExtensionInches = 0;
             break;
         }
       }
-      else if (robotFacing() == FacingPOI.HUMAN_PLAYER) {
-        //facing HPS, lid down
+      else {
+        //facing HPS or nothing, lid down
         switch (gamePieceTypeChooser.getSelected()) {
           case CUBE://fill in
-            intakeCannonAngle = 193.0;//only fix
-            intakeLidAngle = 40.0;
+            intakeCannonAngle = 190.0;//fix
+            intakeLidAngle = 35.0;
             intakeSpeed = -1.0;
-            intakeExtensionInches = 0.0;
+            intakeExtensionInches = 1.5;//fix
             break;
-          case UPRIGHT_CONE:
-            intakeCannonAngle = 173.5;
+          case UPRIGHT_CONE://WORKS
+            intakeCannonAngle = 175.0;
             intakeLidAngle = 40.0;
             intakeSpeed = 1.0;
+            intakeExtensionInches = 0;
             break; 
           case TIPPED_CONE:
             intakeCannonAngle = 189.4;
             intakeLidAngle = 112.0;
             intakeSpeed = 1.0;
+            intakeExtensionInches = 0;
             break; 
           case NOTHING: 
             intakeCannonAngle = 90.0;
             intakeLidAngle = 60.0;
             intakeSpeed = 0.0;
-              
+            intakeExtensionInches = 0;
             break;
           
           }
@@ -495,7 +514,8 @@ public class RobotContainer {
   }
 
   public Command getAutonomousCommand() {
-    return autoBuilder.fullAuto(autoSelect.getSelected());
+    // return autoBuilder.fullAuto(autoSelect.getSelected());
+    return autoScoreHighCube();
   }
 // //TODO: Commented this out because it's not ready
   // public List<PathPlannerTrajectory> autoPathGroupOnTheFly() {
@@ -512,7 +532,6 @@ public class RobotContainer {
   //   return PGOTF;
   // }
 
-  @Log
   public double getYOffset() {
     return NodePosition.getNodePosition(nodeGroupChooser.getSelected(), nodeGridChooser.getSelected()).getYCoord();
   }
@@ -531,7 +550,6 @@ public class RobotContainer {
     return robotFacing().toString();
   }
 
-  @Log
   public String cannonFacingString() {
     return cannonFacing().toString();
   }
@@ -631,7 +649,7 @@ public class RobotContainer {
     return Commands.runOnce(()->s_Lid.setLid(NodePosition.NodeGrid.HIGH_CENTER.getNodeLidPositionLidUp()))
       .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(NodePosition.NodeGrid.HIGH_CENTER.getNodeCannonAngleLidUp())))
       .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
-      .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(NodePosition.NodeGrid.HIGH_CENTER.getNodeCannonAngleLidUp())))
+      .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(30.0)))
       .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
       .andThen(()->s_Intake.setIntake(1.0))
       .andThen(Commands.waitSeconds(0.5))
@@ -645,7 +663,7 @@ public class RobotContainer {
     return Commands.runOnce(()->s_Lid.setLid(NodePosition.NodeGrid.HIGH_LEFT.getNodeLidPositionLidUp()))
       .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(NodePosition.NodeGrid.HIGH_LEFT.getNodeCannonAngleLidUp())))
       .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
-      .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(NodePosition.NodeGrid.HIGH_LEFT.getNodeCannonAngleLidUp())))
+      .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(NodePosition.NodeGrid.HIGH_LEFT.getExtension())))
       .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
       .andThen(()->s_Intake.setIntake(-1.0))
       .andThen(Commands.waitSeconds(0.5))

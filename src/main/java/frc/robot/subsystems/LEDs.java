@@ -56,7 +56,6 @@ public class LEDs extends SubsystemBase implements Loggable{
     this.mode = mode;
   }
 
-  @Log
   public String getMode() {
       return mode.name();
   }
@@ -160,17 +159,14 @@ public class LEDs extends SubsystemBase implements Loggable{
     previousTime = currentTime;
   }
 
-  @Config
   public void setR(int r) {
     this.r = r;
   }
 
-  @Config
   public void setG(int g) {
     this.g = g;
   }
 
-  @Config
   public void setB(int b) {
     this.b = b;
   }

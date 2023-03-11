@@ -213,7 +213,6 @@ private ArmFeedforward m_feedforward =
     return cannonAbsolute.getPosition() - 90;
   }
 
-  @Log
   public double getArbitraryFeedForward() {
     return m_feedforward.calculate(Math.toRadians(getCannonAngleEncoder()),
         Math.toRadians(getCannonVelocity()));

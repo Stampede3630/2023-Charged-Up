@@ -75,7 +75,6 @@ public class Lid extends SubsystemBase implements Loggable{
         return m_lidAbsolute.getPosition();
     }
     
-    @Log
     public double getLidCurrent() {
         return m_lidMotor.getOutputCurrent();
     }

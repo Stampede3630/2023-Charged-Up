@@ -22,8 +22,6 @@ public class Intake extends SubsystemBase implements Loggable{
     private RelativeEncoder m_intakeEncoder = m_intakeMotor.getEncoder();
     private SparkMaxPIDController m_intakePid = m_intakeMotor.getPIDController();
     private SparkMaxLimitSwitch intakeHardStop = m_intakeMotor.getReverseLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen);
-
-    @Log
     private double speed = 0;
     private boolean haveGamePiece = false;
     public Intake() {
@@ -63,12 +61,11 @@ public class Intake extends SubsystemBase implements Loggable{
         speed = 0;
     }
 
-    @Log
     public boolean getIntakeHardStop(){
       return intakeHardStop.isPressed();
     }
 
-    @Log.Graph
+    // @Log.Graph
     public double getIntakeCurrent() {
         return m_intakeMotor.getOutputCurrent();
     }
@@ -86,4 +83,8 @@ public class Intake extends SubsystemBase implements Loggable{
         haveGamePiece = (getIntakeCurrent() > IntakeConstants.GAME_PIECE_DETECTION_AMPS) || (intakeHardStop.isPressed()) ? true : haveGamePiece;
         return haveGamePiece;
     }
+  @Config
+  public void setHaveGamePiece(boolean input) {
+      this.haveGamePiece = input;
+  }
 }

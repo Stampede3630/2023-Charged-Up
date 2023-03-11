@@ -8,10 +8,10 @@ public class SendableChooserWrapper<V> extends SendableChooser<V> {
         boolean didItChange = false;
         try {
             didItChange = previousSelection.equals(getSelected());
-            previousSelection = getSelected();
         } catch (NullPointerException ignored) {
 
         }
+        previousSelection = getSelected();
         return didItChange;
     }
 }

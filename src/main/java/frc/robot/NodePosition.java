@@ -53,14 +53,14 @@ public class NodePosition {
       LOW_CENTER(0, 0, 0, "midLow", 180, 100, 0, 100),
       LOW_RIGHT(0, 22, 0,"rightLow", 180, 37.5, 0.0, 150.0),
   
-      MID_LEFT(19.7, -22, 0, "leftMid", 139.5, 37.5, 26.0, 150),
-      MID_CENTER(7.5, 0, 0, "midMid", 154.3, 100.0, 25.7, 100.0),
-      MID_RIGHT(19.7, 22, 0,"rightMid", 139.5, 37.5, 26.0, 150),
+      MID_LEFT(19.7, -22, 0, "leftMid", 139.5, 37.5, 26.0, 130.0),
+      MID_CENTER(9.5, 0, 0, "midMid", 154.3, 100.0, 25.7, 100.0),
+      MID_RIGHT(19.7, 22, 0,"rightMid", 139.5, 37.5, 26.0, 130.0),
   
   
-      HIGH_LEFT(40, -22, 0, "leftHigh", 141.3, 37.5, 23.6, 150),
-      HIGH_CENTER(38.0, 0, 0, "midHigh", 141.3, 100.0, 38.7, 100.0),
-      HIGH_RIGHT(40, 22, 0, "rightHigh", 141.3, 37.5, 23.6, 150);
+      HIGH_LEFT(32.5, -22, 0, "leftHigh", 141.3, 37.5, 33.0, 135.0), //WORKS
+      HIGH_CENTER(30.0, 0, 0, "midHigh", 141.3, 100.0, 38.7, 100.0), //WORKS
+      HIGH_RIGHT(32.5, 22, 0, "rightHigh", 141.3, 37.5, 33.0, 135.0); //WORKS
       
   
       public final double extension;
