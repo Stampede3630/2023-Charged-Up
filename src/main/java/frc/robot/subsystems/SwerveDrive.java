@@ -77,7 +77,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
 
   public SwerveDrive() {
     rollRotationController =new ProfiledPIDController(5.4/67, 0, 0, 
-      new TrapezoidProfile.Constraints(5.4,5.4));
+      new TrapezoidProfile.Constraints(.7,.7));
     pitchRotationController = new ProfiledPIDController(5.4/67, 0, 0, 
       new TrapezoidProfile.Constraints(.7,.7));
     rotationController = new ProfiledPIDController(
@@ -381,6 +381,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
   }
 
   public double limelightLatencyFront(){
+
     double vLatency = 0;
     vLatency = NetworkTableInstance.getDefault().getTable("limelight-front").getEntry("tl").getDouble(vLatency);
    
@@ -426,8 +427,12 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
     }
   }
 
+  public void activateDefensiveStop() {
+    m_driveTrain.activateDefensiveStop(getPose().getRotation());
+  }
+
   public Command autoBalanceCommand(){
-    return Commands.run(()->autoBalance());
+    return Commands.run(this::autoBalance).until(() -> balanced);
   }
 
   public boolean isBalanced() {

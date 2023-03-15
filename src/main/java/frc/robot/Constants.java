@@ -38,11 +38,11 @@ public final class Constants {
     public static final double KGB = 8.57E-3;
 
     public static final double CONVERSION_FACTOR = 360;
-    public static final double ZERO_OFFSET = 360+(143.6330116-180);
+    public static final double ZERO_OFFSET = 360+(143.6330116-180 - 6.0); //4.0 added for error compensation
     public static final int  CURRENT_LIMIT = 60; //used to be 70
-    public static final float FORWARD_LIMIT = 195.0f;
+    public static final float FORWARD_LIMIT = 220.0f;
     public static final float REVERSE_LIMIT = -20.0f;
-    public static final double INITIALIZED_ANGLE = 90.0;
+    public static final double INITIALIZED_ANGLE = 85.0;
     public static final double ERROR = 10.0;
   }
 

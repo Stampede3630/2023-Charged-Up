@@ -77,10 +77,10 @@ public final class SwerveConstants {
     public static Gains BRDriveGains = new Gains(0.0007, 0, 0, 1023.0 / 20660.0);
     public static Gains BLDriveGains = new Gains(0.0007, 0, 0, 1023.0 / 20660.0);
 
-    public static final double kS = 0.21355;
-    public static final double kV = 0.7013;
-    public static final double kA = 0.14234;
-    public static final double kP = 0.54897; //now better!
+    public static final double kS = 0.13766;//0.21355;
+    public static final double kV = 0.69714;//0.7013;
+    public static final double kA = 0.23374;//0.14234;
+    public static final double kP = 1.4395;//0.54897; //now better!
 
     // CTRE CAN-based constants (shouldn't need to change these)
     public static final int kDefaultPIDSlotID = 0;

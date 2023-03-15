@@ -66,7 +66,7 @@
       "isStopPoint": false,
       "stopEvent": {
         "names": [
-          "autoScoreHighCone"
+          "autoScoreMidCone"
         ],
         "executionBehavior": "sequential",
         "waitBehavior": "none",
@@ -76,7 +76,7 @@
   ],
   "markers": [
     {
-      "position": 1.1636363636363638,
+      "position": 0.7818181818181817,
       "names": [
         "autoIntake"
       ]

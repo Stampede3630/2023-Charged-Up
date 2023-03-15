@@ -171,14 +171,6 @@ private ArmFeedforward m_feedforward =
     return Math.abs(extensionInches - getExtensionEncoder()) < ExtendoConstants.ERROR;
   }
 
-  // public void stowMode() {
-  //   cannonRotLead.set(0);
-  //   cannonExtension.set(0);
-  //   // cannonRotLeadPID.setReference(3, ControlType.kPosition);
-  //   // cannonAbsolute.setPosition(3);
-
-  // }
-
   public void manExtend() {
     // extension motor spins
     extensionInches += 1;
@@ -227,7 +219,7 @@ private ArmFeedforward m_feedforward =
   public void setExtensionInches(double input){
     extensionInches = input;
   }
-  @Config.NumberSlider(max = 200, min = -20, defaultValue = CannonConstants.INITIALIZED_ANGLE)
+  @Config.NumberSlider(max = 230, min = -20, defaultValue = CannonConstants.INITIALIZED_ANGLE)
   public void setCannonAngle(double input){
     cannonRotation = input;
   }

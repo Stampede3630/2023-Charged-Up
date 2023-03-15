@@ -10,8 +10,13 @@ import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
 
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.wpilibj.Preferences;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.IntakeConstants;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Config;
@@ -28,20 +33,11 @@ public class Intake extends SubsystemBase implements Loggable{
 
         m_intakeMotor.setSmartCurrentLimit(70);
 
-
                 
         // cannonExtension.setInverted(true);
         //changed idle mode to help with troubleshooting    
         m_intakeMotor.setIdleMode(IdleMode.kCoast);
-        intakeHardStop.enableLimitSwitch(true);
-
-        // m_intakePid.setFeedbackDevice(m_intakeEncoder);
-        // m_intakePid.setPositionPIDWrappingEnabled(false);
-
-        // m_intakePid.setP(Preferences.getDouble("IntakeKP", 1.0/30.0));
-        // m_intakePid.setI(Preferences.getDouble("IntakeKI", 0.0));
-        // m_intakePid.setD(Preferences.getDouble("IntakeKD", 0.0));
-        // m_intakePid.setOutputRange(-.5, .5);
+        intakeHardStop.enableLimitSwitch(true); 
 
         m_intakeMotor.burnFlash();
         
@@ -65,12 +61,12 @@ public class Intake extends SubsystemBase implements Loggable{
       return intakeHardStop.isPressed();
     }
 
-    // @Log.Graph
+    @Log.Graph
     public double getIntakeCurrent() {
         return m_intakeMotor.getOutputCurrent();
     }
 
-    @Log(tabName = "nodeSelector")
+    @Log.BooleanBox(tabName = "nodeSelector")
     public boolean haveGamePiece() {
         return haveGamePiece;
     }
@@ -80,11 +76,20 @@ public class Intake extends SubsystemBase implements Loggable{
     }
 
     public boolean checkForCurrentSpike() {
-        haveGamePiece = (getIntakeCurrent() > IntakeConstants.GAME_PIECE_DETECTION_AMPS) || (intakeHardStop.isPressed()) ? true : haveGamePiece;
+        haveGamePiece = intakeHardStop.isPressed() ? true : haveGamePiece; // latching
         return haveGamePiece;
     }
-  @Config(tabName = "nodeSelector")
+  @Config.ToggleButton(tabName = "nodeSelector")
   public void setHaveGamePiece(boolean input) {
       this.haveGamePiece = input;
+  }
+
+  public boolean limitSwitchPressed() {
+    return intakeHardStop.isPressed();
+  }
+
+  public Command waitUntilHaveGamePiece() {
+    return Commands.waitUntil(new Trigger(() -> getIntakeCurrent() > 30).debounce(.1, DebounceType.kRising))
+        .raceWith(Commands.waitUntil(this::limitSwitchPressed)).andThen(Commands.runOnce(() -> haveGamePiece = true));
   }
 }

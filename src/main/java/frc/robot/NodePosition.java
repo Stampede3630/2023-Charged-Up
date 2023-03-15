@@ -53,9 +53,9 @@ public class NodePosition {
       LOW_CENTER(0, 0, 0, "midLow", 180, 100, 0, 100),
       LOW_RIGHT(0, 22, 0,"rightLow", 180, 37.5, 0.0, 150.0),
   
-      MID_LEFT(19.7, -22, 0, "leftMid", 139.5, 37.5, 26.0, 130.0),
+      MID_LEFT(16.0, -22, 0, "leftMid", 47.0, 37.5, 26.0, 130.0),
       MID_CENTER(9.5, 0, 0, "midMid", 154.3, 100.0, 25.7, 100.0),
-      MID_RIGHT(19.7, 22, 0,"rightMid", 139.5, 37.5, 26.0, 130.0),
+      MID_RIGHT(16.0, 22, 0,"rightMid", 47.0, 37.5, 26.0, 130.0),
   
   
       HIGH_LEFT(32.5, -22, 0, "leftHigh", 141.3, 37.5, 33.0, 135.0), //WORKS
