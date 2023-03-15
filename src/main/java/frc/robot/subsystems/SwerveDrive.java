@@ -165,9 +165,8 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
       () -> {
         double x = -(Math.abs(_x.getAsDouble()) < .1 ? 0 : _x.getAsDouble());
         double y = -(Math.abs(_y.getAsDouble()) < .1 ? 0 : _y.getAsDouble());
-        double rot = Math.pow((Math.abs(_rot.getAsDouble()) < .1 ? 0 : _rot.getAsDouble()), 3);
+        double rot = -Math.pow((Math.abs(_rot.getAsDouble()) < .1 ? 0 : _rot.getAsDouble()), 3);
         double joystickDriveGovernor = Preferences.getDouble("pDriveGovernor", DriverConstants.DRIVE_GOVERNOR);
-        
         if (Preferences.getBoolean("pAccelInputs", DriverConstants.ACCELERATED_INPUTS)) {
 
         } else {
@@ -361,7 +360,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
 
   public Pose2d limelightBotPoseBack(){
 
-    double myArray[] = {0, 0, 0, 0, 0, 0};
+    double myArray[] = {0, 0, 0, 0, 0, 0, 0};
     String allianceColorBotPose = DriverStation.getAlliance() == Alliance.Red ? "botpose_wpired" : "botpose_wpiblue";
 
       myArray = NetworkTableInstance.getDefault().getTable("limelight-back").getEntry(allianceColorBotPose).getDoubleArray(myArray);
@@ -382,17 +381,33 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
 
   public double limelightLatencyFront(){
 
-    double vLatency = 0;
-    vLatency = NetworkTableInstance.getDefault().getTable("limelight-front").getEntry("tl").getDouble(vLatency);
+    // double vLatency = 0;
+    // vLatency = NetworkTableInstance.getDefault().getTable("limelight-front").getEntry("tl").getDouble(vLatency);
    
-    return (vLatency * 0.001) + (11 * 0.001);
+    // return (vLatency * 0.001) + (11 * 0.001);
+
+    double myArray[] = {0, 0, 0, 0, 0, 0, 0};
+    String allianceColorBotPose = DriverStation.getAlliance() == Alliance.Red ? "botpose_wpired" : "botpose_wpiblue";
+
+    myArray = NetworkTableInstance.getDefault().getTable("limelight-front").getEntry(allianceColorBotPose).getDoubleArray(myArray);
+    
+
+    return Timer.getFPGATimestamp() - myArray[6]/1000.0;
   }
 
   public double limelightLatencyBack(){
-    double vLatency = 0;
-    vLatency = NetworkTableInstance.getDefault().getTable("limelight-back").getEntry("tl").getDouble(vLatency);
+    // double vLatency = 0;
+    // vLatency = NetworkTableInstance.getDefault().getTable("limelight-back").getEntry("tl").getDouble(vLatency);
    
-    return (vLatency * 0.001) + (11 * 0.001);
+    // return (vLatency * 0.001) + (11 * 0.001);
+
+    double myArray[] = {0, 0, 0, 0, 0, 0, 0};
+    String allianceColorBotPose = DriverStation.getAlliance() == Alliance.Red ? "botpose_wpired" : "botpose_wpiblue";
+
+    myArray = NetworkTableInstance.getDefault().getTable("limelight-back").getEntry(allianceColorBotPose).getDoubleArray(myArray);
+    
+
+    return Timer.getFPGATimestamp() - myArray[6]/1000.0;
   }
 
   @Config(defaultValueBoolean = false)
@@ -432,7 +447,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
   }
 
   public Command autoBalanceCommand(){
-    return Commands.run(this::autoBalance).until(() -> balanced);
+    return Commands.run(this::autoBalance).until(() -> balanced).andThen(Commands.run(this::activateDefensiveStop));
   }
 
   public boolean isBalanced() {

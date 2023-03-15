@@ -16,8 +16,6 @@ public final class SwerveConstants {
     public static final double MAX_SPEED_TICKSper100MS = 21900;
     public static final double STEERING_MOTOR_GEARING = 150.0/7.0; //L3, probably?
     public static final double DRIVE_MOTOR_GEARING = 300.0/49.0; // 1/(14/50*25/19*15/45)
-    public static final double SPEED_GOVERNOR = 1; // .11 is a good safe start. Unlock it to "1" when you're confident
-                                                   // with the robot
     public static final double TRACK_WIDE = 20.1 * 2.54 / 100;
 
     // SWERVE Drive Default Values
@@ -30,31 +28,31 @@ public final class SwerveConstants {
     public static final double kIRotationController = 0;
 
     // Swerve Drive Motor IDs
-    public static final int FRDriveID = 0;
-    public static final int FLDriveID = 10;
-    public static final int BRDriveID = 1;
-    public static final int BLDriveID = 15;
+    public static final int FRDriveID = 15;
+    public static final int FLDriveID = 1;
+    public static final int BRDriveID = 10;
+    public static final int BLDriveID = 0;
 
     // Swerve Steer Motor IDs
-    public static final int FRSteerID = 3;
-    public static final int FLSteerID = 12;
-    public static final int BRSteerID = 2;
-    public static final int BLSteerID = 16;
+    public static final int FRSteerID = 16;
+    public static final int FLSteerID = 2;
+    public static final int BRSteerID = 12;
+    public static final int BLSteerID = 3;
 
     // Swerve CANCoder Sensor IDs
-    public static final int FRSensorID = 2;
-    public static final int FLSensorID = 6;
-    public static final int BRSensorID = 4;
-    public static final int BLSensorID = 8;
+    public static final int FRSensorID = 8;
+    public static final int FLSensorID = 4;
+    public static final int BRSensorID = 6;
+    public static final int BLSensorID = 2;
 
     // Swerve CANCoder Sensort offsets
     // CHANGE TO 0 first, reset the sensor,
     // PHYSICALLY zero out the motor
     // place the OPPOSITE of the value
-    public static double FRSensorOffset = -0.661377 ; // 121.904; test? values
-    public static double FLSensorOffset = -0.882812 ;// 40.869;-.878174 
-    public static double BRSensorOffset = -0.870850 ;// 179.561; 
-    public static double BLSensorOffset = -0.063232  ;// -24.873; -.541992 
+    public static double FRSensorOffset = -0.585205   ; // 121.904; test? values
+    public static double FLSensorOffset = -0.365479   ;// 40.869;-.878174 
+    public static double BRSensorOffset = -0.382568   ;// 179.561; 
+    public static double BLSensorOffset = -0.164795   ;// -24.873; -.541992 
 
     // Give a positive input on the joystick or phoenix tuner
     // Switch this if it goes opposite the desired direction

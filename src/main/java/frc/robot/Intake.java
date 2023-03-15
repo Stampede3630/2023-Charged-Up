@@ -31,7 +31,7 @@ public class Intake extends SubsystemBase implements Loggable{
     private boolean haveGamePiece = false;
     public Intake() {
 
-        m_intakeMotor.setSmartCurrentLimit(70);
+        m_intakeMotor.setSmartCurrentLimit(80);
 
                 
         // cannonExtension.setInverted(true);
@@ -57,10 +57,6 @@ public class Intake extends SubsystemBase implements Loggable{
         speed = 0;
     }
 
-    public boolean getIntakeHardStop(){
-      return intakeHardStop.isPressed();
-    }
-
     @Log.Graph
     public double getIntakeCurrent() {
         return m_intakeMotor.getOutputCurrent();
@@ -74,8 +70,9 @@ public class Intake extends SubsystemBase implements Loggable{
     public void leaveGamePiece(){
         haveGamePiece = false;
     }
+    
 
-    public boolean checkForCurrentSpike() {
+    public boolean checkForGamePiece() {
         haveGamePiece = intakeHardStop.isPressed() ? true : haveGamePiece; // latching
         return haveGamePiece;
     }
@@ -84,12 +81,13 @@ public class Intake extends SubsystemBase implements Loggable{
       this.haveGamePiece = input;
   }
 
-  public boolean limitSwitchPressed() {
+  @Log.BooleanBox
+  public boolean isLimitSwitchPressed() {
     return intakeHardStop.isPressed();
   }
 
   public Command waitUntilHaveGamePiece() {
-    return Commands.waitUntil(new Trigger(() -> getIntakeCurrent() > 30).debounce(.1, DebounceType.kRising))
-        .raceWith(Commands.waitUntil(this::limitSwitchPressed)).andThen(Commands.runOnce(() -> haveGamePiece = true));
+    return Commands.waitUntil(new Trigger(() -> getIntakeCurrent() > 50).debounce(.5, DebounceType.kRising))
+        .raceWith(Commands.waitUntil(this::isLimitSwitchPressed)).andThen(Commands.runOnce(() -> haveGamePiece = true));
   }
 }

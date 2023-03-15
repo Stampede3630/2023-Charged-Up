@@ -8,11 +8,8 @@ import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import io.github.oblarg.oblog.Loggable;
-import io.github.oblarg.oblog.annotations.Config;
-import io.github.oblarg.oblog.annotations.Log;
 
-public class LEDs extends SubsystemBase implements Loggable{
+public class LEDs extends SubsystemBase {
 
   public AddressableLED m_led;
   public AddressableLEDBuffer m_LEDBuffer; //156

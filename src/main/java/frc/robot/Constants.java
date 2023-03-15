@@ -74,7 +74,7 @@ public final class Constants {
     public static final double ZERO_OFFSET = 12.0;
     public static final int  CURRENT_LIMIT = 20; 
 
-    public static final double KP = 1.0/10.0; //used to be 1/30.0
+    public static final double KP = 1.0/20.0; //used to be 1/30.0
     public static final double KI = 0.0;
     public static final double KD = 0.0; //used to be 0
   }

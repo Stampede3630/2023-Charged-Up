@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,12 +12,14 @@ import java.util.Map;
 import com.pathplanner.lib.PathConstraints;
 import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
+import com.pathplanner.lib.PathPoint;
 import com.pathplanner.lib.auto.PIDConstants;
 import com.pathplanner.lib.auto.SwerveAutoBuilder;
 
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -143,9 +146,6 @@ public class RobotContainer {
       .add("PDH", pdh)
       .withWidget(BuiltInWidgets.kPowerDistribution);
 
-
-
-    
     for (GamePieceType orientation : GamePieceType.values()) {
       gamePieceTypeChooser.addOption(orientation.name(), orientation);
     }
@@ -201,7 +201,7 @@ public class RobotContainer {
     eventMap.put("1stBallPickup", new WaitCommand(2));
     eventMap.put("autoScoreHigh", autoScoreHighCube());
     eventMap.put("autoScoreHighCone", autoScoreHighCone());
-    eventMap.put("autoIntake", autoIntake());
+    eventMap.put("autoIntake", autoIntakeCube());
     eventMap.put("autoBalance", s_SwerveDrive.autoBalanceCommand());
     eventMap.put("autoScoreMidCube", autoScoreMidCube());
     eventMap.put("autoScoreMidCone", autoScoreMidCone());
@@ -210,15 +210,15 @@ public class RobotContainer {
         s_SwerveDrive::getOdometryPose, // Pose2d supplier
         s_SwerveDrive::resetOdometry, // Pose2d consumer, used to reset odometry at the beginning of auto
         s_SwerveDrive.getKinematics(), // SwerveDriveKinematics
-        new PIDConstants(1, 0.0, 0.0), // PID constants to correct for translation error (used to create the X and Y
+        new PIDConstants(4, 0.0, 0.0), // PID constants to correct for translation error (used to create the X and Y
                                        // PID controllers)
-        new PIDConstants(1, 0.0, 0.0), // PID constants to correct for rotation error (used to create the rotation
+        new PIDConstants(4, 0.0, 0.0), // PID constants to correct for rotation error (used to create the rotation
                                        // controller)
         s_SwerveDrive::setAutoModuleStates, // Module states consumer used to output to the drive subsystem
         eventMap,
         s_SwerveDrive // The drive subsystem. Used to properly set the requirements of path following
                       // commands
-    );
+    ); 
 
     // List<String> files = List.of(new File(Filesystem.getDeployDirectory(), "pathplanner/").list());
     // files.removeIf((str) -> !str.endsWith(".path"));
@@ -303,9 +303,9 @@ public class RobotContainer {
         .whileTrue(new RepeatCommand(Commands.runOnce(s_Cannon::manRotUp)));
     xBox.povDown()
         .whileTrue(new RepeatCommand(Commands.runOnce(s_Cannon::manRotDown)));
-    xBox.povRight().debounce(.2)
+    xBox.povRight()
         .whileTrue(new RepeatCommand(Commands.runOnce(s_Cannon::manExtend, s_Cannon)));
-    xBox.povLeft().debounce(.2)
+    xBox.povLeft()
         .whileTrue(new RepeatCommand(Commands.runOnce(s_Cannon::manRetract, s_Cannon)));
 
     // combined triggers
@@ -325,16 +325,14 @@ public class RobotContainer {
             () -> s_Cannon.getExtensionEncoder() < 10) // "dangerous" or not
           .andThen(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle)))
           .andThen(Commands.runOnce(()-> s_Intake.setIntake(intakeSpeed)))
-          .alongWith(new PrintCommand("I'm Intaking with: " + intakeSpeed + "!"))
-          // .andThen(Commands.waitSeconds(.1))
           .andThen(s_Intake.waitUntilHaveGamePiece()
-            .raceWith(Commands.waitUntil(xBox.rightTrigger(.1).debounce(.1, DebounceType.kFalling).negate())))
+            .raceWith(Commands.waitUntil(xBox.rightTrigger(.2).debounce(.2, DebounceType.kFalling).negate())))
           .andThen(Commands.runOnce(s_Intake::stopIntake)))
         .onFalse(Commands.runOnce(s_Intake::stopIntake));
       
     //-> Outtake trigger
     xBox.leftTrigger(.55).debounce(.1, DebounceType.kFalling)
-        .onTrue(Commands.runOnce(()-> s_Intake.setIntake(-intakeSpeed/3)).alongWith(Commands.runOnce(s_Intake::leaveGamePiece)))
+        .onTrue(Commands.runOnce(()-> s_Intake.setIntake(-intakeSpeed/2)).alongWith(Commands.runOnce(s_Intake::leaveGamePiece)))
         .onFalse(Commands.runOnce(s_Intake::stopIntake)
           .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(0.5)))
           .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
@@ -379,13 +377,14 @@ public class RobotContainer {
         Commands.runOnce(s_LEDs::beYellow), 
         ()-> (gamePieceTypeChooser.getSelected().equals(GamePieceType.CUBE))));
 
-    // new Trigger(() -> robotFacing() != FacingPOI.NOTHING)
-    //   .onTrue(Commands.either(
-    //     Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle))
-    //     .unless(xBox.rightTrigger(.5)),
-    //     Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), 40)).unless(xBox.rightTrigger(.5)) // towards pickup
-    //       .andThen(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle))), 
-    //        s_Intake::haveGamePiece));
+    new Trigger(() -> robotFacing() != FacingPOI.NOTHING)
+      .onTrue(Commands.either(
+        Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle))
+        .unless(xBox.rightTrigger(.1)),
+        Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), 40))
+          .unless(xBox.rightTrigger(.1)) // towards pickup
+          .andThen(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle))), 
+        s_Intake::haveGamePiece));
     
 // //TODO: Commented this out because it's not ready  
     // xBox.a().onTrue(new
@@ -407,19 +406,19 @@ public class RobotContainer {
         case CUBE://impossible
           intakeCannonAngle = 180.0;
           intakeLidAngle = 37.5;
-          intakeSpeed = -1.0;
+          intakeSpeed = -1.0/3.5;
           intakeExtensionInches = 0.5; 
           break;
         case UPRIGHT_CONE://revise, should be same as tipped
           intakeCannonAngle = 180.0;
           intakeLidAngle = 210.0;
-          intakeSpeed = 1.0;
+          intakeSpeed = 1.0/2;
           intakeExtensionInches = 0.5;
           break;
         case TIPPED_CONE: //revise, should be same as upright
           intakeCannonAngle = 180.0;
           intakeLidAngle = 210.0;
-          intakeSpeed = 1.0;
+          intakeSpeed = 1.0/2;
           intakeExtensionInches = 0.5;
           break;
         case NOTHING:
@@ -435,20 +434,20 @@ public class RobotContainer {
         case CUBE:
           intakeCannonAngle = 136.5;
           intakeLidAngle = 55.0;
-          intakeSpeed = -1.0;
+          intakeSpeed = -1.0/3.5;
           intakeExtensionInches = 0.5
           ;
           break;
         case TIPPED_CONE:
           intakeCannonAngle = 177.5;
           intakeLidAngle = 57.5;
-          intakeSpeed = 1.0;
+          intakeSpeed = 1.0/3;
           intakeExtensionInches = 0.5;
           break;
         case UPRIGHT_CONE://should be same as tipped
           intakeCannonAngle = 177.5;
           intakeLidAngle = 57.5;
-          intakeSpeed = 1.0;
+          intakeSpeed = 1.0/3;
           intakeExtensionInches = 0.5;
           break;
         case NOTHING:
@@ -473,13 +472,14 @@ public class RobotContainer {
           case UPRIGHT_CONE://fill in
             intakeCannonAngle = -7.0;
             intakeLidAngle = 206.0;
-            intakeSpeed = 1.0;
+
+            intakeSpeed = 1.0/2;
             intakeExtensionInches = 0.5;
             break;
           case TIPPED_CONE: // impossible
             intakeCannonAngle = 4.0;
             intakeLidAngle = 180.0;
-            intakeSpeed = 1.0;
+            intakeSpeed = 1.0/2;
             intakeExtensionInches = 0.5;
             break;
           case NOTHING:
@@ -496,19 +496,20 @@ public class RobotContainer {
           case CUBE://Caleb 3/14/23
             intakeCannonAngle = 200.0;
             intakeLidAngle = 60.0;
-            intakeSpeed = -1.0;
+            intakeSpeed = -1.0
+            ;
             intakeExtensionInches = 2.5;
             break;
           case UPRIGHT_CONE://Caleb 3/14/23
             intakeCannonAngle = 198.5;
             intakeLidAngle = 140.0;
-            intakeSpeed = 1.0;
+            intakeSpeed = 1.0/2;
             intakeExtensionInches = 1.0;
             break; 
           case TIPPED_CONE://Caleb 3/14/23
           intakeCannonAngle = 198.5;
           intakeLidAngle = 140.0;
-          intakeSpeed = 1.0;
+          intakeSpeed = 1.0/2;
           intakeExtensionInches = 1.0;
             break; 
           case NOTHING: 
@@ -525,22 +526,24 @@ public class RobotContainer {
 
   public Command getAutonomousCommand() {
     return autoBuilder.fullAuto(autoSelect.getSelected());
-    // return autoScoreHighCube();
   }
 // //TODO: Commented this out because it's not ready
-  // public List<PathPlannerTrajectory> autoPathGroupOnTheFly() {
-  //   List<PathPlannerTrajectory> PGOTF = autoSelect.getSelected();
-  //   PGOTF.add(0,
-  //       PathPlanner.generatePath(
-  //           new PathConstraints(4, 3),
-  //           new PathPoint(s_SwerveDrive.getOdometryPose().getTranslation(), s_SwerveDrive.getOdometryPose().getRotation()),
-  //           new PathPoint(new Translation2d(Units.inchesToMeters(nodeGroupChooser.getSelected().xCoord), 
-  //             Units.inchesToMeters(nodeGroupChooser.getSelected().yCoord) + Units.inchesToMeters(getYOffset())), 
-  //             new Rotation2d(robotFacing() == FacingPOI.COMMUNITY ? 0:180), 
-  //             new Rotation2d(robotFacing() == FacingPOI.COMMUNITY ? 0:180))));
-
-  //   return PGOTF;
-  // }
+  public List<PathPlannerTrajectory> autoPathGroupOnTheFly() {
+    List<PathPlannerTrajectory> PGOTF = new ArrayList<>();
+    PGOTF.add(
+      PathPlanner.generatePath(
+        new PathConstraints(4, 3),
+        new PathPoint(s_SwerveDrive.getOdometryPose().getTranslation(), s_SwerveDrive.getOdometryPose().getRotation()),
+        new PathPoint(new Translation2d(
+          Units.inchesToMeters(nodeGroupChooser.getSelected().xCoord), 
+          Units.inchesToMeters(NodePosition.getNodePosition(nodeGroupChooser.getSelected(),nodeGridChooser.getSelected()).getYCoord())), 
+          new Rotation2d(robotFacing() == FacingPOI.COMMUNITY ? 0:180), 
+          new Rotation2d(robotFacing() == FacingPOI.COMMUNITY ? 0:180)
+        )
+      )
+    );
+    return PGOTF;
+  }
 
   public double getYOffset() {
     return NodePosition.getNodePosition(nodeGroupChooser.getSelected(), nodeGridChooser.getSelected()).getYCoord();
@@ -656,17 +659,18 @@ public class RobotContainer {
   }
 
   public Command autoScoreHighCube() {
-    return Commands.runOnce(()->s_Lid.setLid(NodePosition.NodeGrid.HIGH_CENTER.getNodeLidPositionLidUp()))
+    return Commands.runOnce(()->s_Lid.setLid(100.0))
       .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(NodePosition.NodeGrid.HIGH_CENTER.getNodeCannonAngleLidUp())))
       .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
-      .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(30.0)))
+      .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(25.0)).alongWith(Commands.print("extendo")))
+      .andThen(Commands.waitSeconds(0.5))
       .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
       .andThen(()->s_Intake.setIntake(0.5))
-      .andThen(Commands.waitSeconds(1.0))
+      .andThen(Commands.waitSeconds(0.5))
       .andThen(Commands.runOnce(s_Intake::stopIntake))
       .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(1.0)))
       .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
-      .andThen(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle)))
+      .andThen(Commands.runOnce(()-> s_Lid.setLid(60.0)))
       .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(120.0)));
       }
 
@@ -702,34 +706,34 @@ public class RobotContainer {
 
   public Command autoScoreMidCube() {
     return Commands.runOnce(()->s_Lid.setLid(NodePosition.NodeGrid.MID_CENTER.getNodeLidPositionLidUp()))
-    .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(NodePosition.NodeGrid.MID_CENTER.getNodeCannonAngleLidUp())))
+    .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(38.0)))
     .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
-    .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(30.0)))
+    .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(3.5)))
     .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
     .andThen(()->s_Intake.setIntake(0.5))
     .andThen(Commands.waitSeconds(0.5))
     .andThen(Commands.runOnce(s_Intake::stopIntake))
     .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(1.0)))
     .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
-    .andThen(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle)))
+    .andThen(Commands.runOnce(()-> s_Lid.setLid(100.0)))
     .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(177.0)));
   }
 
 
 
-  public Command autoIntake() {
-    return (Commands.runOnce(()-> s_Cannon.setCannonAngle(intakeCannonAngle)))
-    .andThen(Commands.runOnce(()-> s_Intake.setIntake(intakeSpeed)))
+  public Command autoIntakeCube() {
+    return (Commands.runOnce(()-> s_Cannon.setCannonAngle(200)))
+    .andThen(Commands.runOnce(()-> s_Intake.setIntake(-1.0)))
+    .andThen(Commands.runOnce(()->s_Lid.setLid(60.0)))
     .andThen(Commands.waitSeconds(.1)
     .andThen(Commands.waitSeconds(2.0)
-    .deadlineWith(Commands.waitUntil(s_Intake::checkForCurrentSpike))))
+    .deadlineWith(Commands.waitUntil(s_Intake::checkForGamePiece))))
     .andThen(Commands.runOnce(s_Intake::stopIntake));
   }
 
   @Config
   public void setCannonOffset(double input){
     s_Cannon.cannonRotation += input;
-
   }
 
 }
