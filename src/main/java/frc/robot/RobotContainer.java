@@ -68,7 +68,7 @@ public class RobotContainer {
   private final CommandXboxController xBox = new CommandXboxController(0);
 
   SwerveAutoBuilder autoBuilder;
-  public final String[] AUTOS_TO_LOAD = {"jankHighScoreOnly", "New Path", "chargeScoreCube", "onePieceConeGrab","onePieceCubeGrab","twoPieceCube","twoPieceCone","LZTwoPieceCone","LZTwoPieceCube","LZTwoPieceCubeCharge"};
+  public final String[] AUTOS_TO_LOAD = {"LZThreePieceCubeFun" ,"jankHighScoreOnly", "New Path", "chargeScoreCube", "onePieceConeGrab","onePieceCubeGrab","twoPieceCube","twoPieceCone","LZTwoPieceCone","LZTwoPieceCube","LZTwoPieceCubeCharge"};
 
 
   // This is just an example event map. It would be better to have a constant,
@@ -205,6 +205,7 @@ public class RobotContainer {
     eventMap.put("autoBalance", s_SwerveDrive.autoBalanceCommand());
     eventMap.put("autoScoreMidCube", autoScoreMidCube());
     eventMap.put("autoScoreMidCone", autoScoreMidCone());
+    eventMap.put("autoScoreLowCube", autoScoreLowCube());
 
     autoBuilder = new SwerveAutoBuilder(
         s_SwerveDrive::getOdometryPose, // Pose2d supplier
@@ -230,7 +231,7 @@ public class RobotContainer {
     for (String autoName : AUTOS_TO_LOAD) { // load all autos dynamically
       
       autoSelect.addOption(autoName, PathPlanner.loadPathGroup(autoName,
-        new PathConstraints(2, 2)));
+        new PathConstraints(4, 4)));
     }
     autoSelect.setDefaultOption("chargeScoreCube", PathPlanner.loadPathGroup("chargeScoreCube", new PathConstraints(1, 1)));
 
@@ -526,6 +527,7 @@ public class RobotContainer {
 
   public Command getAutonomousCommand() {
     return autoBuilder.fullAuto(autoSelect.getSelected());
+    // return autoScoreHighCube();
   }
 // //TODO: Commented this out because it's not ready
   public List<PathPlannerTrajectory> autoPathGroupOnTheFly() {
@@ -658,14 +660,14 @@ public class RobotContainer {
     return new Rotation2d(-Math.atan(oOfOA/aOfOA));
   }
 
-  public Command autoScoreHighCube() {
+  public Command autoScoreHighCube() { //works if running as NOT first command (for some reason) -ej 3/15
     return Commands.runOnce(()->s_Lid.setLid(100.0))
       .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(NodePosition.NodeGrid.HIGH_CENTER.getNodeCannonAngleLidUp())))
       .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
-      .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(25.0)).alongWith(Commands.print("extendo")))
-      .andThen(Commands.waitSeconds(0.5))
+      .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(23.5)).alongWith(Commands.print("extendo")))
+      .andThen(Commands.waitSeconds(0.2))
       .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
-      .andThen(()->s_Intake.setIntake(0.5))
+      .andThen(()->s_Intake.setIntake(0.4))
       .andThen(Commands.waitSeconds(0.5))
       .andThen(Commands.runOnce(s_Intake::stopIntake))
       .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(1.0)))
@@ -704,13 +706,13 @@ public class RobotContainer {
       .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(177.0)));
   } 
 
-  public Command autoScoreMidCube() {
-    return Commands.runOnce(()->s_Lid.setLid(NodePosition.NodeGrid.MID_CENTER.getNodeLidPositionLidUp()))
+  public Command autoScoreMidCube() { //works -ej 3/15
+    return Commands.runOnce(()->s_Lid.setLid(100.0))
     .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(38.0)))
     .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
-    .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(3.5)))
+    .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(2.0)))
     .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
-    .andThen(()->s_Intake.setIntake(0.5))
+    .andThen(()->s_Intake.setIntake(0.4))
     .andThen(Commands.waitSeconds(0.5))
     .andThen(Commands.runOnce(s_Intake::stopIntake))
     .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(1.0)))
@@ -719,16 +721,30 @@ public class RobotContainer {
     .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(177.0)));
   }
 
+  public Command autoScoreLowCube() { 
+    return Commands.runOnce(()->s_Cannon.setCannonAngle(-7.5))
+    .andThen(Commands.runOnce(()->  s_Lid.setLid(80.0)))
+    .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
+    .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(1.0)))
+    .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
+    .andThen(()->s_Intake.setIntake(0.4))
+    .andThen(Commands.waitSeconds(0.5))
+    .andThen(Commands.runOnce(s_Intake::stopIntake))
+    .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(1.0)))
+    .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
+    .andThen(Commands.runOnce(()-> s_Lid.setLid(100.0)))
+    .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(100.0)));
+  }
 
-
-  public Command autoIntakeCube() {
+  public Command autoIntakeCube() { //works -ej 3/15
     return (Commands.runOnce(()-> s_Cannon.setCannonAngle(200)))
     .andThen(Commands.runOnce(()-> s_Intake.setIntake(-1.0)))
-    .andThen(Commands.runOnce(()->s_Lid.setLid(60.0)))
+    .andThen(Commands.runOnce(()->s_Lid.setLid(100.0)))
     .andThen(Commands.waitSeconds(.1)
     .andThen(Commands.waitSeconds(2.0)
     .deadlineWith(Commands.waitUntil(s_Intake::checkForGamePiece))))
-    .andThen(Commands.runOnce(s_Intake::stopIntake));
+    .andThen(Commands.runOnce(s_Intake::stopIntake))
+    .andThen(Commands.runOnce(()->s_Lid.setLid(100.0)));
   }
 
   @Config

@@ -102,6 +102,7 @@ private ArmFeedforward m_feedforward =
   @Override
   public void periodic() {
 
+
     setAdaptiveFeedForward();
 
     cannonExtensionPID.setReference(extensionInches, ControlType.kPosition); 
@@ -117,6 +118,7 @@ private ArmFeedforward m_feedforward =
     cannonExtensionPID.setD(Preferences.getDouble("ExtensionKD", ExtendoConstants.KD));
       Preferences.setBoolean("Wanna PID Cannon", false);
     }
+
 
     setExtensionZero();
 
@@ -134,6 +136,12 @@ private ArmFeedforward m_feedforward =
         CannonConstants.KV,
         CannonConstants.KAM * extensionPosition + CannonConstants.KAB
       );
+  }
+
+  
+  @Log
+  public double getExtensionInches(){
+    return extensionInches;
   }
 
   public void setCannonToCoast(){
