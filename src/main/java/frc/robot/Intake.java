@@ -10,6 +10,7 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.IntakeConstants;
@@ -37,7 +38,9 @@ public class Intake extends SubsystemBase implements Loggable{
         intakeHardStop.enableLimitSwitch(true); 
 
         m_intakeMotor.burnFlash();
-        
+        m_intakeEncoder.setPositionConversionFactor(1); // TODO Put some numbers here
+        m_intakeEncoder.setVelocityConversionFactor(1);
+
 
     }
 
@@ -69,13 +72,20 @@ public class Intake extends SubsystemBase implements Loggable{
     public void leaveGamePiece(){
         haveGamePiece = false;
     }
-    
-    public void outALittle(){
-        m_intakeEncoder.setPosition(intakeEncoderPosition - 2);
-    }
 
-    public void inALittle(){
-        m_intakeEncoder.setPosition(intakeEncoderPosition + 15);
+    public Command outALittle(){
+        return new FunctionalCommand(
+                () -> m_intakeEncoder.setPosition(0),   // first zero the encoder
+                () -> m_intakeMotor.set(-.1),            // then run the intake
+                (success) -> m_intakeMotor.set(0),      // when finished, stop the intake
+                () -> m_intakeEncoder.getPosition() <= -15); // it is finished when the encoder goes down by 15 rotations
+    }
+    public Command inALittle(){
+        return new FunctionalCommand(
+                () -> m_intakeEncoder.setPosition(0),   // first zero the encoder
+                () -> m_intakeMotor.set(.1),            // then run the intake
+                (success) -> m_intakeMotor.set(0),      // when finished, stop the intake
+                () -> m_intakeEncoder.getPosition() >= 15); // it is finished when the encoder goes up by 15 rotations
     }
     public boolean checkForGamePiece() {
         haveGamePiece = haveGamePiece || intakeHardStop.isPressed(); // latching
