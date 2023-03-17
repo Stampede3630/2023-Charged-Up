@@ -8,10 +8,7 @@ import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.FunctionalCommand;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.IntakeConstants;
 import io.github.oblarg.oblog.Loggable;
@@ -76,15 +73,15 @@ public class Intake extends SubsystemBase implements Loggable{
     public Command outALittle(){
         return new FunctionalCommand(
                 () -> m_intakeEncoder.setPosition(0),   // first zero the encoder
-                () -> m_intakeMotor.set(-.1),            // then run the intake
-                (success) -> m_intakeMotor.set(0),      // when finished, stop the intake
+                () -> setIntake(-.1),            // then run the intake
+                (success) -> setIntake(0),      // when finished, stop the intake
                 () -> m_intakeEncoder.getPosition() <= -15); // it is finished when the encoder goes down by 15 rotations
     }
     public Command inALittle(){
         return new FunctionalCommand(
                 () -> m_intakeEncoder.setPosition(0),   // first zero the encoder
-                () -> m_intakeMotor.set(.1),            // then run the intake
-                (success) -> m_intakeMotor.set(0),      // when finished, stop the intake
+                () -> setIntake(.1),            // then run the intake
+                (success) -> setIntake(0),      // when finished, stop the intake
                 () -> m_intakeEncoder.getPosition() >= 15); // it is finished when the encoder goes up by 15 rotations
     }
     public boolean checkForGamePiece() {
