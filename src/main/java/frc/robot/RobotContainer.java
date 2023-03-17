@@ -684,12 +684,7 @@ public class RobotContainer {
 
 
   public enum PickupLocation {
-    GROUND(), 
-    SHELF(), 
-    CHUTE(); // change these
-
- 
-    PickupLocation(){}
+    GROUND, SHELF, CHUTE // change these
   }
 
   public Rotation2d calculateHeading(){
