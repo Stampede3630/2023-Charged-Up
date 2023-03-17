@@ -2,8 +2,6 @@ package frc.robot.subsystems.swerve;
 
 import java.util.List;
 
-import com.ctre.phoenixpro.*;
-import com.ctre.phoenixpro.controls.DutyCycleOut;
 import com.ctre.phoenixpro.signals.NeutralModeValue;
 
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -105,15 +103,6 @@ public class QuadFalconSwerveDrive {
     NeutralMode = NeutralModeValue.Brake;
   }
 
-
-  // public SwerveModuleState[] getModuleStates() {
-  //   return new SwerveModuleState[] {
-  //       FrontLeftSwerveModule.getSwerveModuleState(),
-  //       FrontRightSwerveModule.getSwerveModuleState(),
-  //       BackLeftSwerveModule.getSwerveModuleState(),
-  //       BackRightSwerveModule.getSwerveModuleState()
-  //   };
-  // }
 
   public SwerveModulePosition[] getModulePositions() {
     return new SwerveModulePosition[] {

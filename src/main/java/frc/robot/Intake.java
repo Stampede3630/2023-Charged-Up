@@ -2,17 +2,12 @@ package frc.robot;
 
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
-import com.revrobotics.SparkMaxAbsoluteEncoder;
 import com.revrobotics.SparkMaxLimitSwitch;
 import com.revrobotics.SparkMaxPIDController;
-import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
-import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
 
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
-import edu.wpi.first.wpilibj.Preferences;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -23,10 +18,10 @@ import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
 
 public class Intake extends SubsystemBase implements Loggable{
-    private CANSparkMax m_intakeMotor = new CANSparkMax(IntakeConstants.SPARK_MAX_ID, MotorType.kBrushless);
-    private RelativeEncoder m_intakeEncoder = m_intakeMotor.getEncoder();
-    private SparkMaxPIDController m_intakePid = m_intakeMotor.getPIDController();
-    private SparkMaxLimitSwitch intakeHardStop = m_intakeMotor.getReverseLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen);
+    private final CANSparkMax m_intakeMotor = new CANSparkMax(IntakeConstants.SPARK_MAX_ID, MotorType.kBrushless);
+    private final RelativeEncoder m_intakeEncoder = m_intakeMotor.getEncoder();
+    private final SparkMaxPIDController m_intakePid = m_intakeMotor.getPIDController();
+    private final SparkMaxLimitSwitch intakeHardStop = m_intakeMotor.getReverseLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen);
     private double speed = 0;
     private boolean haveGamePiece = false;
     @Log
@@ -83,7 +78,7 @@ public class Intake extends SubsystemBase implements Loggable{
         m_intakeEncoder.setPosition(intakeEncoderPosition + 15);
     }
     public boolean checkForGamePiece() {
-        haveGamePiece = intakeHardStop.isPressed() ? true : haveGamePiece; // latching
+        haveGamePiece = haveGamePiece || intakeHardStop.isPressed(); // latching
         return haveGamePiece;
     }
   @Config.ToggleButton(tabName = "nodeSelector")

@@ -3,9 +3,7 @@ package frc.robot.util;
 import edu.wpi.first.hal.SimDouble;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.SimDeviceSim;
-import frc.robot.Robot;
 
 public class SimGyroSensorModel{
 
@@ -26,8 +24,6 @@ public class SimGyroSensorModel{
     }
     /**
      * 
-     * @param curRobotPose
-     * @param prevRobotPose
      * @param deltaTime the
      */
     public void update(Pose2d curRobotPose, Pose2d prevRobotPose, Double deltaTime){

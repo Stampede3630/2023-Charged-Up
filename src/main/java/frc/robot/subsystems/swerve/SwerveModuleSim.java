@@ -7,48 +7,43 @@ import com.ctre.phoenixpro.hardware.TalonFX;
 import com.ctre.phoenixpro.sim.TalonFXSimState;
 
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
-import frc.robot.Robot;
-import frc.robot.subsystems.swerve.SwerveModule.SteeringSensor;
 
 
 public class SwerveModuleSim {
 
-    public static final double kWheelDiameter = Units.inchesToMeters(4);
-    public static final double kWheelCircumference = kWheelDiameter*Math.PI;
+    public static final double WHEEL_DIAMETER = Units.inchesToMeters(4);
+    public static final double WHEEL_CIRCUMFERENCE = WHEEL_DIAMETER *Math.PI;
     // Simulation
 
     private final TalonFX driveMotor;
     private final TalonFX steerMotor;
     private final CANcoder steerSensorCANCoder;
-    public static final SimpleMotorFeedforward kDriveFF = new SimpleMotorFeedforward( // real
+    public static final SimpleMotorFeedforward DRIVE_FF = new SimpleMotorFeedforward( // real
     SwerveConstants.kS, // Voltage to break static friction
     SwerveConstants.kV, // Volts per meter per second
     SwerveConstants.kA // Volts per meter per second squared
     );
     // Steer feed forward
-    public static final SimpleMotorFeedforward kSteerFF = new SimpleMotorFeedforward( // real
+    public static final SimpleMotorFeedforward STEER_FF = new SimpleMotorFeedforward( // real
         0.55, // Voltage to break static friction
         0.23, // Volts per radian per second
         0.0056 // Volts per radian per second squared
     );
     private final FlywheelSim driveWheelSim = new FlywheelSim(
         LinearSystemId.identifyVelocitySystem(
-            kDriveFF.kv * kWheelCircumference / (2*Math.PI),
-            kDriveFF.ka * kWheelCircumference / (2*Math.PI)
+            DRIVE_FF.kv * WHEEL_CIRCUMFERENCE / (2*Math.PI),
+            DRIVE_FF.ka * WHEEL_CIRCUMFERENCE / (2*Math.PI)
         ),
         DCMotor.getFalcon500(1),
         SwerveConstants.DRIVE_MOTOR_GEARING
     );
 
     private final FlywheelSim steeringSim = new FlywheelSim(
-        LinearSystemId.identifyVelocitySystem(kSteerFF.kv, kSteerFF.ka),
+        LinearSystemId.identifyVelocitySystem(STEER_FF.kv, STEER_FF.ka),
         DCMotor.getFalcon500(1),
         SwerveConstants.STEERING_MOTOR_GEARING
     );
@@ -65,13 +60,13 @@ public class SwerveModuleSim {
         TalonFXSimState steerSimState = steerMotor.getSimState();
         // apply our commanded voltage to our simulated physics mechanisms
         double driveVoltage = driveSimState.getMotorVoltage();
-        if(driveVoltage >= 0) driveVoltage = Math.max(0, driveVoltage-kSteerFF.ks);
-        else driveVoltage = Math.min(0, driveVoltage+kSteerFF.ks);
+        if(driveVoltage >= 0) driveVoltage = Math.max(0, driveVoltage- STEER_FF.ks);
+        else driveVoltage = Math.min(0, driveVoltage+ STEER_FF.ks);
         driveSimState.setSupplyVoltage(driveVoltage);
 
         double steerVoltage = steerSimState.getMotorVoltage();
-        if(steerVoltage >= 0) steerVoltage = Math.max(0, steerVoltage-kSteerFF.ks);
-        else steerVoltage = Math.min(0, steerVoltage+kSteerFF.ks);
+        if(steerVoltage >= 0) steerVoltage = Math.max(0, steerVoltage- STEER_FF.ks);
+        else steerVoltage = Math.min(0, steerVoltage+ STEER_FF.ks);
         steerSimState.setSupplyVoltage(steerVoltage);
         
         driveWheelSim.update(deltaTime);

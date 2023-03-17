@@ -4,9 +4,9 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 public class ChangeChecker<T> implements BooleanSupplier{
-    private Supplier<T> valueGetter;
+    private final Supplier<T> valueGetter;
     private T oldValue;
-    private BooleanSupplier condition;
+    private final BooleanSupplier condition;
 
     public ChangeChecker(Supplier<T> valueSupplier, T initialValue, BooleanSupplier conditionForChecking) {
         valueGetter = valueSupplier;

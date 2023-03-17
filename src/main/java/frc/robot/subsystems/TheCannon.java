@@ -6,7 +6,6 @@ package frc.robot.subsystems;
 
 import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.CANSparkMax;
-import com.revrobotics.EncoderType;
 import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMax.SoftLimitDirection;
@@ -34,16 +33,16 @@ public double extensionInches = ExtendoConstants.INITIALIZED_INCHES;
 @Log
 public double cannonRotation = CannonConstants.INITIALIZED_ANGLE;
 
-private CANSparkMax cannonRotLead = new CANSparkMax(CannonConstants.SPARK_MASTER_ID, MotorType.kBrushless);
-private CANSparkMax cannonRotFollow = new CANSparkMax(CannonConstants.SPARK_FOLLOWER_ID, MotorType.kBrushless);
-private CANSparkMax cannonExtension = new CANSparkMax(ExtendoConstants.SPARK_MAX_ID, MotorType.kBrushless);
+private final CANSparkMax cannonRotLead = new CANSparkMax(CannonConstants.SPARK_MASTER_ID, MotorType.kBrushless);
+private final CANSparkMax cannonRotFollow = new CANSparkMax(CannonConstants.SPARK_FOLLOWER_ID, MotorType.kBrushless);
+private final CANSparkMax cannonExtension = new CANSparkMax(ExtendoConstants.SPARK_MAX_ID, MotorType.kBrushless);
 
-private AbsoluteEncoder cannonAbsolute = cannonRotLead.getAbsoluteEncoder(Type.kDutyCycle);
-private RelativeEncoder extensionEncoder = cannonExtension.getEncoder();
-private SparkMaxLimitSwitch extensionHardStop = cannonExtension.getReverseLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen);
+private final AbsoluteEncoder cannonAbsolute = cannonRotLead.getAbsoluteEncoder(Type.kDutyCycle);
+private final RelativeEncoder extensionEncoder = cannonExtension.getEncoder();
+private final SparkMaxLimitSwitch extensionHardStop = cannonExtension.getReverseLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen);
 
-private SparkMaxPIDController cannonRotLeadPID = cannonRotLead.getPIDController();
-private SparkMaxPIDController cannonExtensionPID = cannonExtension.getPIDController();
+private final SparkMaxPIDController cannonRotLeadPID = cannonRotLead.getPIDController();
+private final SparkMaxPIDController cannonExtensionPID = cannonExtension.getPIDController();
 
 private ArmFeedforward m_feedforward =
   new ArmFeedforward(
@@ -202,7 +201,7 @@ private ArmFeedforward m_feedforward =
   }
 
   /**
-   * @return degress per sec
+   * @return degrees per sec
    */
   public double getCannonVelocity(){
     return cannonAbsolute.getVelocity() / 60.0;

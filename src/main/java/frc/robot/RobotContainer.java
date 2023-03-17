@@ -5,10 +5,7 @@
 package frc.robot;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import com.pathplanner.lib.PathConstraints;
 import com.pathplanner.lib.PathPlanner;
@@ -35,11 +32,9 @@ import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.NodePosition.NodeGrid;
@@ -56,7 +51,6 @@ import frc.robot.util.SendableChooserWrapper;
 import io.github.oblarg.oblog.Logger;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
-import io.github.oblarg.oblog.annotations.Config.Configs;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -121,7 +115,7 @@ public class RobotContainer {
     }
 
     
-    /**
+    /*
      * Preferences are cool. they store the values in the roborio flash memory so
      * they don't necessarily get reset to default.
      */
@@ -129,9 +123,9 @@ public class RobotContainer {
     Preferences.initBoolean("pAccelInputs", DriverConstants.ACCELERATED_INPUTS);
     Preferences.initDouble("pDriveGovernor", DriverConstants.DRIVE_GOVERNOR);
     Preferences.initBoolean("pOptimizeSteering", SwerveConstants.OPTIMIZESTEERING);
-    Preferences.initDouble("pKPRotationController", SwerveConstants.kPRotationController);
-    Preferences.initDouble("pKIRotationController", SwerveConstants.kDRotationController);
-    Preferences.initDouble("pKDRotationController", SwerveConstants.kIRotationController);
+    Preferences.initDouble("pKPRotationController", SwerveConstants.P_ROTATION_CONTROLLER);
+    Preferences.initDouble("pKIRotationController", SwerveConstants.D_ROTATION_CONTROLLER);
+    Preferences.initDouble("pKDRotationController", SwerveConstants.I_ROTATION_CONTROLLER);
     Preferences.initDouble("CannonKP", CannonConstants.KP);
     Preferences.initDouble("CannonKI", CannonConstants.KI);
     Preferences.initDouble("CannonKD", CannonConstants.KD);
@@ -242,8 +236,8 @@ public class RobotContainer {
   private void loadPaths() {
     // load autos completely dynamically -- any autos in pathplanner folder will be added to selector
     List<File> files = List.of(
-      new File(Filesystem.getDeployDirectory(), "pathplanner")
-      .listFiles((dir, name) -> name.endsWith(".path")));
+            Objects.requireNonNull(new File(Filesystem.getDeployDirectory(), "pathplanner")
+                    .listFiles((dir, name) -> name.endsWith(".path"))));
     for (File file : files) {
       String pathName = file.getName().split("\\.")[0];
       autoSelect.addOption(pathName, PathPlanner.loadPathGroup(pathName,
@@ -262,7 +256,7 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
 
-    /**
+    /*
      * Trigger Coast/Brake modes when DS is Disabled/Enabled.
      * Trigger runs WHILETRUE for coast mode. Coast Mode method
      * is written to wait for slow speeds before setting to coast
@@ -280,7 +274,7 @@ public class RobotContainer {
           .alongWith(Commands.runOnce(s_Cannon::setCannonToBrake)));
 
 
-    /**
+    /*
      * HOLD HEADING mode and set a heading
      */
 
@@ -428,11 +422,6 @@ public class RobotContainer {
           intakeExtensionInches = 0.5; 
           break;
         case UPRIGHT_CONE://revise, should be same as tipped
-          intakeCannonAngle = 180.0;
-          intakeLidAngle = 210.0;
-          intakeSpeed = 1.0;
-          intakeExtensionInches = 0.5;
-          break;
         case TIPPED_CONE: //revise, should be same as upright
           intakeCannonAngle = 180.0;
           intakeLidAngle = 210.0;
@@ -457,11 +446,6 @@ public class RobotContainer {
           ;
           break;
         case TIPPED_CONE:
-          intakeCannonAngle = 177.5;
-          intakeLidAngle = 57.5;
-          intakeSpeed = 1.0;
-          intakeExtensionInches = 0.5;
-          break;
         case UPRIGHT_CONE://should be same as tipped
           intakeCannonAngle = 177.5;
           intakeLidAngle = 57.5;
@@ -609,7 +593,7 @@ public class RobotContainer {
   }
 
   public enum GamePieceType {
-    TIPPED_CONE, UPRIGHT_CONE, CUBE, NOTHING;
+    TIPPED_CONE, UPRIGHT_CONE, CUBE, NOTHING
   }
 
   public enum NodeDriverStation {
@@ -617,12 +601,12 @@ public class RobotContainer {
 
     public final String dsFriendlyName;
 
-    private NodeDriverStation(String dsFriendlyName) {
+    NodeDriverStation(String dsFriendlyName) {
       this.dsFriendlyName = dsFriendlyName;
     }
   }
 
-  public static enum ScoringSetPoints {
+  public enum ScoringSetPoints {
     HIGH("for high node", 40, 40),
     MID("for mid node", 40, 20),
     LOW("for low/hybrid node", 0, 10),
@@ -657,7 +641,7 @@ public class RobotContainer {
     private final double cannonAngle;
     private final double cannonExtension;
    
-    private PickupLocation(double cannonAngle, double cannonExtension){this.cannonAngle = cannonAngle; this.cannonExtension = cannonExtension;}
+    PickupLocation(double cannonAngle, double cannonExtension){this.cannonAngle = cannonAngle; this.cannonExtension = cannonExtension;}
   }
   public double armTestSetPointsAngle(SendableChooser<ScoringSetPoints> armTestSetPoints){
   

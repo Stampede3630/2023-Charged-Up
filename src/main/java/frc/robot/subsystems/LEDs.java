@@ -174,11 +174,7 @@ public class LEDs extends SubsystemBase {
   }
 
   public enum LEDMode {
-    STROBE, CHASING, RAINBOW, SOLID, OFF;
+    STROBE, CHASING, RAINBOW, SOLID, OFF
   }
 
-  // @Config
-  // public void doRainbowConfig(boolean input) {
-  //   this.rainbow = input;
-  // }
 }
