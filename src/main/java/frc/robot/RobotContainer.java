@@ -100,6 +100,8 @@ public class RobotContainer {
   private double intakeExtensionInches;
 
   private boolean sniperMode;
+  private HashMap<String, Command> eventMap = new HashMap<>();
+
   // private GamePieceType prev;  
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -194,7 +196,6 @@ public class RobotContainer {
       .withPosition(0, 3)
       .withSize(8, 3);
 
-    HashMap<String, Command> eventMap = new HashMap<>();
     eventMap.put("1stBallPickup", new WaitCommand(2));
     eventMap.put("autoScoreHigh", autoScoreHighCube());
     eventMap.put("autoScoreHighCone", autoScoreHighCone());
@@ -203,20 +204,6 @@ public class RobotContainer {
     eventMap.put("autoScoreMidCube", autoScoreMidCube());
     eventMap.put("autoScoreMidCone", autoScoreMidCone());
     eventMap.put("autoScoreLowCube", autoScoreLowCube());
-
-    autoBuilder = new SwerveAutoBuilder(
-        s_SwerveDrive::getOdometryPose, // Pose2d supplier
-        s_SwerveDrive::resetOdometry, // Pose2d consumer, used to reset odometry at the beginning of auto
-        s_SwerveDrive.getKinematics(), // SwerveDriveKinematics
-        new PIDConstants(4, 0.0, 0.0), // PID constants to correct for translation error (used to create the X and Y
-                                       // PID controllers)
-        new PIDConstants(4, 0.0, 0.0), // PID constants to correct for rotation error (used to create the rotation
-                                       // controller)
-        s_SwerveDrive::setAutoModuleStates, // Module states consumer used to output to the drive subsystem
-        eventMap,
-        s_SwerveDrive // The drive subsystem. Used to properly set the requirements of path following
-                      // commands
-    ); 
 
     loadPaths();
 
@@ -234,6 +221,21 @@ public class RobotContainer {
   }
 
   private void loadPaths() {
+    autoBuilder = new SwerveAutoBuilder(
+            s_SwerveDrive::getOdometryPose, // Pose2d supplier
+            s_SwerveDrive::resetOdometry, // Pose2d consumer, used to reset odometry at the beginning of auto
+            s_SwerveDrive.getKinematics(), // SwerveDriveKinematics
+            new PIDConstants(4, 0.0, 0.0), // PID constants to correct for translation error (used to create the X and Y
+            // PID controllers)
+            new PIDConstants(4, 0.0, 0.0), // PID constants to correct for rotation error (used to create the rotation
+            // controller)
+            s_SwerveDrive::setAutoModuleStates, // Module states consumer used to output to the drive subsystem
+            eventMap,
+            true,
+            s_SwerveDrive // The drive subsystem. Used to properly set the requirements of path following
+            // commands
+    );
+
     // load autos completely dynamically -- any autos in pathplanner folder will be added to selector
     List<File> files = List.of(
             Objects.requireNonNull(new File(Filesystem.getDeployDirectory(), "pathplanner")
