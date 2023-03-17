@@ -388,8 +388,8 @@ public class RobotContainer {
 
     new Trigger(new ChangeChecker<>(this::robotFacing))
       .onTrue(Commands.either(
-              Commands.runOnce(()-> s_Cannon.setCannonAngleSides(robotFacing(), 80.0)),
-        Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), 80))
+        Commands.runOnce(()-> s_Cannon.setCannonAngleSides(robotFacing(), 80.0)),
+        Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), 100))
           .unless(xBox.rightTrigger(.1)) // towards pickup
           .alongWith(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle))),
         s_Intake::haveGamePiece));
@@ -400,7 +400,7 @@ public class RobotContainer {
     // .beforeStarting(new
     // InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
 
-    new Trigger(gamePieceTypeChooser::didValueChange).and(new Trigger(s_Intake::haveGamePiece).negate())
+    new Trigger(gamePieceTypeChooser::didValueChange).and(() -> !s_Intake.haveGamePiece())
       .onTrue(Commands.either(
         Commands.runOnce(s_LEDs::bePurple), 
         Commands.runOnce(s_LEDs::beYellow), 
