@@ -88,10 +88,13 @@ public class RobotContainer {
   private final LEDs s_LEDs = new LEDs();
   private final Lid s_Lid = new Lid();
   private final Intake s_Intake = new Intake();
-  
+  @Log(tabName = "NodeSelector")
   public double intakeCannonAngle;
+  @Log(tabName = "NodeSelector")
   public double intakeLidAngle=Constants.LidConstants.INITIALIZED_ANGLE;
+  @Log(tabName = "NodeSelector")
   public double intakeSpeed;
+
   public boolean facingOverrideButton;
 
   private double intakeExtensionInches;
@@ -210,6 +213,19 @@ public class RobotContainer {
     ); 
 
     loadPaths();
+
+    configureButtonBindings();
+
+    
+    s_SwerveDrive.setDefaultCommand(
+      s_SwerveDrive.joystickDriveCommand(
+          () -> xBox.getLeftY() * (sniperMode ? 0.5 : 1),
+          () -> xBox.getLeftX() * (sniperMode ? 0.5 : 1),
+          () -> xBox.getRightX() * (sniperMode ? 0.5 : 1))
+      .withName("DefaultDrive"));
+
+          Logger.configureLoggingAndConfig(this, false);
+
 
   }
 
@@ -427,7 +443,7 @@ public class RobotContainer {
       
     //-> Outtake trigger
     xBox.leftTrigger(.55).debounce(.1, DebounceType.kFalling)
-        .onTrue(Commands.runOnce(()-> s_Intake.setIntake(-intakeSpeed/2)).alongWith(Commands.runOnce(s_Intake::leaveGamePiece)))
+        .onTrue(Commands.runOnce(()-> s_Intake.setIntake(-intakeSpeed)).alongWith(Commands.runOnce(s_Intake::leaveGamePiece)))
         .onFalse(Commands.runOnce(s_Intake::stopIntake)
           .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(0.5)))
           .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
@@ -456,10 +472,10 @@ public class RobotContainer {
             s_Cannon.setCannonAngle(nodeGridChooser.getSelected().getNodeCannonAngleLidUp());
           }
         }))
-          .alongWith(
-                  s_Intake.outALittle()
-                  .andThen(Commands.waitUntil(s_Lid::lidWithinError))
-                  .andThen(s_Intake.inALittle()))
+          // .alongWith(
+                  // s_Intake.outALittle()
+                  // (Commands.waitUntil(s_Lid::lidWithinError))
+                  // .andThen(s_Intake.inALittle()))
           .alongWith(
                   Commands.waitUntil(s_Cannon::cannonErrorWithinRange)
                   .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(nodeGridChooser.getSelected().getExtension()))))
@@ -471,7 +487,6 @@ public class RobotContainer {
     new Trigger(s_Intake::haveGamePiece)
       .onTrue(Commands.runOnce(()-> s_Cannon.setExtensionInches(1))
         .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
-        .andThen(()-> s_Lid.setLid(180.0))
          .andThen(Commands.waitUntil(s_Lid::lidWithinError).andThen(()-> s_Cannon.setCannonAngleSides(robotFacing(), 80.0)))
           .alongWith(Commands.runOnce(() -> {s_LEDs.setChaseColorsSlot(0); s_LEDs.setMode(LEDs.LEDMode.CHASING);}))) // chasing leds because we have a game piece
       .onFalse(Commands.either(
@@ -481,8 +496,8 @@ public class RobotContainer {
 
     new Trigger(new ChangeChecker<>(this::robotFacing))
       .onTrue(Commands.either(
-        Commands.runOnce(()-> s_Cannon.setCannonAngleSides(robotFacing(), 80.0)),
-        Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), 100))
+        Commands.runOnce(()-> s_Cannon.setCannonAngleSides(robotFacing(), 65.0)),
+        Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), 115.0))
           .unless(xBox.rightTrigger(.1)) // towards pickup
           .alongWith(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle))),
         s_Intake::haveGamePiece));

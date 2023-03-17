@@ -7,6 +7,8 @@ import com.revrobotics.SparkMaxPIDController;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
+import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -22,6 +24,9 @@ public class Intake extends SubsystemBase implements Loggable{
     private final SparkMaxLimitSwitch intakeHardStop = m_intakeMotor.getReverseLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen);
     private double speed = 0;
     private boolean haveGamePiece = false;
+    private LinearFilter currentFilter = LinearFilter.movingAverage(10);
+    @Log
+    private double filteredCurrent;
     @Log
     private double intakeEncoderPosition;
     public Intake() {
@@ -45,6 +50,7 @@ public class Intake extends SubsystemBase implements Loggable{
     public void periodic() {
         m_intakeMotor.set(speed);
         intakeEncoderPosition = m_intakeEncoder.getPosition();
+        filteredCurrent = currentFilter.calculate(getIntakeCurrent());
     }
 
 
@@ -59,6 +65,11 @@ public class Intake extends SubsystemBase implements Loggable{
     @Log.Graph
     public double getIntakeCurrent() {
         return m_intakeMotor.getOutputCurrent();
+    }
+
+    @Log
+    public double getFilteredCurrent() {
+      return filteredCurrent;
     }
 
     @Log.BooleanBox(tabName = "nodeSelector")
@@ -93,13 +104,14 @@ public class Intake extends SubsystemBase implements Loggable{
       this.haveGamePiece = input;
   }
 
-  @Log.BooleanBox
+  @Log.BooleanBox(tabName = "nodeSelector")
   public boolean isLimitSwitchPressed() {
     return intakeHardStop.isPressed();
   }
 
   public Command waitUntilHaveGamePiece() {
-    return Commands.waitUntil(new Trigger(() -> getIntakeCurrent() > 40).debounce(.5, DebounceType.kRising))
-        .raceWith(Commands.waitUntil(this::isLimitSwitchPressed)).andThen(Commands.runOnce(() -> haveGamePiece = true));
+    Debouncer m_debouncer = new Debouncer(0.30, DebounceType.kRising);
+    return Commands.waitUntil(()-> m_debouncer.calculate(getFilteredCurrent() > 30) || isLimitSwitchPressed()).andThen(Commands.runOnce(() -> haveGamePiece = true));
+    
   }
 }

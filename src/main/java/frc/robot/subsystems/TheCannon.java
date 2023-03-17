@@ -28,7 +28,7 @@ import io.github.oblarg.oblog.annotations.Log;
 
 public class TheCannon extends SubsystemBase implements Loggable {
   /** Creates a new TheCannon. */
-@Log
+@Log(tabName = "NodeSelector")
 public double extensionInches = ExtendoConstants.INITIALIZED_INCHES;
 @Log
 public double cannonRotation = CannonConstants.INITIALIZED_ANGLE;
@@ -138,7 +138,7 @@ private ArmFeedforward m_feedforward =
   }
 
   
-  @Log
+  @Log(tabName = "NodeSelector")
   public double getExtensionInches(){
     return extensionInches;
   }
