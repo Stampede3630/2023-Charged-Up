@@ -29,6 +29,8 @@ public class Intake extends SubsystemBase implements Loggable{
     private SparkMaxLimitSwitch intakeHardStop = m_intakeMotor.getReverseLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen);
     private double speed = 0;
     private boolean haveGamePiece = false;
+    @Log
+    private double intakeEncoderPosition;
     public Intake() {
 
         m_intakeMotor.setSmartCurrentLimit(80);
@@ -47,7 +49,9 @@ public class Intake extends SubsystemBase implements Loggable{
     @Override
     public void periodic() {
         m_intakeMotor.set(speed);
+        intakeEncoderPosition = m_intakeEncoder.getPosition();
     }
+
 
     public void setIntake(double intakeSpeed) {
         speed = intakeSpeed;
@@ -71,7 +75,13 @@ public class Intake extends SubsystemBase implements Loggable{
         haveGamePiece = false;
     }
     
+    public void outALittle(){
+        m_intakeEncoder.setPosition(intakeEncoderPosition - 2);
+    }
 
+    public void inALittle(){
+        m_intakeEncoder.setPosition(intakeEncoderPosition + 15);
+    }
     public boolean checkForGamePiece() {
         haveGamePiece = intakeHardStop.isPressed() ? true : haveGamePiece; // latching
         return haveGamePiece;
@@ -87,7 +97,7 @@ public class Intake extends SubsystemBase implements Loggable{
   }
 
   public Command waitUntilHaveGamePiece() {
-    return Commands.waitUntil(new Trigger(() -> getIntakeCurrent() > 50).debounce(.5, DebounceType.kRising))
+    return Commands.waitUntil(new Trigger(() -> getIntakeCurrent() > 40).debounce(.5, DebounceType.kRising))
         .raceWith(Commands.waitUntil(this::isLimitSwitchPressed)).andThen(Commands.runOnce(() -> haveGamePiece = true));
   }
 }

@@ -50,51 +50,51 @@ public class NodePosition {
     */
     public enum NodeGrid {
       LOW_LEFT(0, -22, 0, "leftLow", 180, 37.5, 0.0, 150.0),
-      LOW_CENTER(0, 0, 0, "midLow", 180, 100, 0, 100),
+      LOW_CENTER(0, 0, 0, "midLow", 0, 100, 0, 100),
       LOW_RIGHT(0, 22, 0,"rightLow", 180, 37.5, 0.0, 150.0),
   
-      MID_LEFT(16.0, -22, 0, "leftMid", 47.0, 37.5, 26.0, 130.0),
-      MID_CENTER(3.5, 0, 0, "midMid", 154.3, 100.0, 38.0, 100.0),
-      MID_RIGHT(16.0, 22, 0,"rightMid", 47.0, 37.5, 26.0, 130.0),
+      MID_LEFT(16.0, -22, 0, "leftMid", 40.0, 37.5, 26.0, 130.0),
+      MID_CENTER(3.5, 0, 0, "midMid", 38.0, 100.0, 38.0, 100.0),
+      MID_RIGHT(16.0, 22, 0,"rightMid", 40.0, 37.5, 26.0, 130.0),
   
   
-      HIGH_LEFT(32.5, -22, 0, "leftHigh", 141.3, 37.5, 33.0, 135.0), //WORKS
-      HIGH_CENTER(25.0, 0, 0, "midHigh", 141.3, 100.0, 38.7, 100.0), //WORKS
-      HIGH_RIGHT(32.5, 22, 0, "rightHigh", 141.3, 37.5, 33.0, 135.0); //WORKS
+      HIGH_LEFT(33.5, -22, 0, "leftHigh", 43.0, 37.5, 43.0, 40.0), //ej 3/16
+      HIGH_CENTER(25.0, 0, 0, "midHigh", 38.7, 100.0, 38.7, 100.0), //ej3/15
+      HIGH_RIGHT(33.5, 22, 0, "rightHigh", 43.0, 37.5, 43.0, 40.0); //ej3/16
       
   
       public final double extension;
       public final double xOffset;
       public final double yOffset;
       public final String widgetName;
-      public final double lidDownCannonAngle;
-      public final double lidDownLidPosition;
       public final double lidUpCannonAngle;
       public final double lidUpLidPosition;
+      public final double lidDownCannonAngle;
+      public final double lidDownLidPosition;
       private NodeGrid(double extension, double yOffset, double xOffset, String widgetName, double lidDownCannonAngle, double lidDownLidPosition, double lidUpCannonAngle, double lidUpLidPosition) {
         this.extension = extension;
         this.xOffset = xOffset;
         this.yOffset = yOffset;
-        this.lidDownCannonAngle = lidDownCannonAngle;
+        this.lidUpCannonAngle = lidDownCannonAngle;
         this.widgetName = widgetName;
-        this.lidDownLidPosition = lidDownLidPosition;
-        this.lidUpCannonAngle = lidUpCannonAngle;
-        this.lidUpLidPosition = lidUpLidPosition;
+        this.lidUpLidPosition = lidDownLidPosition;
+        this.lidDownCannonAngle = lidUpCannonAngle;
+        this.lidDownLidPosition = lidUpLidPosition;
       }
 
-      public double getNodeCannonAngleLidDown(){
-        return lidDownCannonAngle;
-      }
-
-      public double getNodeLidPositionLidDown(){
-        return lidDownLidPosition;
-      }
       public double getNodeCannonAngleLidUp(){
         return lidUpCannonAngle;
       }
 
       public double getNodeLidPositionLidUp(){
         return lidUpLidPosition;
+      }
+      public double getNodeCannonAngleLidDown(){
+        return lidDownCannonAngle;
+      }
+
+      public double getNodeLidPositionLidDown(){
+        return lidDownLidPosition;
       }
       public double getExtension(){
         return extension;

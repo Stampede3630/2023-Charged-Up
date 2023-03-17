@@ -20,6 +20,7 @@ public class Lid extends SubsystemBase implements Loggable{
     private CANSparkMax m_lidMotor = new CANSparkMax(LidConstants.SPARK_MAX_ID, MotorType.kBrushless);
     private SparkMaxAbsoluteEncoder m_lidAbsolute = m_lidMotor.getAbsoluteEncoder(Type.kDutyCycle);
     private SparkMaxPIDController m_lidPid = m_lidMotor.getPIDController();
+    @Log
     public double lidReference = LidConstants.INITIALIZED_ANGLE;
 
     public Lid() {
@@ -78,5 +79,9 @@ public class Lid extends SubsystemBase implements Loggable{
     
     public double getLidCurrent() {
         return m_lidMotor.getOutputCurrent();
+    }
+
+    public boolean lidWithinError(){
+        return Math.abs(lidReference - lidPosition()) < LidConstants.ERROR;
     }
 }

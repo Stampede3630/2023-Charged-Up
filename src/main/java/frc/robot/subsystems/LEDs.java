@@ -22,7 +22,9 @@ public class LEDs extends SubsystemBase {
 
   private final double STROBE_TIME_MS = 500;
   private double previousTime = System.currentTimeMillis();
-  private final Color[] strobeColors = {new Color(0,0,255),new Color(255,255,0)};
+  private final Color[][] strobeColors = {{new Color(0,0,255),new Color(255,255,0)},
+  {new Color(0,0,0),new Color(255,55,0)}};
+  private int strobeColorsSlot = 0;
   private double chaseSeparator = 0; 
   private LEDMode mode = LEDMode.RAINBOW;
   
@@ -49,6 +51,9 @@ public class LEDs extends SubsystemBase {
     // This method will be called once per scheduler run
   }
 
+  public void setStrobeColorsSlot(int strobeColorsSlot) {
+      this.strobeColorsSlot = strobeColorsSlot;
+  }
   public void setMode(LEDMode mode) {
     this.mode = mode;
   }
@@ -93,14 +98,14 @@ public class LEDs extends SubsystemBase {
       // shape is a circle so only one value needs to precess
       // Set the value to claw machine + bing chilling 
 
-      m_LEDBuffer.setLED(i, strobeColors[0]);
+      m_LEDBuffer.setLED(i, strobeColors[strobeColorsSlot][0]);
     }
     for (int i = 0; i < m_LEDBuffer.getLength()-chaseSeparator; i++) {
       // Calculate the hue - hue is easier for rainbows because the color
       // shape is a circle so only one value needs to precess
       // Set the value to claw machine + bing chilling 
 
-      m_LEDBuffer.setLED(i, strobeColors[1]);
+      m_LEDBuffer.setLED(i, strobeColors[strobeColorsSlot][1]);
        
     }
     chaseSeparator++;
@@ -120,14 +125,14 @@ public class LEDs extends SubsystemBase {
       // shape is a circle so only one value needs to precess
       // Set the value to claw machine + bing chilling 
 
-      m_LEDBuffer.setLED(i%length, strobeColors[0]);
+      m_LEDBuffer.setLED(i%length, strobeColors[strobeColorsSlot][0]);
     }
     for (int i = delim2; i < delim1+(delim1>delim2 ? 0 : length); i++) { // wrap if 2 is further than 1
       // Calculate the hue - hue is easier for rainbows because the color
       // shape is a circle so only one value needs to precess
       // Set the value to claw machine + bing chilling 
 
-      m_LEDBuffer.setLED(i%length, strobeColors[1]);
+      m_LEDBuffer.setLED(i%length, strobeColors[strobeColorsSlot][1]);
        
     }
     chaseSeparator += CHASE_MOVE_PER_MS*timeElapsed;

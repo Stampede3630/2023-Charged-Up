@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,10 +23,12 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
@@ -36,6 +39,7 @@ import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.NodePosition.NodeGrid;
@@ -47,6 +51,7 @@ import frc.robot.subsystems.SwerveDrive;
 import frc.robot.subsystems.TheCannon;
 import frc.robot.subsystems.LEDs.LEDMode;
 import frc.robot.subsystems.swerve.SwerveConstants;
+import frc.robot.util.ChangeChecker;
 import frc.robot.util.SendableChooserWrapper;
 import io.github.oblarg.oblog.Logger;
 import io.github.oblarg.oblog.annotations.Config;
@@ -68,8 +73,6 @@ public class RobotContainer {
   private final CommandXboxController xBox = new CommandXboxController(0);
 
   SwerveAutoBuilder autoBuilder;
-  public final String[] AUTOS_TO_LOAD = {"LZThreePieceCubeFun" ,"jankHighScoreOnly", "New Path", "chargeScoreCube", "onePieceConeGrab","onePieceCubeGrab","twoPieceCube","twoPieceCone","LZTwoPieceCone","LZTwoPieceCube","LZTwoPieceCubeCharge"};
-
 
   // This is just an example event map. It would be better to have a constant,
   // global event map
@@ -96,7 +99,7 @@ public class RobotContainer {
   private final Intake s_Intake = new Intake();
   
   public double intakeCannonAngle;
-  public double intakeLidAngle;
+  public double intakeLidAngle=Constants.LidConstants.INITIALIZED_ANGLE;
   public double intakeSpeed;
   public boolean facingOverrideButton;
 
@@ -221,20 +224,7 @@ public class RobotContainer {
                       // commands
     ); 
 
-    // List<String> files = List.of(new File(Filesystem.getDeployDirectory(), "pathplanner/").list());
-    // files.removeIf((str) -> !str.endsWith(".path"));
-    // for (String name : files) {
-    //   String pathName = name.split("\\.")[0];
-    //   autoSelect.addOption(pathName, PathPlanner.loadPathGroup(pathName,
-    //     new PathConstraints(2, 2)));
-    // }
-    for (String autoName : AUTOS_TO_LOAD) { // load all autos dynamically
-      
-      autoSelect.addOption(autoName, PathPlanner.loadPathGroup(autoName,
-        new PathConstraints(4, 4)));
-    }
-    autoSelect.setDefaultOption("chargeScoreCube", PathPlanner.loadPathGroup("chargeScoreCube", new PathConstraints(1, 1)));
-
+    loadPaths();
 
     s_SwerveDrive.setDefaultCommand(
         s_SwerveDrive.joystickDriveCommand(
@@ -247,6 +237,19 @@ public class RobotContainer {
     configureButtonBindings();
     Logger.configureLoggingAndConfig(this, false);
     // SmartDashboard.getString("nodeselector/Node Grid Chooser", "");
+  }
+
+  private void loadPaths() {
+    // load autos completely dynamically -- any autos in pathplanner folder will be added to selector
+    List<File> files = List.of(
+      new File(Filesystem.getDeployDirectory(), "pathplanner")
+      .listFiles((dir, name) -> name.endsWith(".path")));
+    for (File file : files) {
+      String pathName = file.getName().split("\\.")[0];
+      autoSelect.addOption(pathName, PathPlanner.loadPathGroup(pathName,
+        new PathConstraints(4, 4)));
+    }
+    autoSelect.setDefaultOption(files.get(0).getName().split("\\.")[0], PathPlanner.loadPathGroup(files.get(0).getName().split("\\.")[0], new PathConstraints(4, 4)));
   }
 
   /**
@@ -273,6 +276,7 @@ public class RobotContainer {
 
     new Trigger(DriverStation::isEnabled)
           .onTrue(Commands.runOnce(s_SwerveDrive::setToBrake)
+          .alongWith(Commands.runOnce(() -> {s_LEDs.setStrobeColorsSlot(1); s_LEDs.setMode(LEDMode.CHASING);}))
           .alongWith(Commands.runOnce(s_Cannon::setCannonToBrake)));
 
 
@@ -353,26 +357,30 @@ public class RobotContainer {
     //-> extension + cannonRot to setpoint
     xBox.y()
         .onTrue((Commands.runOnce(()-> {
-          if (robotFacing()==FacingPOI.HUMAN_PLAYER){
-            s_Lid.setLidReference(nodeGridChooser.getSelected().getNodeLidPositionLidUp());
-            s_Cannon.setCannonAngle(nodeGridChooser.getSelected().getNodeCannonAngleLidUp());
-          }
-          else {
+          if (robotFacing()==FacingPOI.COMMUNITY){
             s_Lid.setLidReference(nodeGridChooser.getSelected().getNodeLidPositionLidDown());
             s_Cannon.setCannonAngle(nodeGridChooser.getSelected().getNodeCannonAngleLidDown());
+          }
+          else {
+            s_Lid.setLidReference(nodeGridChooser.getSelected().getNodeLidPositionLidUp());
+            s_Cannon.setCannonAngle(nodeGridChooser.getSelected().getNodeCannonAngleLidUp());
           }
           //s_Cannon.setCannonAngleSides(robotFacing(), NodePosition.getNodePosition(nodeGroupChooser.getSelected(), nodeGridChooser.getSelected()).getCannonAngle());
           // switch ()
         }))
           .andThen(new SequentialCommandGroup(Commands.waitUntil(s_Cannon::cannonErrorWithinRange)),
-              Commands.runOnce(()-> s_Cannon.setExtensionInches(nodeGridChooser.getSelected().getExtension()))));
+              Commands.runOnce(()-> s_Cannon.setExtensionInches(nodeGridChooser.getSelected().getExtension())))
+              .andThen(Commands.waitUntil(s_Lid::lidWithinError))
+        .andThen(Commands.runOnce(()-> s_Intake.setIntake(.4))
+        .until(s_Intake::haveGamePiece)));
 
     //logic/no controller triggers
     new Trigger(s_Intake::haveGamePiece)
       .onTrue(Commands.runOnce(()-> s_Cannon.setExtensionInches(1))
         .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
-         .andThen(()-> s_Cannon.setCannonAngleSides(robotFacing(), 50.0))
-          .alongWith(Commands.runOnce(() -> s_LEDs.setMode(LEDs.LEDMode.CHASING)))) // chasing leds because we have a game piece
+        .andThen(()-> s_Lid.setLid(180.0))
+         .andThen(Commands.waitUntil(s_Lid::lidWithinError).andThen(()-> s_Cannon.setCannonAngleSides(robotFacing(), 50.0)))
+          .alongWith(Commands.runOnce(() -> {s_LEDs.setStrobeColorsSlot(0); s_LEDs.setMode(LEDs.LEDMode.CHASING);}))) // chasing leds because we have a game piece
       .onFalse(Commands.either(
         Commands.runOnce(s_LEDs::bePurple), 
         Commands.runOnce(s_LEDs::beYellow), 
@@ -399,6 +407,9 @@ public class RobotContainer {
         Commands.runOnce(s_LEDs::beYellow), 
         () -> gamePieceTypeChooser.getSelected().equals(GamePieceType.CUBE)))
       .onTrue(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle)));
+      
+    new Trigger(new ChangeChecker<Alliance>(DriverStation::getAlliance, Alliance.Invalid, DriverStation::isDSAttached))
+        .onTrue(Commands.runOnce(this::loadPaths));
   }
 
   public void setIntakeParameters() {
@@ -407,19 +418,19 @@ public class RobotContainer {
         case CUBE://impossible
           intakeCannonAngle = 180.0;
           intakeLidAngle = 37.5;
-          intakeSpeed = -1.0/3.5;
+          intakeSpeed = -1.0;
           intakeExtensionInches = 0.5; 
           break;
         case UPRIGHT_CONE://revise, should be same as tipped
           intakeCannonAngle = 180.0;
           intakeLidAngle = 210.0;
-          intakeSpeed = 1.0/2;
+          intakeSpeed = 1.0;
           intakeExtensionInches = 0.5;
           break;
         case TIPPED_CONE: //revise, should be same as upright
           intakeCannonAngle = 180.0;
           intakeLidAngle = 210.0;
-          intakeSpeed = 1.0/2;
+          intakeSpeed = 1.0;
           intakeExtensionInches = 0.5;
           break;
         case NOTHING:
@@ -435,20 +446,20 @@ public class RobotContainer {
         case CUBE:
           intakeCannonAngle = 136.5;
           intakeLidAngle = 55.0;
-          intakeSpeed = -1.0/3.5;
+          intakeSpeed = -1.0;
           intakeExtensionInches = 0.5
           ;
           break;
         case TIPPED_CONE:
           intakeCannonAngle = 177.5;
           intakeLidAngle = 57.5;
-          intakeSpeed = 1.0/3;
+          intakeSpeed = 1.0;
           intakeExtensionInches = 0.5;
           break;
         case UPRIGHT_CONE://should be same as tipped
           intakeCannonAngle = 177.5;
           intakeLidAngle = 57.5;
-          intakeSpeed = 1.0/3;
+          intakeSpeed = 1.0;
           intakeExtensionInches = 0.5;
           break;
         case NOTHING:
@@ -474,13 +485,13 @@ public class RobotContainer {
             intakeCannonAngle = -7.0;
             intakeLidAngle = 206.0;
 
-            intakeSpeed = 1.0/2;
+            intakeSpeed = 1.0;
             intakeExtensionInches = 0.5;
             break;
           case TIPPED_CONE: // impossible
             intakeCannonAngle = 4.0;
             intakeLidAngle = 180.0;
-            intakeSpeed = 1.0/2;
+            intakeSpeed = 1.0;
             intakeExtensionInches = 0.5;
             break;
           case NOTHING:
@@ -497,20 +508,19 @@ public class RobotContainer {
           case CUBE://Caleb 3/14/23
             intakeCannonAngle = 200.0;
             intakeLidAngle = 60.0;
-            intakeSpeed = -1.0
-            ;
+            intakeSpeed = -1.0;
             intakeExtensionInches = 2.5;
             break;
           case UPRIGHT_CONE://Caleb 3/14/23
             intakeCannonAngle = 198.5;
             intakeLidAngle = 140.0;
-            intakeSpeed = 1.0/2;
+            intakeSpeed = 1.0;
             intakeExtensionInches = 1.0;
             break; 
           case TIPPED_CONE://Caleb 3/14/23
-          intakeCannonAngle = 198.5;
+          intakeCannonAngle = 195.5;
           intakeLidAngle = 140.0;
-          intakeSpeed = 1.0/2;
+          intakeSpeed = 1.0;
           intakeExtensionInches = 1.0;
             break; 
           case NOTHING: 
@@ -662,7 +672,7 @@ public class RobotContainer {
 
   public Command autoScoreHighCube() { //works if running as NOT first command (for some reason) -ej 3/15
     return Commands.runOnce(()->s_Lid.setLid(100.0))
-      .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(NodePosition.NodeGrid.HIGH_CENTER.getNodeCannonAngleLidUp())))
+      .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(NodePosition.NodeGrid.HIGH_CENTER.getNodeCannonAngleLidDown())))
       .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
       .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(23.5)).alongWith(Commands.print("extendo")))
       .andThen(Commands.waitSeconds(0.2))
@@ -677,8 +687,8 @@ public class RobotContainer {
       }
 
   public Command autoScoreHighCone() {
-    return Commands.runOnce(()->s_Lid.setLid(NodePosition.NodeGrid.HIGH_LEFT.getNodeLidPositionLidUp()))
-      .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(NodePosition.NodeGrid.HIGH_LEFT.getNodeCannonAngleLidUp())))
+    return Commands.runOnce(()->s_Lid.setLid(NodePosition.NodeGrid.HIGH_LEFT.getNodeLidPositionLidDown()))
+      .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(NodePosition.NodeGrid.HIGH_LEFT.getNodeCannonAngleLidDown())))
       .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
       .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(NodePosition.NodeGrid.HIGH_LEFT.getExtension())))
       .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
@@ -692,8 +702,8 @@ public class RobotContainer {
   }
 
   public Command autoScoreMidCone() {
-    return Commands.runOnce(()->s_Lid.setLid(NodePosition.NodeGrid.MID_LEFT.getNodeLidPositionLidUp()))
-      .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(NodePosition.NodeGrid.MID_LEFT.getNodeCannonAngleLidUp())))
+    return Commands.runOnce(()->s_Lid.setLid(NodePosition.NodeGrid.MID_LEFT.getNodeLidPositionLidDown()))
+      .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(NodePosition.NodeGrid.MID_LEFT.getNodeCannonAngleLidDown())))
       .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
       .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(NodePosition.NodeGrid.MID_LEFT.getExtension())))
       .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
@@ -746,6 +756,7 @@ public class RobotContainer {
     .andThen(Commands.runOnce(s_Intake::stopIntake))
     .andThen(Commands.runOnce(()->s_Lid.setLid(100.0)));
   }
+  
 
   @Config
   public void setCannonOffset(double input){
