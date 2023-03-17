@@ -686,42 +686,6 @@ public class RobotContainer {
     TIPPED_CONE, UPRIGHT_CONE, CUBE, NOTHING
   }
 
-  public enum NodeDriverStation {
-    ONE("driver station one"), TWO("driver station two"), THREE("driver station three");
-
-    public final String dsFriendlyName;
-
-    NodeDriverStation(String dsFriendlyName) {
-      this.dsFriendlyName = dsFriendlyName;
-    }
-  }
-
-  public static enum ScoringSetPoints {
-    HIGH("for high node", 40, 40),
-    MID("for mid node", 40, 20),
-    LOW("for low/hybrid node", 0, 10),
-    UP("straight up", 90, 0),
-    ZERO("straight out", 0, 0);
-
-    public final String setPointName;
-    public final double cannonAngle;
-    public final double cannonExtention;
-
-    ScoringSetPoints(String setPointName, double cannonAngle, double cannonExtention){
-      this.setPointName = setPointName;
-      this.cannonAngle = cannonAngle;
-      this.cannonExtention = cannonExtention;
-    }
-
-    public double getTestCannonExtension(){
-      return cannonExtention;
-    }
-
-    public double getCannonAngle(){
-      return cannonAngle;
-    }
-
-  }
 
   public enum PickupLocation {
     GROUND(-14, 10), 
