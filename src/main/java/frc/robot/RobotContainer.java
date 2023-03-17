@@ -450,15 +450,11 @@ public class RobotContainer {
             s_Lid.setLidReference(nodeGridChooser.getSelected().getNodeLidPositionLidDown());
             s_Cannon.setCannonAngle(nodeGridChooser.getSelected().getNodeCannonAngleLidDown());
           }
-          else if(robotFacing()==FacingPOI.HUMAN_PLAYER) {
+          else {
             s_Lid.setLidReference(nodeGridChooser.getSelected().getNodeLidPositionLidUp());
             s_Cannon.setCannonAngle(nodeGridChooser.getSelected().getNodeCannonAngleLidUp());
           }
 
-          else if(robotFacing()==FacingPOI.NOTHING){
-            s_Lid.setLidReference(nodeGridChooser.getSelected().getNodeLidPositionLidUp());
-            s_Cannon.setCannonAngle(nodeGridChooser.getSelected().getNodeCannonAngleLidUp());
-          }
           
           //s_Cannon.setCannonAngleSides(robotFacing(), NodePosition.getNodePosition(nodeGroupChooser.getSelected(), nodeGridChooser.getSelected()).getCannonAngle());
           // switch ()
