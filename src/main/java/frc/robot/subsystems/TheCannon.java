@@ -235,7 +235,7 @@ private ArmFeedforward m_feedforward =
     double angleToSet = cannonRotation; // no change
     if (robotFacing == FacingPOI.COMMUNITY)
       angleToSet = 180-angle;
-    else if (robotFacing == FacingPOI.HUMAN_PLAYER)
+    else // hp or nothing
       angleToSet = angle;
 
     setCannonAngle(angleToSet);

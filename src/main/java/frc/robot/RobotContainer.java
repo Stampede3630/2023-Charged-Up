@@ -25,7 +25,6 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
@@ -196,15 +195,6 @@ public class RobotContainer {
       .withPosition(0, 3)
       .withSize(8, 3);
 
-    eventMap.put("1stBallPickup", new WaitCommand(2));
-    eventMap.put("autoScoreHigh", autoScoreHighCube());
-    eventMap.put("autoScoreHighCone", autoScoreHighCone());
-    eventMap.put("autoIntake", autoIntakeCube());
-    eventMap.put("autoBalance", s_SwerveDrive.autoBalanceCommand());
-    eventMap.put("autoScoreMidCube", autoScoreMidCube());
-    eventMap.put("autoScoreMidCone", autoScoreMidCone());
-    eventMap.put("autoScoreLowCube", autoScoreLowCube());
-
     loadPaths();
 
     s_SwerveDrive.setDefaultCommand(
@@ -235,6 +225,14 @@ public class RobotContainer {
             s_SwerveDrive // The drive subsystem. Used to properly set the requirements of path following
             // commands
     );
+    eventMap.put("1stBallPickup", new WaitCommand(2));
+    eventMap.put("autoScoreHigh", autoScoreHighCube());
+    eventMap.put("autoScoreHighCone", autoScoreHighCone());
+    eventMap.put("autoIntake", autoIntakeCube());
+    eventMap.put("autoBalance", s_SwerveDrive.autoBalanceCommand());
+    eventMap.put("autoScoreMidCube", autoScoreMidCube());
+    eventMap.put("autoScoreMidCone", autoScoreMidCone());
+    eventMap.put("autoScoreLowCube", autoScoreLowCube());
 
     // load autos completely dynamically -- any autos in pathplanner folder will be added to selector
     List<File> files = List.of(
@@ -272,7 +270,7 @@ public class RobotContainer {
 
     new Trigger(DriverStation::isEnabled)
           .onTrue(Commands.runOnce(s_SwerveDrive::setToBrake)
-          .alongWith(Commands.runOnce(() -> {s_LEDs.setStrobeColorsSlot(1); s_LEDs.setMode(LEDMode.CHASING);}))
+          .alongWith(Commands.runOnce(() -> {s_LEDs.setChaseColorsSlot(1); s_LEDs.setMode(LEDMode.CHASING);}))
           .alongWith(Commands.runOnce(s_Cannon::setCannonToBrake)));
 
 
@@ -381,20 +379,19 @@ public class RobotContainer {
       .onTrue(Commands.runOnce(()-> s_Cannon.setExtensionInches(1))
         .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
         .andThen(()-> s_Lid.setLid(180.0))
-         .andThen(Commands.waitUntil(s_Lid::lidWithinError).andThen(()-> s_Cannon.setCannonAngleSides(robotFacing(), 50.0)))
-          .alongWith(Commands.runOnce(() -> {s_LEDs.setStrobeColorsSlot(0); s_LEDs.setMode(LEDs.LEDMode.CHASING);}))) // chasing leds because we have a game piece
+         .andThen(Commands.waitUntil(s_Lid::lidWithinError).andThen(()-> s_Cannon.setCannonAngleSides(robotFacing(), 80.0)))
+          .alongWith(Commands.runOnce(() -> {s_LEDs.setChaseColorsSlot(0); s_LEDs.setMode(LEDs.LEDMode.CHASING);}))) // chasing leds because we have a game piece
       .onFalse(Commands.either(
         Commands.runOnce(s_LEDs::bePurple), 
         Commands.runOnce(s_LEDs::beYellow), 
         ()-> (gamePieceTypeChooser.getSelected().equals(GamePieceType.CUBE))));
 
-    new Trigger(() -> robotFacing() != FacingPOI.NOTHING)
+    new Trigger(new ChangeChecker<>(this::robotFacing))
       .onTrue(Commands.either(
-        Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle))
-        .unless(xBox.rightTrigger(.1)),
-        Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), 40))
+              Commands.runOnce(()-> s_Cannon.setCannonAngleSides(robotFacing(), 80.0)),
+        Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), 80))
           .unless(xBox.rightTrigger(.1)) // towards pickup
-          .andThen(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle))), 
+          .alongWith(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle))),
         s_Intake::haveGamePiece));
     
 // //TODO: Commented this out because it's not ready  
@@ -409,9 +406,6 @@ public class RobotContainer {
         Commands.runOnce(s_LEDs::beYellow), 
         () -> gamePieceTypeChooser.getSelected().equals(GamePieceType.CUBE)))
       .onTrue(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle)));
-      
-    new Trigger(new ChangeChecker<Alliance>(DriverStation::getAlliance, Alliance.Invalid, DriverStation::isDSAttached))
-        .onTrue(Commands.runOnce(this::loadPaths));
   }
 
   public void setIntakeParameters() {

@@ -13,14 +13,22 @@ public class ChangeChecker<T> implements BooleanSupplier{
         oldValue = initialValue;
         condition = conditionForChecking;
     }
+
+    public ChangeChecker(Supplier<T> valueSupplier) {
+        this.valueGetter = valueSupplier;
+        this.condition = () -> true;
+        this.oldValue = null;
+    }
+
     @Override
     public boolean getAsBoolean() {
-        if (condition.getAsBoolean()) {
+        if (condition.getAsBoolean()) { // only eval if the condition is true
             boolean didItChange = false;
             T currentValue = valueGetter.get();
-            try {
-                didItChange = currentValue.equals(oldValue);
-            } catch (NullPointerException ignored) {}
+            if (currentValue != null)
+                didItChange = !currentValue.equals(oldValue);
+            else if (oldValue != null) // current value is null and old value is not null
+                didItChange = true;
             oldValue = currentValue;
             return didItChange;
         } else 
