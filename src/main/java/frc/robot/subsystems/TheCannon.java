@@ -167,7 +167,7 @@ private ArmFeedforward m_feedforward =
       extensionInches = 0;
     }
   }
-  
+
   @Log
   public boolean cannonErrorWithinRange (){
     return Math.abs(cannonRotation - getCannonAngleEncoder()) < CannonConstants.ERROR; 
