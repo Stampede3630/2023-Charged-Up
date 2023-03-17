@@ -459,10 +459,10 @@ public class RobotContainer {
           //s_Cannon.setCannonAngleSides(robotFacing(), NodePosition.getNodePosition(nodeGroupChooser.getSelected(), nodeGridChooser.getSelected()).getCannonAngle());
           // switch ()
         }))
-          .andThen(new SequentialCommandGroup(Commands.waitUntil(s_Cannon::cannonErrorWithinRange)),
-              Commands.runOnce(()-> s_Cannon.setExtensionInches(nodeGridChooser.getSelected().getExtension())))
-              .andThen(Commands.waitUntil(s_Lid::lidWithinError))
-        .andThen(Commands.runOnce(()-> s_Intake.setIntake(intakeSpeed/3.0))));
+          .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
+          .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(nodeGridChooser.getSelected().getExtension())))
+          .andThen(Commands.waitUntil(s_Lid::lidWithinError)));
+//        .andThen(Commands.runOnce(()-> s_Intake.setIntake(intakeSpeed/3.0))));
 
     //logic/no controller triggers
     new Trigger(s_Intake::haveGamePiece)
