@@ -456,11 +456,14 @@ public class RobotContainer {
             s_Cannon.setCannonAngle(nodeGridChooser.getSelected().getNodeCannonAngleLidUp());
           }
         }))
-          .alongWith(s_Intake.outALittle())
-          .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
-          .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(nodeGridChooser.getSelected().getExtension())))
-          .andThen(Commands.waitUntil(s_Lid::lidWithinError))
-          .andThen(s_Intake.inALittle()));
+          .alongWith(
+                  s_Intake.outALittle()
+                  .andThen(Commands.waitUntil(s_Lid::lidWithinError))
+                  .andThen(s_Intake.inALittle()))
+          .alongWith(
+                  Commands.waitUntil(s_Cannon::cannonErrorWithinRange)
+                  .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(nodeGridChooser.getSelected().getExtension()))))
+          );
 
 //        .andThen(Commands.runOnce(()-> s_Intake.setIntake(intakeSpeed/3.0))));
 
