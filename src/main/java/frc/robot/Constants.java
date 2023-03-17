@@ -80,7 +80,7 @@ public final class Constants {
     public static final double KD = 0.0; //used to be 0
   }
 
-  public static final Translation2d blueScorePos[] = new Translation2d[] {
+  public static final Translation2d[] blueScorePos = new Translation2d[] {
     new Translation2d(0, 0),
     new Translation2d(0, 0),
     new Translation2d(0, 0)

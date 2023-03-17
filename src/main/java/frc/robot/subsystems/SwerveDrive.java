@@ -4,15 +4,8 @@
 
 package frc.robot.subsystems;
 
-
-import java.lang.constant.DirectMethodHandleDesc;
-import java.sql.Driver;
-import java.util.function.DoubleSupplier;
-
 import com.kauailabs.navx.frc.AHRS;
 
-import edu.wpi.first.hal.AllianceStationID;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
@@ -33,24 +26,21 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.interfaces.Gyro;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import frc.robot.Constants.DriverConstants;
 import frc.robot.subsystems.swerve.QuadFalconSwerveDrive;
 import frc.robot.subsystems.swerve.SwerveConstants;
 import frc.robot.subsystems.swerve.SwerveModule;
-import frc.robot.subsystems.swerve.SwerveModule.DriveMotor;
 import frc.robot.util.SimGyroSensorModel;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
+
+import java.util.function.DoubleSupplier;
 
 
 public class SwerveDrive extends SubsystemBase implements Loggable {
@@ -81,9 +71,9 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
     pitchRotationController = new ProfiledPIDController(5.4/67, 0, 0, 
       new TrapezoidProfile.Constraints(.7,.7));
     rotationController = new ProfiledPIDController(
-      Preferences.getDouble("pKPRotationController", SwerveConstants.kPRotationController),
-      Preferences.getDouble("pIPRotationController", SwerveConstants.kIRotationController),
-      Preferences.getDouble("pKDRotationController", SwerveConstants.kDRotationController),
+      Preferences.getDouble("pKPRotationController", SwerveConstants.P_ROTATION_CONTROLLER),
+      Preferences.getDouble("pIPRotationController", SwerveConstants.I_ROTATION_CONTROLLER),
+      Preferences.getDouble("pKDRotationController", SwerveConstants.D_ROTATION_CONTROLLER),
       new TrapezoidProfile.Constraints(Units.radiansToDegrees(SwerveConstants.MAX_SPEED_RADIANSperSECOND), 5*Units.radiansToDegrees(SwerveConstants.MAX_SPEED_RADIANSperSECOND)));
     rotationController.enableContinuousInput(-180.0, 180.0);
     rotationController.setTolerance(4.0);
@@ -120,21 +110,18 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
         module.simModule.simulationPeriodic(deltaTime);
       }    
 
-    } 
-
-    // System.out.println(visionPose);
-    // System.out.println(limelightLatency());
-    // System.out.println(m_odometry);
+    }
 
     deltaTime = Timer.getFPGATimestamp() - prevTime;
     prevTime = Timer.getFPGATimestamp();
+
 
     if(RobotBase.isSimulation()) {
       simNavx.update(robotPose, prevRobotPose, deltaTime);
     }
 
-    aprilTagDetectedFront = (NetworkTableInstance.getDefault().getTable("limelight-front").getEntry("tv").getDouble(0) == 1) ? true : false;
-    aprilTagDetectedBack = (NetworkTableInstance.getDefault().getTable("limelight-back").getEntry("tv").getDouble(0) == 1) ? true : false;
+    aprilTagDetectedFront = NetworkTableInstance.getDefault().getTable("limelight-front").getEntry("tv").getDouble(0) == 1;
+    aprilTagDetectedBack = NetworkTableInstance.getDefault().getTable("limelight-back").getEntry("tv").getDouble(0) == 1;
     // System.out.println(aprilTagDetected);
 
     robotPose = updateOdometry();
@@ -152,22 +139,14 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
   }
 
 
-  /**
-   * @param _x
-   * @param _y
-   * @param _rot
-   * @param DRIVE_GOVERNOR
-   * @param FIELD_RELATIVE
-   * @param ACCELERATED_INPUTS
-   */
   public CommandBase joystickDriveCommand(DoubleSupplier _x, DoubleSupplier _y, DoubleSupplier _rot){
     return Commands.run(
       () -> {
         double x = -(Math.abs(_x.getAsDouble()) < .1 ? 0 : _x.getAsDouble());
         double y = -(Math.abs(_y.getAsDouble()) < .1 ? 0 : _y.getAsDouble());
         double rot = -Math.pow((Math.abs(_rot.getAsDouble()) < .1 ? 0 : _rot.getAsDouble()), 3);
-        double joystickDriveGovernor = Preferences.getDouble("pDriveGovernor", DriverConstants.DRIVE_GOVERNOR);
-        if (Preferences.getBoolean("pAccelInputs", DriverConstants.ACCELERATED_INPUTS)) {
+        double joystickDriveGovernor = Preferences.getDouble("pDriveGovernor", Constants.DriverConstants.DRIVE_GOVERNOR);
+        if (Preferences.getBoolean("pAccelInputs", Constants.DriverConstants.ACCELERATED_INPUTS)) {
 
         } else {
           x = Math.signum(x) * Math.sqrt(Math.abs(x));
@@ -179,7 +158,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
             convertToMetersPerSecond(x)*joystickDriveGovernor,
             convertToMetersPerSecond(y)*joystickDriveGovernor), 
           convertToRadiansPerSecond(rot)* joystickDriveGovernor, 
-          Preferences.getBoolean("pFieldRelative", DriverConstants.FIELD_RELATIVE));
+          Preferences.getBoolean("pFieldRelative", Constants.DriverConstants.FIELD_RELATIVE));
         }, this);
   }
 
@@ -229,7 +208,6 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
 
   /**
    * @param xySpeedsMetersPerSec (X is Positive forward, Y is Positive Right)
-   * @param rRadiansPerSecond 
    * @param fieldRelative (SUGGESTION: Telop use field centric, AUTO use robot centric)
    */
   public void setDriveSpeeds(Translation2d xySpeedsMetersPerSec, double rRadiansPerSecond, boolean fieldRelative){
@@ -289,7 +267,6 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
   /**
    * Draw a pose that is based on the robot pose, but shifted by the translation of the module relative to robot center,
    * then rotated around its own center by the angle of the module.
-   * @param field
    */
   public void drawRobotOnField(Field2d field) {
     field.setRobotPose(m_odometry.getEstimatedPosition());
@@ -341,7 +318,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
 
     String allianceColorBotPose = DriverStation.getAlliance() == Alliance.Red ? "botpose_wpired" : "botpose_wpiblue";
 
-    double myArray[] = {0, 0, 0, 0, 0, 0};
+    double[] myArray = {0, 0, 0, 0, 0, 0};
     
     myArray = NetworkTableInstance.getDefault().getTable("limelight-front").getEntry(allianceColorBotPose).getDoubleArray(myArray);
 
@@ -360,7 +337,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
 
   public Pose2d limelightBotPoseBack(){
 
-    double myArray[] = {0, 0, 0, 0, 0, 0, 0};
+    double[] myArray = {0, 0, 0, 0, 0, 0, 0};
     String allianceColorBotPose = DriverStation.getAlliance() == Alliance.Red ? "botpose_wpired" : "botpose_wpiblue";
 
       myArray = NetworkTableInstance.getDefault().getTable("limelight-back").getEntry(allianceColorBotPose).getDoubleArray(myArray);
@@ -386,7 +363,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
    
     // return (vLatency * 0.001) + (11 * 0.001);
 
-    double myArray[] = {0, 0, 0, 0, 0, 0, 0};
+    double[] myArray = {0, 0, 0, 0, 0, 0, 0};
     String allianceColorBotPose = DriverStation.getAlliance() == Alliance.Red ? "botpose_wpired" : "botpose_wpiblue";
 
     myArray = NetworkTableInstance.getDefault().getTable("limelight-front").getEntry(allianceColorBotPose).getDoubleArray(myArray);
@@ -401,7 +378,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
    
     // return (vLatency * 0.001) + (11 * 0.001);
 
-    double myArray[] = {0, 0, 0, 0, 0, 0, 0};
+    double[] myArray = {0, 0, 0, 0, 0, 0, 0};
     String allianceColorBotPose = DriverStation.getAlliance() == Alliance.Red ? "botpose_wpired" : "botpose_wpiblue";
 
     myArray = NetworkTableInstance.getDefault().getTable("limelight-back").getEntry(allianceColorBotPose).getDoubleArray(myArray);

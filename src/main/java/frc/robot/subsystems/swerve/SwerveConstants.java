@@ -23,9 +23,9 @@ public final class SwerveConstants {
     public static final boolean DEFAULT_HOLD_ROBOT_ANGLE = false;
     public static final boolean DEFAULT_FIELD_RELATIVE_DRIVE = true;
     public static final double DEFAULT_HOLD_ROBOT_ANGLE_SETPOINT = 0;
-    public static final double kPRotationController = 6.0;
-    public static final double kDRotationController = 0;
-    public static final double kIRotationController = 0;
+    public static final double P_ROTATION_CONTROLLER = 6.0;
+    public static final double D_ROTATION_CONTROLLER = 0;
+    public static final double I_ROTATION_CONTROLLER = 0;
 
     // Swerve Drive Motor IDs
     public static final int FRDriveID = 15;
@@ -81,9 +81,9 @@ public final class SwerveConstants {
     public static final double kP = 1.4395;//0.54897; //now better!
 
     // CTRE CAN-based constants (shouldn't need to change these)
-    public static final int kDefaultPIDSlotID = 0;
-    public static final int kDefaultClosedLoopError = 1; // degrees
-    public static final int kDefaultTimeout = 30;
+    public static final int DEFAULT_PID_SLOT_ID = 0;
+    public static final int DEFAULT_CLOSED_LOOP_ERROR = 1; // degrees
+    public static final int DEFAULT_TIMEOUT = 30;
 
     // Constants for conversion maths (RARELY THESE SHOULD BE CHANGED)
     public static final double SECONDSper100MS = .1;
@@ -108,9 +108,6 @@ public final class SwerveConstants {
         public final double kPeakOutput;
 
         /**
-         * @param _kP
-         * @param _kI
-         * @param _kD
          */
         public Gains(double _kP, double _kI, double _kD) {
             kP = _kP;

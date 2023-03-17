@@ -5,10 +5,7 @@
 package frc.robot;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import com.pathplanner.lib.PathConstraints;
 import com.pathplanner.lib.PathPlanner;
@@ -28,18 +25,15 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.NodePosition.NodeGrid;
@@ -56,7 +50,6 @@ import frc.robot.util.SendableChooserWrapper;
 import io.github.oblarg.oblog.Logger;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
-import io.github.oblarg.oblog.annotations.Config.Configs;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -104,6 +97,8 @@ public class RobotContainer {
   private double intakeExtensionInches;
 
   private boolean sniperMode;
+  private HashMap<String, Command> eventMap = new HashMap<>();
+
   // private GamePieceType prev;  
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -111,7 +106,7 @@ public class RobotContainer {
   public RobotContainer() {
 
     
-    /**
+    /*
      * Preferences are cool. they store the values in the roborio flash memory so
      * they don't necessarily get reset to default.
      */
@@ -119,9 +114,9 @@ public class RobotContainer {
     Preferences.initBoolean("pAccelInputs", DriverConstants.ACCELERATED_INPUTS);
     Preferences.initDouble("pDriveGovernor", DriverConstants.DRIVE_GOVERNOR);
     Preferences.initBoolean("pOptimizeSteering", SwerveConstants.OPTIMIZESTEERING);
-    Preferences.initDouble("pKPRotationController", SwerveConstants.kPRotationController);
-    Preferences.initDouble("pKIRotationController", SwerveConstants.kDRotationController);
-    Preferences.initDouble("pKDRotationController", SwerveConstants.kIRotationController);
+    Preferences.initDouble("pKPRotationController", SwerveConstants.P_ROTATION_CONTROLLER);
+    Preferences.initDouble("pKIRotationController", SwerveConstants.D_ROTATION_CONTROLLER);
+    Preferences.initDouble("pKDRotationController", SwerveConstants.I_ROTATION_CONTROLLER);
     Preferences.initDouble("CannonKP", CannonConstants.KP);
     Preferences.initDouble("CannonKI", CannonConstants.KI);
     Preferences.initDouble("CannonKD", CannonConstants.KD);
@@ -190,19 +185,6 @@ public class RobotContainer {
       .withPosition(0, 3)
       .withSize(8, 3);
 
-
-      s_SwerveDrive.setDefaultCommand(
-        s_SwerveDrive.joystickDriveCommand(
-            () -> xBox.getLeftY() * (sniperMode ? 0.5 : 1),
-            () -> xBox.getLeftX() * (sniperMode ? 0.5 : 1),
-            () -> xBox.getRightX() * (sniperMode ? 0.5 : 1))
-        .withName("DefaultDrive"));
-    
-    // Configure the button bindings
-    configureButtonBindings();
-    Logger.configureLoggingAndConfig(this, false);
-    // SmartDashboard.getString("nodeselector/Node Grid Chooser", "");
-
     HashMap<String, Command> eventMap = new HashMap<>();
     eventMap.put("1stBallPickup", new WaitCommand(2));
     eventMap.put("autoScoreHigh", autoScoreHighCube());
@@ -212,8 +194,6 @@ public class RobotContainer {
     eventMap.put("autoScoreMidCube", autoScoreMidCube());
     eventMap.put("autoScoreMidCone", autoScoreMidCone());
     eventMap.put("autoScoreLowCube", autoScoreLowCube());
-
-    
 
     autoBuilder = new SwerveAutoBuilder(
         s_SwerveDrive::getOdometryPose, // Pose2d supplier
@@ -321,10 +301,33 @@ public class RobotContainer {
   }
 
   private void loadPaths() {
+    autoBuilder = new SwerveAutoBuilder(
+            s_SwerveDrive::getOdometryPose, // Pose2d supplier
+            s_SwerveDrive::resetOdometry, // Pose2d consumer, used to reset odometry at the beginning of auto
+            s_SwerveDrive.getKinematics(), // SwerveDriveKinematics
+            new PIDConstants(4, 0.0, 0.0), // PID constants to correct for translation error (used to create the X and Y
+            // PID controllers)
+            new PIDConstants(4, 0.0, 0.0), // PID constants to correct for rotation error (used to create the rotation
+            // controller)
+            s_SwerveDrive::setAutoModuleStates, // Module states consumer used to output to the drive subsystem
+            eventMap,
+            true,
+            s_SwerveDrive // The drive subsystem. Used to properly set the requirements of path following
+            // commands
+    );
+    eventMap.put("1stBallPickup", new WaitCommand(2));
+    eventMap.put("autoScoreHigh", autoScoreHighCube());
+    eventMap.put("autoScoreHighCone", autoScoreHighCone());
+    eventMap.put("autoIntake", autoIntakeCube());
+    eventMap.put("autoBalance", s_SwerveDrive.autoBalanceCommand());
+    eventMap.put("autoScoreMidCube", autoScoreMidCube());
+    eventMap.put("autoScoreMidCone", autoScoreMidCone());
+    eventMap.put("autoScoreLowCube", autoScoreLowCube());
+
     // load autos completely dynamically -- any autos in pathplanner folder will be added to selector
     List<File> files = List.of(
-      new File(Filesystem.getDeployDirectory(), "pathplanner")
-      .listFiles((dir, name) -> name.endsWith(".path")));
+            Objects.requireNonNull(new File(Filesystem.getDeployDirectory(), "pathplanner")
+                    .listFiles((dir, name) -> name.endsWith(".path"))));
     for (File file : files) {
       String pathName = file.getName().split("\\.")[0];
       autoSelect.addOption(pathName, PathPlanner.loadPathGroup(pathName,
@@ -343,7 +346,7 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
 
-    /**
+    /*
      * Trigger Coast/Brake modes when DS is Disabled/Enabled.
      * Trigger runs WHILETRUE for coast mode. Coast Mode method
      * is written to wait for slow speeds before setting to coast
@@ -357,11 +360,11 @@ public class RobotContainer {
 
     new Trigger(DriverStation::isEnabled)
           .onTrue(Commands.runOnce(s_SwerveDrive::setToBrake)
-          .alongWith(Commands.runOnce(() -> {s_LEDs.setStrobeColorsSlot(1); s_LEDs.setMode(LEDMode.CHASING);}))
+          .alongWith(Commands.runOnce(() -> {s_LEDs.setChaseColorsSlot(1); s_LEDs.setMode(LEDMode.CHASING);}))
           .alongWith(Commands.runOnce(s_Cannon::setCannonToBrake)));
 
 
-    /**
+    /*
      * HOLD HEADING mode and set a heading
      */
 
@@ -465,20 +468,19 @@ public class RobotContainer {
       .onTrue(Commands.runOnce(()-> s_Cannon.setExtensionInches(1))
         .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
         .andThen(()-> s_Lid.setLid(180.0))
-         .andThen(Commands.waitUntil(s_Lid::lidWithinError).andThen(()-> s_Cannon.setCannonAngleSides(robotFacing(), 50.0)))
-          .alongWith(Commands.runOnce(() -> {s_LEDs.setStrobeColorsSlot(0); s_LEDs.setMode(LEDs.LEDMode.CHASING);}))) // chasing leds because we have a game piece
+         .andThen(Commands.waitUntil(s_Lid::lidWithinError).andThen(()-> s_Cannon.setCannonAngleSides(robotFacing(), 80.0)))
+          .alongWith(Commands.runOnce(() -> {s_LEDs.setChaseColorsSlot(0); s_LEDs.setMode(LEDs.LEDMode.CHASING);}))) // chasing leds because we have a game piece
       .onFalse(Commands.either(
         Commands.runOnce(s_LEDs::bePurple), 
         Commands.runOnce(s_LEDs::beYellow), 
         ()-> (gamePieceTypeChooser.getSelected().equals(GamePieceType.CUBE))));
 
-    new Trigger(() -> robotFacing() != FacingPOI.NOTHING)
+    new Trigger(new ChangeChecker<>(this::robotFacing))
       .onTrue(Commands.either(
-        Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle))
-        .unless(xBox.rightTrigger(.1)),
-        Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), 40))
+              Commands.runOnce(()-> s_Cannon.setCannonAngleSides(robotFacing(), 80.0)),
+        Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), 80))
           .unless(xBox.rightTrigger(.1)) // towards pickup
-          .andThen(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle))), 
+          .alongWith(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle))),
         s_Intake::haveGamePiece));
     
 // //TODO: Commented this out because it's not ready  
@@ -493,9 +495,6 @@ public class RobotContainer {
         Commands.runOnce(s_LEDs::beYellow), 
         () -> gamePieceTypeChooser.getSelected().equals(GamePieceType.CUBE)))
       .onTrue(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle)));
-      
-    new Trigger(new ChangeChecker<Alliance>(DriverStation::getAlliance, Alliance.Invalid, DriverStation::isDSAttached))
-        .onTrue(Commands.runOnce(this::loadPaths));
   }
   
   @Log
@@ -509,11 +508,6 @@ public class RobotContainer {
           intakeExtensionInches = 0.5; 
           break;
         case UPRIGHT_CONE://revise, should be same as tipped
-          intakeCannonAngle = 180.0;
-          intakeLidAngle = 210.0;
-          intakeSpeed = 1.0;
-          intakeExtensionInches = 0.5;
-          break;
         case TIPPED_CONE: //revise, should be same as upright
           intakeCannonAngle = 180.0;
           intakeLidAngle = 210.0;
@@ -538,11 +532,6 @@ public class RobotContainer {
           ;
           break;
         case TIPPED_CONE:
-          intakeCannonAngle = 177.5;
-          intakeLidAngle = 57.5;
-          intakeSpeed = 1.0;
-          intakeExtensionInches = 0.5;
-          break;
         case UPRIGHT_CONE://should be same as tipped
           intakeCannonAngle = 177.5;
           intakeLidAngle = 57.5;
@@ -689,7 +678,7 @@ public class RobotContainer {
   }
 
   public enum GamePieceType {
-    TIPPED_CONE, UPRIGHT_CONE, CUBE, NOTHING;
+    TIPPED_CONE, UPRIGHT_CONE, CUBE, NOTHING
   }
 
   public enum NodeDriverStation {
@@ -697,9 +686,36 @@ public class RobotContainer {
 
     public final String dsFriendlyName;
 
-    private NodeDriverStation(String dsFriendlyName) {
+    NodeDriverStation(String dsFriendlyName) {
       this.dsFriendlyName = dsFriendlyName;
     }
+  }
+
+  public static enum ScoringSetPoints {
+    HIGH("for high node", 40, 40),
+    MID("for mid node", 40, 20),
+    LOW("for low/hybrid node", 0, 10),
+    UP("straight up", 90, 0),
+    ZERO("straight out", 0, 0);
+
+    public final String setPointName;
+    public final double cannonAngle;
+    public final double cannonExtention;
+
+    ScoringSetPoints(String setPointName, double cannonAngle, double cannonExtention){
+      this.setPointName = setPointName;
+      this.cannonAngle = cannonAngle;
+      this.cannonExtention = cannonExtention;
+    }
+
+    public double getTestCannonExtension(){
+      return cannonExtention;
+    }
+
+    public double getCannonAngle(){
+      return cannonAngle;
+    }
+
   }
 
   public enum PickupLocation {
@@ -710,7 +726,7 @@ public class RobotContainer {
     private final double cannonAngle;
     private final double cannonExtension;
    
-    private PickupLocation(double cannonAngle, double cannonExtension){this.cannonAngle = cannonAngle; this.cannonExtension = cannonExtension;}
+    PickupLocation(double cannonAngle, double cannonExtension){this.cannonAngle = cannonAngle; this.cannonExtension = cannonExtension;}
   }
 
   public Rotation2d calculateHeading(){

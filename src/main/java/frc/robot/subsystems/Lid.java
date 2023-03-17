@@ -17,9 +17,9 @@ import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
 
 public class Lid extends SubsystemBase implements Loggable{
-    private CANSparkMax m_lidMotor = new CANSparkMax(LidConstants.SPARK_MAX_ID, MotorType.kBrushless);
-    private SparkMaxAbsoluteEncoder m_lidAbsolute = m_lidMotor.getAbsoluteEncoder(Type.kDutyCycle);
-    private SparkMaxPIDController m_lidPid = m_lidMotor.getPIDController();
+    private final CANSparkMax m_lidMotor = new CANSparkMax(LidConstants.SPARK_MAX_ID, MotorType.kBrushless);
+    private final SparkMaxAbsoluteEncoder m_lidAbsolute = m_lidMotor.getAbsoluteEncoder(Type.kDutyCycle);
+    private final SparkMaxPIDController m_lidPid = m_lidMotor.getPIDController();
     @Log
     public double lidReference = LidConstants.INITIALIZED_ANGLE;
 

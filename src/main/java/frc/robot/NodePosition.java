@@ -32,7 +32,7 @@ public class NodePosition {
       public final double xCoord;
       public final double yCoord;
 
-      private NodeGroup(double xCoord, double yCoord){
+      NodeGroup(double xCoord, double yCoord){
         this.xCoord = xCoord;
         this.yCoord = yCoord;
       }
@@ -71,7 +71,7 @@ public class NodePosition {
       public final double lidUpLidPosition;
       public final double lidDownCannonAngle;
       public final double lidDownLidPosition;
-      private NodeGrid(double extension, double yOffset, double xOffset, String widgetName, double lidDownCannonAngle, double lidDownLidPosition, double lidUpCannonAngle, double lidUpLidPosition) {
+      NodeGrid(double extension, double yOffset, double xOffset, String widgetName, double lidDownCannonAngle, double lidDownLidPosition, double lidUpCannonAngle, double lidUpLidPosition) {
         this.extension = extension;
         this.xOffset = xOffset;
         this.yOffset = yOffset;
