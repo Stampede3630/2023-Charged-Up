@@ -688,14 +688,12 @@ public class RobotContainer {
 
 
   public enum PickupLocation {
-    GROUND(-14, 10), 
-    SHELF(40, 24), 
-    CHUTE(4, 24); // change these
+    GROUND(), 
+    SHELF(), 
+    CHUTE(); // change these
 
-    private final double cannonAngle;
-    private final double cannonExtension;
-   
-    PickupLocation(double cannonAngle, double cannonExtension){this.cannonAngle = cannonAngle; this.cannonExtension = cannonExtension;}
+ 
+    PickupLocation(){}
   }
 
   public Rotation2d calculateHeading(){
