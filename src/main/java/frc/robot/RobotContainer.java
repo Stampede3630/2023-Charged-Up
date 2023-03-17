@@ -454,14 +454,13 @@ public class RobotContainer {
             s_Lid.setLidReference(nodeGridChooser.getSelected().getNodeLidPositionLidUp());
             s_Cannon.setCannonAngle(nodeGridChooser.getSelected().getNodeCannonAngleLidUp());
           }
-
-          
-          //s_Cannon.setCannonAngleSides(robotFacing(), NodePosition.getNodePosition(nodeGroupChooser.getSelected(), nodeGridChooser.getSelected()).getCannonAngle());
-          // switch ()
         }))
+          .alongWith(s_Intake.outALittle())
           .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
           .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(nodeGridChooser.getSelected().getExtension())))
-          .andThen(Commands.waitUntil(s_Lid::lidWithinError)));
+          .andThen(Commands.waitUntil(s_Lid::lidWithinError))
+          .andThen(s_Intake.inALittle()));
+
 //        .andThen(Commands.runOnce(()-> s_Intake.setIntake(intakeSpeed/3.0))));
 
     //logic/no controller triggers
