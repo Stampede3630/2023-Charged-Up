@@ -361,17 +361,23 @@ public class RobotContainer {
             s_Lid.setLidReference(nodeGridChooser.getSelected().getNodeLidPositionLidDown());
             s_Cannon.setCannonAngle(nodeGridChooser.getSelected().getNodeCannonAngleLidDown());
           }
-          else {
+          else if(robotFacing()==FacingPOI.HUMAN_PLAYER) {
             s_Lid.setLidReference(nodeGridChooser.getSelected().getNodeLidPositionLidUp());
             s_Cannon.setCannonAngle(nodeGridChooser.getSelected().getNodeCannonAngleLidUp());
           }
+
+          else if(robotFacing()==FacingPOI.NOTHING){
+            s_Lid.setLidReference(nodeGridChooser.getSelected().getNodeLidPositionLidDown());
+            s_Cannon.setCannonAngle(nodeGridChooser.getSelected().getNodeCannonAngleLidDown());
+          }
+          
           //s_Cannon.setCannonAngleSides(robotFacing(), NodePosition.getNodePosition(nodeGroupChooser.getSelected(), nodeGridChooser.getSelected()).getCannonAngle());
           // switch ()
         }))
           .andThen(new SequentialCommandGroup(Commands.waitUntil(s_Cannon::cannonErrorWithinRange)),
               Commands.runOnce(()-> s_Cannon.setExtensionInches(nodeGridChooser.getSelected().getExtension())))
               .andThen(Commands.waitUntil(s_Lid::lidWithinError))
-        .andThen(Commands.runOnce(()-> s_Intake.setIntake(.4))
+        .andThen(Commands.runOnce(()-> s_Intake.setIntake(intakeSpeed/3.0))
         .until(s_Intake::haveGamePiece)));
 
     //logic/no controller triggers
