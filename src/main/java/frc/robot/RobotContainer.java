@@ -358,9 +358,10 @@ public class RobotContainer {
      */
 
     new Trigger(DriverStation::isDisabled)
-        .whileTrue(Commands.repeatingSequence(Commands.runOnce(s_SwerveDrive::setToCoast)).ignoringDisable(true))
-        .whileTrue((Commands.runOnce(s_Cannon::setCannonToCoast)).ignoringDisable(true)
-        .alongWith(Commands.runOnce(() -> s_LEDs.setMode(LEDMode.RAINBOW)).ignoringDisable(true))
+        .onTrue(Commands.waitSeconds(5)
+            .andThen(Commands.repeatingSequence(Commands.runOnce(s_SwerveDrive::setToCoast)).ignoringDisable(true)
+              .alongWith((Commands.runOnce(s_Cannon::setCannonToCoast)).ignoringDisable(true)
+              .alongWith(Commands.runOnce(() -> s_LEDs.setMode(LEDMode.RAINBOW)).ignoringDisable(true))))
             .withName("SetToCoast"));
 
     new Trigger(DriverStation::isEnabled)
