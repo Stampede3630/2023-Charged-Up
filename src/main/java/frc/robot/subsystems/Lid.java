@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.SparkMaxAbsoluteEncoder;
+import com.revrobotics.SparkMaxLimitSwitch;
 import com.revrobotics.SparkMaxPIDController;
 import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.CANSparkMax.IdleMode;
@@ -12,6 +13,7 @@ import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.LidConstants;
+import frc.robot.RobotContainer.FacingPOI;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
@@ -20,10 +22,11 @@ public class Lid extends SubsystemBase implements Loggable{
     private final CANSparkMax m_lidMotor = new CANSparkMax(LidConstants.SPARK_MAX_ID, MotorType.kBrushless);
     private final SparkMaxAbsoluteEncoder m_lidAbsolute = m_lidMotor.getAbsoluteEncoder(Type.kDutyCycle);
     private final SparkMaxPIDController m_lidPid = m_lidMotor.getPIDController();
+    private static Lid instance;
     @Log(tabName = "NodeSelector")
     public double lidReference = LidConstants.INITIALIZED_ANGLE;
 
-    public Lid() {
+    private Lid() {
         m_lidAbsolute.setInverted(true);
         m_lidAbsolute.setPositionConversionFactor(LidConstants.CONVERSION_FACTOR);
         m_lidAbsolute.setVelocityConversionFactor(LidConstants.CONVERSION_FACTOR);
@@ -83,5 +86,33 @@ public class Lid extends SubsystemBase implements Loggable{
 
     public boolean lidWithinError(){
         return Math.abs(lidReference - lidPosition()) < LidConstants.ERROR;
+    }
+
+    public SparkMaxLimitSwitch getReverseLimitSwitch() {
+        return m_lidMotor.getReverseLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen);
+    }
+
+    public static Lid getInstance() {
+        if (instance == null)
+            instance = new Lid();
+        return instance;
+
+    }
+
+    public enum LidPosition {
+        TOP, BOTTOM, UNKNOWN;
+
+        public static LidPosition getLidPosition(FacingPOI robotFacing, FacingPOI cannonFacing) {
+            if (robotFacing==FacingPOI.HUMAN_PLAYER && cannonFacing == FacingPOI.HUMAN_PLAYER)
+                return TOP;
+            else if (robotFacing==FacingPOI.HUMAN_PLAYER && cannonFacing == FacingPOI.COMMUNITY)
+                return BOTTOM;
+            else if (robotFacing==FacingPOI.COMMUNITY && cannonFacing == FacingPOI.COMMUNITY)
+                return TOP;
+            else if (robotFacing==FacingPOI.COMMUNITY && cannonFacing == FacingPOI.HUMAN_PLAYER)
+                return BOTTOM;
+            else
+                return UNKNOWN;
+        }
     }
 }

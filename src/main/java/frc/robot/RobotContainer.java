@@ -19,6 +19,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -86,7 +87,7 @@ public class RobotContainer {
   private final TheCannon s_Cannon = new TheCannon();
 
   private final LEDs s_LEDs = new LEDs();
-  private final Lid s_Lid = new Lid();
+  private final Lid s_Lid = Lid.getInstance();
   private final Intake s_Intake = new Intake();
   @Log(tabName = "NodeSelector")
   public double intakeCannonAngle;
@@ -225,8 +226,6 @@ public class RobotContainer {
       .withName("DefaultDrive"));
 
           Logger.configureLoggingAndConfig(this, false);
-
-
   }
 
   public Command autoScoreHighCube() { //works if running as NOT first command (for some reason) -ej 3/15
@@ -438,12 +437,13 @@ public class RobotContainer {
           .andThen(Commands.runOnce(()-> s_Intake.setIntake(intakeSpeed)))
           .andThen(s_Intake.waitUntilHaveGamePiece()
             .raceWith(Commands.waitUntil(xBox.rightTrigger(.2).debounce(.2, DebounceType.kFalling).negate())))
-          .andThen(Commands.runOnce(s_Intake::stopIntake)))
+          .andThen(Commands.runOnce(s_Intake::stopIntake))
+          .unless(s_Intake::haveGamePiece))
         .onFalse(Commands.runOnce(s_Intake::stopIntake));
       
     //-> Outtake trigger
     xBox.leftTrigger(.55).debounce(.1, DebounceType.kFalling)
-        .onTrue(Commands.runOnce(()-> s_Intake.setIntake(-intakeSpeed)).alongWith(Commands.runOnce(s_Intake::leaveGamePiece)))
+        .onTrue(Commands.runOnce(()-> s_Intake.setIntake(-intakeSpeed/2)).alongWith(Commands.runOnce(s_Intake::leaveGamePiece)))
         .onFalse(Commands.runOnce(s_Intake::stopIntake)
           .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(0.5)))
           .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
@@ -462,33 +462,33 @@ public class RobotContainer {
         .onFalse(Commands.runOnce(s_Intake::stopIntake));
     //-> extension + cannonRot to setpoint
     xBox.y()
-        .onTrue((Commands.runOnce(()-> {
+        .onTrue(Commands.runOnce(()-> {
           if (robotFacing()==FacingPOI.COMMUNITY){
-            s_Lid.setLidReference(nodeGridChooser.getSelected().getNodeLidPositionLidDown());
+            s_Lid.setLidReference(nodeGridChooser.getSelected().getNodeLidPositionLidDown()); 
             s_Cannon.setCannonAngle(nodeGridChooser.getSelected().getNodeCannonAngleLidDown());
           }
           else {
             s_Lid.setLidReference(nodeGridChooser.getSelected().getNodeLidPositionLidUp());
             s_Cannon.setCannonAngle(nodeGridChooser.getSelected().getNodeCannonAngleLidUp());
           }
-        }))
-          // .alongWith(
-                  // s_Intake.outALittle()
-                  // (Commands.waitUntil(s_Lid::lidWithinError))
-                  // .andThen(s_Intake.inALittle()))
+        }).alongWith(s_Intake.inALittle(intakeSpeed, Lid.LidPosition.getLidPosition(robotFacing(), cannonFacing())))
           .alongWith(
                   Commands.waitUntil(s_Cannon::cannonErrorWithinRange)
-                  .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(nodeGridChooser.getSelected().getExtension()))))
-          );
+                  .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(nodeGridChooser.getSelected().getExtension())))));
 
 //        .andThen(Commands.runOnce(()-> s_Intake.setIntake(intakeSpeed/3.0))));
 
+    xBox.b().onTrue(s_Intake.outALittle(intakeSpeed, Lid.LidPosition.getLidPosition(robotFacing(), cannonFacing())));
     //logic/no controller triggers
     new Trigger(s_Intake::haveGamePiece)
       .onTrue(Commands.runOnce(()-> s_Cannon.setExtensionInches(1))
-        .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
-         .andThen(Commands.waitUntil(s_Lid::lidWithinError).andThen(()-> s_Cannon.setCannonAngleSides(robotFacing(), 80.0)))
-          .alongWith(Commands.runOnce(() -> {s_LEDs.setChaseColorsSlot(0); s_LEDs.setMode(LEDs.LEDMode.CHASING);}))) // chasing leds because we have a game piece
+        .alongWith(s_Intake.outALittle(intakeSpeed, Lid.LidPosition.getLidPosition(robotFacing(), cannonFacing())))
+        .alongWith(Commands.waitUntil(s_Cannon::extensionErrorWithinRange)
+         .andThen(Commands.waitUntil(s_Lid::lidWithinError)
+         .andThen(s_Intake.inALittle(intakeSpeed, Lid.LidPosition.getLidPosition(robotFacing(), cannonFacing())))
+         .andThen(()-> s_Cannon.setCannonAngleSides(robotFacing(), 80.0)))
+          .andThen(Commands.runOnce(()-> s_Intake.setIntake(intakeSpeed/3)).until(s_Intake::haveGamePiece)))
+        .alongWith(Commands.runOnce(() -> {s_LEDs.setChaseColorsSlot(0); s_LEDs.setMode(LEDs.LEDMode.CHASING);}))) // chasing leds because we have a game piece
       .onFalse(Commands.either(
         Commands.runOnce(s_LEDs::bePurple), 
         Commands.runOnce(s_LEDs::beYellow), 
@@ -514,6 +514,11 @@ public class RobotContainer {
         Commands.runOnce(s_LEDs::beYellow), 
         () -> gamePieceTypeChooser.getSelected().equals(GamePieceType.CUBE)))
       .onTrue(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle)));
+  }
+
+  @Log
+  public String lidPOsitioN() {
+    return Lid.LidPosition.getLidPosition(robotFacing(), cannonFacing()).name();
   }
   
   @Log
@@ -578,7 +583,7 @@ public class RobotContainer {
             break;
           case UPRIGHT_CONE://fill in
             intakeCannonAngle = -7.0;
-            intakeLidAngle = 206.0;
+            intakeLidAngle = 204.0;
             intakeSpeed = 1.0;
             intakeExtensionInches = 0.5;
             break;
@@ -669,6 +674,7 @@ public class RobotContainer {
     return robotFacing().toString();
   }
 
+  @Log
   public String cannonFacingString() {
     return cannonFacing().toString();
   }
@@ -682,14 +688,14 @@ public class RobotContainer {
 
     if (gyroFacing == FacingPOI.COMMUNITY)
       if (cannonFacingGyroZero)
-        return FacingPOI.COMMUNITY;
-      else
         return FacingPOI.HUMAN_PLAYER;
+      else
+        return FacingPOI.COMMUNITY;
     else // gyro must be facing HP
       if (cannonFacingGyroZero)
-        return FacingPOI.HUMAN_PLAYER;
-      else
         return FacingPOI.COMMUNITY;
+      else
+        return FacingPOI.HUMAN_PLAYER;
   }
 
   public enum FacingPOI {

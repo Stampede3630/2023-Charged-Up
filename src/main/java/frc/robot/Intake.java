@@ -1,58 +1,45 @@
 package frc.robot;
 
-import com.revrobotics.CANSparkMax;
-import com.revrobotics.RelativeEncoder;
+import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.NeutralMode;
+import com.ctre.phoenix.motorcontrol.StatorCurrentLimitConfiguration;
+import com.ctre.phoenix.motorcontrol.can.TalonFX;
+import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.revrobotics.SparkMaxLimitSwitch;
-import com.revrobotics.SparkMaxPIDController;
-import com.revrobotics.CANSparkMax.IdleMode;
-import com.revrobotics.CANSparkMaxLowLevel.MotorType;
-
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.wpilibj2.command.*;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.Constants.IntakeConstants;
+import frc.robot.subsystems.Lid;
+import frc.robot.subsystems.Lid.LidPosition;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
 
 public class Intake extends SubsystemBase implements Loggable{
-    private final CANSparkMax m_intakeMotor = new CANSparkMax(IntakeConstants.SPARK_MAX_ID, MotorType.kBrushless);
-    private final RelativeEncoder m_intakeEncoder = m_intakeMotor.getEncoder();
-    private final SparkMaxPIDController m_intakePid = m_intakeMotor.getPIDController();
-    private final SparkMaxLimitSwitch intakeHardStop = m_intakeMotor.getReverseLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen);
+    private final TalonFX m_intakeMotor = new TalonFX(14, "rio");
+    private final SparkMaxLimitSwitch intakeHardStop = Lid.getInstance().getReverseLimitSwitch();
     private double speed = 0;
     private boolean haveGamePiece = false;
     private LinearFilter currentFilter = LinearFilter.movingAverage(10);
+    private final double A_LITLE_AMOUNT = 1;
     @Log
     private double filteredCurrent;
-    @Log
-    private double intakeEncoderPosition;
+    private Debouncer m_debouncer = new Debouncer(0.30, DebounceType.kRising);
     public Intake() {
 
-        m_intakeMotor.setSmartCurrentLimit(80);
-
+         m_intakeMotor.configStatorCurrentLimit(new StatorCurrentLimitConfiguration(true, 80, 70, .05));
+         m_intakeMotor.setNeutralMode(NeutralMode.Coast);
                 
         // cannonExtension.setInverted(true);
         //changed idle mode to help with troubleshooting    
-        m_intakeMotor.setIdleMode(IdleMode.kCoast);
-        intakeHardStop.enableLimitSwitch(true); 
-
-        m_intakeMotor.burnFlash();
-        m_intakeEncoder.setPositionConversionFactor(1); // TODO Put some numbers here
-        m_intakeEncoder.setVelocityConversionFactor(1);
-
-
     }
 
     @Override
     public void periodic() {
-        m_intakeMotor.set(speed);
-        intakeEncoderPosition = m_intakeEncoder.getPosition();
+        m_intakeMotor.set(ControlMode.PercentOutput,speed);
         filteredCurrent = currentFilter.calculate(getIntakeCurrent());
     }
-
 
     public void setIntake(double intakeSpeed) {
         speed = intakeSpeed;
@@ -62,14 +49,27 @@ public class Intake extends SubsystemBase implements Loggable{
         speed = 0;
     }
 
+    @Log
+    public double getMotorTemp() {
+        return m_intakeMotor.getTemperature();
+    }
+
     @Log.Graph
     public double getIntakeCurrent() {
-        return m_intakeMotor.getOutputCurrent();
+        return m_intakeMotor.getStatorCurrent();
     }
 
     @Log
-    public double getFilteredCurrent() {
-      return filteredCurrent;
+    public double getVoltage() {
+        return m_intakeMotor.getMotorOutputVoltage();
+    }
+    @Log
+    public double getEncoderPosition() {
+        return m_intakeMotor.getSelectedSensorPosition();
+    }
+
+    public void setEncoderPosition(double position) {
+        m_intakeMotor.setSelectedSensorPosition(position);
     }
 
     @Log.BooleanBox(tabName = "nodeSelector")
@@ -81,19 +81,42 @@ public class Intake extends SubsystemBase implements Loggable{
         haveGamePiece = false;
     }
 
-    public Command outALittle(){
+    public Command inALittle(double intakeSpeed, LidPosition lidPosition){
+        double intakeSign = Math.copySign(1, intakeSpeed);
         return new FunctionalCommand(
-                () -> m_intakeEncoder.setPosition(0),   // first zero the encoder
-                () -> setIntake(-.1),            // then run the intake
+                () -> setEncoderPosition(0),   // first zero the encoder
+                () -> {// then run the intake
+                    if (lidPosition == LidPosition.TOP)
+                        setIntake(intakeSign*.1); // bc intake speed is always on the HP side
+                    else 
+                        setIntake(-intakeSign*.1);
+                },
                 (success) -> setIntake(0),      // when finished, stop the intake
-                () -> m_intakeEncoder.getPosition() <= -15); // it is finished when the encoder goes down by 15 rotations
+                () -> {
+                    if (lidPosition == LidPosition.TOP)
+                        return (intakeSign >= 0) ? getEncoderPosition() >= A_LITLE_AMOUNT :getEncoderPosition() <= -A_LITLE_AMOUNT;
+                    else
+                        return (intakeSign >= 0) ? getEncoderPosition() <= -A_LITLE_AMOUNT :getEncoderPosition() >= A_LITLE_AMOUNT;
+                }); // it is finished when the encoder goes down by 15 rotations
     }
-    public Command inALittle(){
+    public Command outALittle(double intakeSpeed, LidPosition lidPosition){
+        double intakeSign = Math.copySign(1, intakeSpeed);
         return new FunctionalCommand(
-                () -> m_intakeEncoder.setPosition(0),   // first zero the encoder
-                () -> setIntake(.1),            // then run the intake
+                () -> setEncoderPosition(0),   // first zero the encoder
+                () -> {// then run the intake
+                    if (lidPosition == LidPosition.TOP)
+                        setIntake(-intakeSign*.1); // bc intake speed is always on the HP side
+                    else 
+                        setIntake(intakeSign*.1);
+                },            
                 (success) -> setIntake(0),      // when finished, stop the intake
-                () -> m_intakeEncoder.getPosition() >= 15); // it is finished when the encoder goes up by 15 rotations
+                () -> {
+                    if (lidPosition == LidPosition.TOP)
+                        return (intakeSign >= 0) ? getEncoderPosition() <= -A_LITLE_AMOUNT : getEncoderPosition() >= A_LITLE_AMOUNT;
+                    else
+                        return (intakeSign >= 0) ? getEncoderPosition() >= A_LITLE_AMOUNT : getEncoderPosition() <= -A_LITLE_AMOUNT;
+
+                }); // it is finished when the encoder goes down by 15 rotations
     }
     public boolean checkForGamePiece() {
         haveGamePiece = haveGamePiece || intakeHardStop.isPressed(); // latching
@@ -110,8 +133,7 @@ public class Intake extends SubsystemBase implements Loggable{
   }
 
   public Command waitUntilHaveGamePiece() {
-    Debouncer m_debouncer = new Debouncer(0.30, DebounceType.kRising);
-    return Commands.waitUntil(()-> m_debouncer.calculate(getFilteredCurrent() > 30) || isLimitSwitchPressed()).andThen(Commands.runOnce(() -> haveGamePiece = true));
-    
+    return Commands.waitUntil(()-> m_debouncer.calculate(filteredCurrent > 60) || isLimitSwitchPressed())
+        .andThen(Commands.runOnce(() -> haveGamePiece = true));
   }
 }
