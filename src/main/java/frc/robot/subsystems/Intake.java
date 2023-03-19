@@ -73,13 +73,22 @@ public class Intake extends SubsystemBase implements Loggable, Disableable, Enab
     public double getVoltage() {
         return m_intakeMotor.getMotorOutputVoltage();
     }
+
+    /**
+     * gets the encoder position in rotations
+     * @return encoder position in rot
+     */
     @Log
     public double getEncoderPosition() {
-        return m_intakeMotor.getSelectedSensorPosition();
+        return m_intakeMotor.getSelectedSensorPosition()/2048;
     }
 
+    /**
+     * sets the encoder position in rotations
+     * @param position the new position in rotations
+     */
     public void setEncoderPosition(double position) {
-        m_intakeMotor.setSelectedSensorPosition(position);
+        m_intakeMotor.setSelectedSensorPosition(position*2048);
     }
 
     @Log.BooleanBox(tabName = "nodeSelector")
@@ -142,9 +151,17 @@ public class Intake extends SubsystemBase implements Loggable, Disableable, Enab
     return intakeHardStop.isPressed();
   }
 
+    /**
+     * gets the velocity of the intake motor (rot/s)
+     * @return velocity of the intake motor in rot/s
+     */
+  public double getVelocity() {
+    return m_intakeMotor.getSelectedSensorVelocity()/2048*10;
+  }
+
   public Command waitUntilHaveGamePiece() {
-    return Commands.waitUntil(()-> Math.abs(m_intakeMotor.getSelectedSensorVelocity()) > 15) // wait for spin up
-            .andThen(Commands.waitUntil(() -> m_debouncer.calculate(Math.abs(m_intakeMotor.getSelectedSensorVelocity()) < 5) || isLimitSwitchPressed())) // wait for stopped TODO adjust the numbers
+    return Commands.waitUntil(()-> Math.abs(getVelocity()) > 15) // wait for spin up
+            .andThen(Commands.waitUntil(() -> m_debouncer.calculate(Math.abs(getVelocity()) < 5) || isLimitSwitchPressed())) // wait for stopped TODO adjust the numbers
             .andThen(Commands.runOnce(() -> haveGamePiece = true));
   }
 }
