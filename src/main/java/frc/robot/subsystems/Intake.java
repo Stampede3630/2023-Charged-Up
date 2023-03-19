@@ -1,4 +1,4 @@
-package frc.robot;
+package frc.robot.subsystems;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
@@ -12,27 +12,37 @@ import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.wpilibj2.command.*;
 import frc.robot.subsystems.Lid;
 import frc.robot.subsystems.Lid.LidPosition;
+import frc.robot.util.Disableable;
+import frc.robot.util.Enableable;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
 
-public class Intake extends SubsystemBase implements Loggable{
+public class Intake extends SubsystemBase implements Loggable, Disableable, Enableable {
     private final TalonFX m_intakeMotor = new TalonFX(14, "rio");
     private final SparkMaxLimitSwitch intakeHardStop = Lid.getInstance().getReverseLimitSwitch();
     private double speed = 0;
     private boolean haveGamePiece = false;
-    private LinearFilter currentFilter = LinearFilter.movingAverage(10);
+    private final LinearFilter currentFilter = LinearFilter.movingAverage(10);
     private final double A_LITLE_AMOUNT = 1;
     @Log
     private double filteredCurrent;
-    private Debouncer m_debouncer = new Debouncer(0.30, DebounceType.kRising);
+    private final Debouncer m_debouncer = new Debouncer(0.30, DebounceType.kRising);
     public Intake() {
-
          m_intakeMotor.configStatorCurrentLimit(new StatorCurrentLimitConfiguration(true, 80, 70, .05));
          m_intakeMotor.setNeutralMode(NeutralMode.Coast);
-                
         // cannonExtension.setInverted(true);
         //changed idle mode to help with troubleshooting    
+    }
+
+    @Override
+    public void onDisable() {
+        m_intakeMotor.setNeutralMode(NeutralMode.Coast);
+    }
+
+    @Override
+    public void onEnable() {
+        m_intakeMotor.setNeutralMode(NeutralMode.Brake);
     }
 
     @Override

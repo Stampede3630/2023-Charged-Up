@@ -19,7 +19,6 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -33,17 +32,14 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RepeatCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.NodePosition.NodeGrid;
 import frc.robot.NodePosition.NodeGroup;
 import static frc.robot.Constants.*;
-import frc.robot.subsystems.LEDs;
-import frc.robot.subsystems.Lid;
-import frc.robot.subsystems.SwerveDrive;
-import frc.robot.subsystems.TheCannon;
+
+import frc.robot.subsystems.*;
 import frc.robot.subsystems.LEDs.LEDMode;
 import frc.robot.subsystems.swerve.SwerveConstants;
 import frc.robot.util.ChangeChecker;
@@ -375,14 +371,16 @@ public class RobotContainer {
     new Trigger(DriverStation::isDisabled)
         .onTrue(Commands.waitSeconds(5)
             .andThen(Commands.repeatingSequence(Commands.runOnce(s_SwerveDrive::setToCoast)).ignoringDisable(true)
-              .alongWith((Commands.runOnce(s_Cannon::setCannonToCoast)).ignoringDisable(true)
-              .alongWith(Commands.runOnce(() -> s_LEDs.setMode(LEDMode.RAINBOW)).ignoringDisable(true))))
+              .alongWith((Commands.runOnce(s_Cannon::setCannonToCoast)).ignoringDisable(true))
+              .alongWith(Commands.runOnce(() -> s_LEDs.setMode(LEDMode.RAINBOW)).ignoringDisable(true))
+              .alongWith(Commands.runOnce(s_Intake::onDisable)).ignoringDisable(true))
             .withName("SetToCoast"));
 
     new Trigger(DriverStation::isEnabled)
           .onTrue(Commands.runOnce(s_SwerveDrive::setToBrake)
-          .alongWith(Commands.runOnce(() -> {s_LEDs.setChaseColorsSlot(1); s_LEDs.setMode(LEDMode.CHASING);}))
-          .alongWith(Commands.runOnce(s_Cannon::setCannonToBrake)));
+            .alongWith(Commands.runOnce(() -> {s_LEDs.setChaseColorsSlot(1); s_LEDs.setMode(LEDMode.CHASING);}))
+            .alongWith(Commands.runOnce(s_Cannon::setCannonToBrake))
+            .alongWith(Commands.runOnce(s_Intake::onEnable)).ignoringDisable(true));
 
 
     /*
