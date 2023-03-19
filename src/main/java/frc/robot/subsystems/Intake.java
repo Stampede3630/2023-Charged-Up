@@ -143,8 +143,8 @@ public class Intake extends SubsystemBase implements Loggable, Disableable, Enab
   }
 
   public Command waitUntilHaveGamePiece() {
-    return Commands.waitUntil(()-> m_intakeMotor.getSelectedSensorVelocity() > 15) // wait for spin up
-            .andThen(Commands.waitUntil(() -> m_debouncer.calculate(m_intakeMotor.getSelectedSensorVelocity() < 5) || isLimitSwitchPressed())) // wait for stopped TODO adjust the numbers
+    return Commands.waitUntil(()-> Math.abs(m_intakeMotor.getSelectedSensorVelocity()) > 15) // wait for spin up
+            .andThen(Commands.waitUntil(() -> m_debouncer.calculate(Math.abs(m_intakeMotor.getSelectedSensorVelocity()) < 5) || isLimitSwitchPressed())) // wait for stopped TODO adjust the numbers
             .andThen(Commands.runOnce(() -> haveGamePiece = true));
   }
 }
