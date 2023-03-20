@@ -415,6 +415,13 @@ public class RobotContainer {
         .whileTrue(new RepeatCommand(Commands.runOnce(s_Cannon::manExtend, s_Cannon)));
     xBox.povLeft()
         .whileTrue(new RepeatCommand(Commands.runOnce(s_Cannon::manRetract, s_Cannon)));
+        //MANUAL INTAKE
+    xBox.leftBumper().debounce(.1, DebounceType.kFalling)
+        .whileTrue(Commands.runOnce(()-> s_Intake.setIntake(1)))
+        .onFalse(Commands.runOnce(s_Intake::stopIntake));
+    xBox.rightBumper().debounce(.1, DebounceType.kFalling)
+        .whileTrue(Commands.runOnce(()-> s_Intake.setIntake(-1)))
+        .onFalse(Commands.runOnce(s_Intake::stopIntake));
 
     // combined triggers
 
@@ -451,13 +458,7 @@ public class RobotContainer {
           // .andThen(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle))));
     
     xBox.leftStick().whileTrue((Commands.repeatingSequence(Commands.runOnce(s_SwerveDrive::activateDefensiveStop))));
-    //MANUAL INTAKE
-    xBox.leftBumper().debounce(.1, DebounceType.kFalling)
-        .whileTrue(Commands.runOnce(()-> s_Intake.setIntake(1)))
-        .onFalse(Commands.runOnce(s_Intake::stopIntake));
-    xBox.rightBumper().debounce(.1, DebounceType.kFalling)
-        .whileTrue(Commands.runOnce(()-> s_Intake.setIntake(-1)))
-        .onFalse(Commands.runOnce(s_Intake::stopIntake));
+
     //-> extension + cannonRot to setpoint
     xBox.y()
         .onTrue(Commands.runOnce(()-> {
