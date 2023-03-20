@@ -342,7 +342,8 @@ public class RobotContainer {
             s_Lid.setLidReference(nodeGridChooser.getSelected().getNodeLidPositionLidUp());
             s_Cannon.setCannonAngle(nodeGridChooser.getSelected().getNodeCannonAngleLidUp());
           }
-        }).alongWith(s_Intake.inALittle(intakeSpeed, Lid.LidPosition.getLidPosition(robotFacing(), cannonFacing())))
+        }).alongWith(s_Intake.inALittle(intakeSpeed, Lid.LidPosition.getLidPosition(robotFacing(), cannonFacing()))
+                        .until(xBox.leftTrigger(.55).debounce(.1, DebounceType.kFalling)))
           .alongWith(
                   Commands.waitUntil(s_Cannon::cannonErrorWithinRange)
                   .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(nodeGridChooser.getSelected().getExtension())))));
