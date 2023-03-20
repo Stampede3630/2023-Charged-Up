@@ -224,134 +224,6 @@ public class RobotContainer {
           Logger.configureLoggingAndConfig(this, false);
   }
 
-  public Command autoScoreHighCube() { //works if running as NOT first command (for some reason) -ej 3/15
-    return Commands.runOnce(()->s_Lid.setLid(100.0))
-      .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(NodePosition.NodeGrid.HIGH_CENTER.getNodeCannonAngleLidDown())))
-      .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
-      .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(23.5)).alongWith(Commands.print("extendo")))
-      .andThen(Commands.waitSeconds(0.2))
-      .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
-      .andThen(()->s_Intake.setIntake(0.4))
-      .andThen(Commands.waitSeconds(0.5))
-      .andThen(Commands.runOnce(s_Intake::stopIntake))
-      .andThen(s_Intake::leaveGamePiece)
-      .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(1.0)))
-      .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
-      .andThen(Commands.runOnce(()-> s_Lid.setLid(60.0)))
-      .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(120.0)));
-      }
-
-  public Command autoScoreHighCone() {
-    return Commands.runOnce(()->s_Lid.setLid(NodePosition.NodeGrid.HIGH_LEFT.getNodeLidPositionLidDown()))
-      .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(NodePosition.NodeGrid.HIGH_LEFT.getNodeCannonAngleLidDown())))
-      .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
-      .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(NodePosition.NodeGrid.HIGH_LEFT.getExtension())))
-      .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
-      .andThen(()->s_Intake.setIntake(-1.0))
-      .andThen(Commands.waitSeconds(0.5))
-      .andThen(Commands.runOnce(s_Intake::stopIntake))
-      .andThen(s_Intake::leaveGamePiece)
-      .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(1.0)))
-      .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
-      .andThen(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle)))
-      .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(177.0)));
-  }
-
-  public Command autoScoreMidCone() {
-    return Commands.runOnce(()->s_Lid.setLid(NodePosition.NodeGrid.MID_LEFT.getNodeLidPositionLidDown()))
-      .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(NodePosition.NodeGrid.MID_LEFT.getNodeCannonAngleLidDown())))
-      .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
-      .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(NodePosition.NodeGrid.MID_LEFT.getExtension())))
-      .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
-      .andThen(()->s_Intake.setIntake(-1.0))
-      .andThen(Commands.waitSeconds(0.5))
-      .andThen(Commands.runOnce(s_Intake::stopIntake))
-      .andThen(s_Intake::leaveGamePiece)
-      .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(1.0)))
-      .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
-      .andThen(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle)))
-      .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(177.0)));
-  } 
-
-  public Command autoScoreMidCube() { //works -ej 3/15
-    return Commands.runOnce(()->s_Lid.setLid(100.0))
-    .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(38.0)))
-    .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
-    .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(2.0)))
-    .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
-    .andThen(()->s_Intake.setIntake(0.4))
-    .andThen(Commands.waitSeconds(0.5))
-    .andThen(Commands.runOnce(s_Intake::stopIntake))
-    .andThen(s_Intake::leaveGamePiece)
-    .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(1.0)))
-    .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
-    .andThen(Commands.runOnce(()-> s_Lid.setLid(100.0)))
-    .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(177.0)));
-  }
-
-  public Command autoScoreLowCube() { 
-    return Commands.runOnce(()->s_Cannon.setCannonAngle(-7.5))
-    .andThen(Commands.runOnce(()->  s_Lid.setLid(80.0)))
-    .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
-    .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(1.0)))
-    .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
-    .andThen(()->s_Intake.setIntake(0.4))
-    .andThen(Commands.waitSeconds(0.5))
-    .andThen(Commands.runOnce(s_Intake::stopIntake))
-    .andThen(s_Intake::leaveGamePiece)
-    .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(1.0)))
-    .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
-    .andThen(Commands.runOnce(()-> s_Lid.setLid(100.0)))
-    .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(100.0)));
-  }
-
-  public Command autoIntakeCube() { //works -ej 3/15
-    return (Commands.runOnce(()-> s_Cannon.setCannonAngle(200)))
-    .andThen(Commands.runOnce(()-> s_Intake.setIntake(-1.0)))
-    .andThen(Commands.runOnce(()->s_Lid.setLid(100.0)))
-    .andThen(Commands.waitSeconds(.1)
-    .andThen(Commands.waitSeconds(2.0)
-    .deadlineWith(Commands.waitUntil(s_Intake::checkForGamePiece))))
-    .andThen(Commands.runOnce(s_Intake::stopIntake))
-    .andThen(Commands.runOnce(()->s_Lid.setLid(100.0)));
-  }
-
-  private void loadPaths() {
-    autoBuilder = new SwerveAutoBuilder(
-            s_SwerveDrive::getOdometryPose, // Pose2d supplier
-            s_SwerveDrive::resetOdometry, // Pose2d consumer, used to reset odometry at the beginning of auto
-            s_SwerveDrive.getKinematics(), // SwerveDriveKinematics
-            new PIDConstants(4, 0.0, 0.0), // PID constants to correct for translation error (used to create the X and Y
-            // PID controllers)
-            new PIDConstants(4, 0.0, 0.0), // PID constants to correct for rotation error (used to create the rotation
-            // controller)
-            s_SwerveDrive::setAutoModuleStates, // Module states consumer used to output to the drive subsystem
-            eventMap,
-            true,
-            s_SwerveDrive // The drive subsystem. Used to properly set the requirements of path following
-            // commands
-    );
-    eventMap.put("1stBallPickup", new WaitCommand(2));
-    eventMap.put("autoScoreHigh", autoScoreHighCube());
-    eventMap.put("autoScoreHighCone", autoScoreHighCone());
-    eventMap.put("autoIntake", autoIntakeCube());
-    eventMap.put("autoBalance", s_SwerveDrive.autoBalanceCommand());
-    eventMap.put("autoScoreMidCube", autoScoreMidCube());
-    eventMap.put("autoScoreMidCone", autoScoreMidCone());
-    eventMap.put("autoScoreLowCube", autoScoreLowCube());
-
-    // load autos completely dynamically -- any autos in pathplanner folder will be added to selector
-    List<File> files = List.of(
-            Objects.requireNonNull(new File(Filesystem.getDeployDirectory(), "pathplanner")
-                    .listFiles((dir, name) -> name.endsWith(".path"))));
-    for (File file : files) {
-      String pathName = file.getName().split("\\.")[0];
-      autoSelect.addOption(pathName, PathPlanner.loadPathGroup(pathName,
-        new PathConstraints(4, 4)));
-    }
-    autoSelect.setDefaultOption(files.get(0).getName().split("\\.")[0], PathPlanner.loadPathGroup(files.get(0).getName().split("\\.")[0], new PathConstraints(4, 4)));
-  }
-
   /**
    * Use this method to define your button->command mappings. Buttons can be
    * created by
@@ -631,6 +503,134 @@ public class RobotContainer {
           }
         }
     }
+  }
+  
+  public Command autoScoreHighCube() { //works if running as NOT first command (for some reason) -ej 3/15
+    return Commands.runOnce(()->s_Lid.setLid(100.0))
+      .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(NodePosition.NodeGrid.HIGH_CENTER.getNodeCannonAngleLidDown())))
+      .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
+      .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(23.5)).alongWith(Commands.print("extendo")))
+      .andThen(Commands.waitSeconds(0.2))
+      .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
+      .andThen(()->s_Intake.setIntake(0.4))
+      .andThen(Commands.waitSeconds(0.5))
+      .andThen(Commands.runOnce(s_Intake::stopIntake))
+      .andThen(s_Intake::leaveGamePiece)
+      .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(1.0)))
+      .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
+      .andThen(Commands.runOnce(()-> s_Lid.setLid(60.0)))
+      .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(120.0)));
+      }
+
+  public Command autoScoreHighCone() {
+    return Commands.runOnce(()->s_Lid.setLid(NodePosition.NodeGrid.HIGH_LEFT.getNodeLidPositionLidDown()))
+      .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(NodePosition.NodeGrid.HIGH_LEFT.getNodeCannonAngleLidDown())))
+      .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
+      .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(NodePosition.NodeGrid.HIGH_LEFT.getExtension())))
+      .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
+      .andThen(()->s_Intake.setIntake(-1.0))
+      .andThen(Commands.waitSeconds(0.5))
+      .andThen(Commands.runOnce(s_Intake::stopIntake))
+      .andThen(s_Intake::leaveGamePiece)
+      .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(1.0)))
+      .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
+      .andThen(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle)))
+      .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(177.0)));
+  }
+
+  public Command autoScoreMidCone() {
+    return Commands.runOnce(()->s_Lid.setLid(NodePosition.NodeGrid.MID_LEFT.getNodeLidPositionLidDown()))
+      .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(NodePosition.NodeGrid.MID_LEFT.getNodeCannonAngleLidDown())))
+      .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
+      .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(NodePosition.NodeGrid.MID_LEFT.getExtension())))
+      .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
+      .andThen(()->s_Intake.setIntake(-1.0))
+      .andThen(Commands.waitSeconds(0.5))
+      .andThen(Commands.runOnce(s_Intake::stopIntake))
+      .andThen(s_Intake::leaveGamePiece)
+      .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(1.0)))
+      .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
+      .andThen(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle)))
+      .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(177.0)));
+  } 
+
+  public Command autoScoreMidCube() { //works -ej 3/15
+    return Commands.runOnce(()->s_Lid.setLid(100.0))
+    .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(38.0)))
+    .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
+    .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(2.0)))
+    .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
+    .andThen(()->s_Intake.setIntake(0.4))
+    .andThen(Commands.waitSeconds(0.5))
+    .andThen(Commands.runOnce(s_Intake::stopIntake))
+    .andThen(s_Intake::leaveGamePiece)
+    .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(1.0)))
+    .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
+    .andThen(Commands.runOnce(()-> s_Lid.setLid(100.0)))
+    .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(177.0)));
+  }
+
+  public Command autoScoreLowCube() { 
+    return Commands.runOnce(()->s_Cannon.setCannonAngle(-7.5))
+    .andThen(Commands.runOnce(()->  s_Lid.setLid(80.0)))
+    .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
+    .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(1.0)))
+    .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
+    .andThen(()->s_Intake.setIntake(0.4))
+    .andThen(Commands.waitSeconds(0.5))
+    .andThen(Commands.runOnce(s_Intake::stopIntake))
+    .andThen(s_Intake::leaveGamePiece)
+    .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(1.0)))
+    .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
+    .andThen(Commands.runOnce(()-> s_Lid.setLid(100.0)))
+    .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(100.0)));
+  }
+
+  public Command autoIntakeCube() { //works -ej 3/15
+    return (Commands.runOnce(()-> s_Cannon.setCannonAngle(200)))
+    .andThen(Commands.runOnce(()-> s_Intake.setIntake(-1.0)))
+    .andThen(Commands.runOnce(()->s_Lid.setLid(100.0)))
+    .andThen(Commands.waitSeconds(.1)
+    .andThen(Commands.waitSeconds(2.0)
+    .deadlineWith(Commands.waitUntil(s_Intake::checkForGamePiece))))
+    .andThen(Commands.runOnce(s_Intake::stopIntake))
+    .andThen(Commands.runOnce(()->s_Lid.setLid(100.0)));
+  }
+
+  private void loadPaths() {
+    autoBuilder = new SwerveAutoBuilder(
+            s_SwerveDrive::getOdometryPose, // Pose2d supplier
+            s_SwerveDrive::resetOdometry, // Pose2d consumer, used to reset odometry at the beginning of auto
+            s_SwerveDrive.getKinematics(), // SwerveDriveKinematics
+            new PIDConstants(4, 0.0, 0.0), // PID constants to correct for translation error (used to create the X and Y
+            // PID controllers)
+            new PIDConstants(4, 0.0, 0.0), // PID constants to correct for rotation error (used to create the rotation
+            // controller)
+            s_SwerveDrive::setAutoModuleStates, // Module states consumer used to output to the drive subsystem
+            eventMap,
+            true,
+            s_SwerveDrive // The drive subsystem. Used to properly set the requirements of path following
+            // commands
+    );
+    eventMap.put("1stBallPickup", new WaitCommand(2));
+    eventMap.put("autoScoreHigh", autoScoreHighCube());
+    eventMap.put("autoScoreHighCone", autoScoreHighCone());
+    eventMap.put("autoIntake", autoIntakeCube());
+    eventMap.put("autoBalance", s_SwerveDrive.autoBalanceCommand());
+    eventMap.put("autoScoreMidCube", autoScoreMidCube());
+    eventMap.put("autoScoreMidCone", autoScoreMidCone());
+    eventMap.put("autoScoreLowCube", autoScoreLowCube());
+
+    // load autos completely dynamically -- any autos in pathplanner folder will be added to selector
+    List<File> files = List.of(
+            Objects.requireNonNull(new File(Filesystem.getDeployDirectory(), "pathplanner")
+                    .listFiles((dir, name) -> name.endsWith(".path"))));
+    for (File file : files) {
+      String pathName = file.getName().split("\\.")[0];
+      autoSelect.addOption(pathName, PathPlanner.loadPathGroup(pathName,
+        new PathConstraints(4, 4)));
+    }
+    autoSelect.setDefaultOption(files.get(0).getName().split("\\.")[0], PathPlanner.loadPathGroup(files.get(0).getName().split("\\.")[0], new PathConstraints(4, 4)));
   }
 
   public Command getAutonomousCommand() {
