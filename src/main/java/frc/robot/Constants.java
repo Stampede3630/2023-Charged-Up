@@ -43,7 +43,7 @@ public final class Constants {
     public static final float FORWARD_LIMIT = 220.0f;
     public static final float REVERSE_LIMIT = -20.0f;
     public static final double INITIALIZED_ANGLE = 85.0;
-    public static final double ERROR = 10.0;
+    public static final double ERROR = 20.0;
   }
 
   public static final class ExtendoConstants{

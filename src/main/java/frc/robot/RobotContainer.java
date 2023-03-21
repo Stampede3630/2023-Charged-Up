@@ -314,20 +314,18 @@ public class RobotContainer {
           .andThen(Commands.runOnce(()-> s_Intake.setIntake(intakeSpeed)))
           .andThen(s_Intake.waitUntilHaveGamePiece()
             .raceWith(Commands.waitUntil(xBox.rightTrigger(.2).debounce(.2, DebounceType.kFalling).negate())))
-          .andThen(Commands.runOnce(s_Intake::stopIntake))
-          .unless(s_Intake::haveGamePiece))
+          .andThen(Commands.runOnce(s_Intake::stopIntake)))
+          //.unless(s_Intake::haveGamePiece))
         .onFalse(Commands.runOnce(s_Intake::stopIntake));
       
     //-> Outtake trigger
     xBox.leftTrigger(.55).debounce(.1, DebounceType.kFalling)
-        .onTrue(Commands.runOnce(()-> s_Intake.setIntake(-intakeSpeed/2)).alongWith(Commands.runOnce(s_Intake::leaveGamePiece)))
+        .onTrue(Commands.runOnce(()-> s_Intake.setIntake(nodeGridChooser.getSelected().intakeSpeed)).alongWith(Commands.runOnce(s_Intake::leaveGamePiece)))
         .onFalse(Commands.runOnce(s_Intake::stopIntake)
           .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(0.5)))
           .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
           .andThen(Commands.runOnce(()-> s_Lid.setLid(60.0)))
           );
-          // .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(intakeCannonAngle))) //intakecannonangle
-          // .andThen(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle))));
     
     xBox.leftStick().whileTrue((Commands.repeatingSequence(Commands.runOnce(s_SwerveDrive::activateDefensiveStop))));
 
@@ -342,24 +340,17 @@ public class RobotContainer {
             s_Lid.setLidReference(nodeGridChooser.getSelected().getNodeLidPositionLidUp());
             s_Cannon.setCannonAngle(nodeGridChooser.getSelected().getNodeCannonAngleLidUp());
           }
-        }).alongWith(s_Intake.inALittle(intakeSpeed, Lid.LidPosition.getLidPosition(robotFacing(), cannonFacing()))
-                        .until(xBox.leftTrigger(.55).debounce(.1, DebounceType.kFalling)))
-          .alongWith(
-                  Commands.waitUntil(s_Cannon::cannonErrorWithinRange)
-                  .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(nodeGridChooser.getSelected().getExtension())))));
+        }).andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange)
+            .andThen(Commands.runOnce(()-> s_Cannon.setExtensionInches(nodeGridChooser.getSelected().getExtension()))))
+        .alongWith(Commands.runOnce(() -> s_Intake.setIntake(0))));
 
-//        .andThen(Commands.runOnce(()-> s_Intake.setIntake(intakeSpeed/3.0))));
-
-    xBox.b().onTrue(s_Intake.outALittle(intakeSpeed, Lid.LidPosition.getLidPosition(robotFacing(), cannonFacing())));
-    //logic/no controller triggers
+     //logic/no controller triggers
     new Trigger(s_Intake::haveGamePiece)
       .onTrue(Commands.runOnce(()-> s_Cannon.setExtensionInches(1))
-        .alongWith(s_Intake.outALittle(intakeSpeed, Lid.LidPosition.getLidPosition(robotFacing(), cannonFacing())))
-        .alongWith(Commands.waitUntil(s_Cannon::extensionErrorWithinRange)
-         .andThen(Commands.waitUntil(s_Lid::lidWithinError)
-         .andThen(s_Intake.inALittle(intakeSpeed, Lid.LidPosition.getLidPosition(robotFacing(), cannonFacing())))
-         .andThen(()-> s_Cannon.setCannonAngleSides(robotFacing(), 80.0)))
-          .andThen(Commands.runOnce(()-> s_Intake.setIntake(intakeSpeed/3)).until(s_Intake::haveGamePiece)))
+        .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange)
+          .andThen(Commands.runOnce(() -> s_Intake.setIntake(Math.copySign(.02, intakeSpeed))))
+          .andThen(()-> s_Cannon.setCannonAngleSides(robotFacing(), 80.0)))
+        .alongWith(s_Intake.outALittle(intakeSpeed, Lid.LidPosition.getLidPosition(robotFacing(), cannonFacing())))         
         .alongWith(Commands.runOnce(() -> {s_LEDs.setChaseColorsSlot(0); s_LEDs.setMode(LEDs.LEDMode.CHASING);}))) // chasing leds because we have a game piece
       .onFalse(Commands.either(
         Commands.runOnce(s_LEDs::bePurple), 
@@ -387,13 +378,7 @@ public class RobotContainer {
         () -> gamePieceTypeChooser.getSelected().equals(GamePieceType.CUBE)))
       .onTrue(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle)));
   }
-
-  @Log
-  public String lidPOsitioN() {
-    return Lid.LidPosition.getLidPosition(robotFacing(), cannonFacing()).name();
-  }
   
-  @Log
   public void setIntakeParameters() {
     if (pickupLocationChooser.getSelected()==PickupLocation.SHELF) {
       switch (gamePieceTypeChooser.getSelected()) {
@@ -448,7 +433,7 @@ public class RobotContainer {
         //facing community, lid up, not able to get tipped cones
         switch (gamePieceTypeChooser.getSelected()) {
           case CUBE://unfavorable cubbe intake!! BOOOOOOO
-          intakeCannonAngle = 195.0;//fix
+          intakeCannonAngle = -20.0;//fix
           intakeLidAngle = 35.0;
           intakeSpeed = -1.0;
           intakeExtensionInches = 2.5;//fix
@@ -459,7 +444,7 @@ public class RobotContainer {
             intakeSpeed = 1.0;
             intakeExtensionInches = 0.5;
             break;
-          case TIPPED_CONE: // impossible
+          case TIPPED_CONE: // no longer impossible
             intakeCannonAngle = 4.0;
             intakeLidAngle = 180.0;
             intakeSpeed = 1.0;
@@ -473,7 +458,7 @@ public class RobotContainer {
             break;
         }
       }
-      else {
+      else { // gnd hp
         //facing HPS or nothing, lid down
         switch (gamePieceTypeChooser.getSelected()) {
           case CUBE://Caleb 3/14/23
@@ -483,7 +468,7 @@ public class RobotContainer {
             intakeExtensionInches = 2.5;
             break;
           case UPRIGHT_CONE://Caleb 3/14/23
-            intakeCannonAngle = 198.5;
+            intakeCannonAngle = 196;
             intakeLidAngle = 140.0;
             intakeSpeed = 1.0;
             intakeExtensionInches = 1.0;
@@ -638,7 +623,7 @@ public class RobotContainer {
     return autoBuilder.fullAuto(autoSelect.getSelected());
     // return autoScoreHighCube();
   }
-// //TODO: Commented this out because it's not ready
+  
   public List<PathPlannerTrajectory> autoPathGroupOnTheFly() {
     List<PathPlannerTrajectory> PGOTF = new ArrayList<>();
     PGOTF.add(

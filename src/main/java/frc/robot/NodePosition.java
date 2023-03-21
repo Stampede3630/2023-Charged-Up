@@ -28,7 +28,6 @@ public class NodePosition {
       LEFT(123.0,42.19),
       CENTER(123.0,66+42.19),
       RIGHT(123.0,132+42.19);
-
       public final double xCoord;
       public final double yCoord;
 
@@ -49,18 +48,18 @@ public class NodePosition {
     * R 132 + 42.19
     */
     public enum NodeGrid {
-      LOW_LEFT(0, -22, 0, "leftLow", 180, 37.5, 0.0, 150.0),
-      LOW_CENTER(0, 0, 0, "midLow", 0, 100, 0, 100),
-      LOW_RIGHT(0, 22, 0,"rightLow", 180, 37.5, 0.0, 150.0),
+      LOW_LEFT(0, -22, 0, "leftLow", 180, 37.5, 0.0, 150.0, .5),
+      LOW_CENTER(0, 0, 0, "midLow", 0, 100, 0, 100, .5),
+      LOW_RIGHT(0, 22, 0,"rightLow", 180, 37.5, 0.0, 150.0, .5),
   
-      MID_LEFT(16.0, -22, 0, "leftMid", 39.0, 37.5, 26.0, 130.0),
-      MID_CENTER(3.5, 0, 0, "midMid", 38.0, 100.0, 38.0, 100.0),
-      MID_RIGHT(16.0, 22, 0,"rightMid", 39.0, 37.5, 26.0, 130.0),
+      MID_LEFT(16.0, -22, 0, "leftMid", 39.0, 37.5, 26.0, 130.0, -.5),
+      MID_CENTER(3.5, 0, 0, "midMid", 38.0, 100.0, 38.0, 100.0, 1),
+      MID_RIGHT(16.0, 22, 0,"rightMid", 39.0, 37.5, 26.0, 130.0, -.5),
   
   
-      HIGH_LEFT(36.5, -22, 0, "leftHigh", 43.0, 37.5, 43.0, 40.0), //ej 3/16
-      HIGH_CENTER(25.0, 0, 0, "midHigh", 38.7, 100.0, 38.7, 100.0), //ej3/15
-      HIGH_RIGHT(36.5, 22, 0, "rightHigh", 43.0, 37.5, 43.0, 40.0); //ej3/16
+      HIGH_LEFT(38.5, -22, 0, "leftHigh", 43.0, 37.5, 43.0, 40.0, -.5), //ej 3/16
+      HIGH_CENTER(25.0, 0, 0, "midHigh", 38.7, 100.0, 38.7, 100.0, .5), //ej3/15
+      HIGH_RIGHT(38.5, 22, 0, "rightHigh", 43.0, 37.5, 43.0, 40.0, -.5); //ej3/16
       
   
       public final double extension;
@@ -71,7 +70,8 @@ public class NodePosition {
       public final double lidUpLidPosition;
       public final double lidDownCannonAngle;
       public final double lidDownLidPosition;
-      NodeGrid(double extension, double yOffset, double xOffset, String widgetName, double lidDownCannonAngle, double lidDownLidPosition, double lidUpCannonAngle, double lidUpLidPosition) {
+      public final double intakeSpeed;
+      NodeGrid(double extension, double yOffset, double xOffset, String widgetName, double lidDownCannonAngle, double lidDownLidPosition, double lidUpCannonAngle, double lidUpLidPosition, double intakeSpeed) {
         this.extension = extension;
         this.xOffset = xOffset;
         this.yOffset = yOffset;
@@ -80,6 +80,7 @@ public class NodePosition {
         this.lidUpLidPosition = lidDownLidPosition;
         this.lidDownCannonAngle = lidUpCannonAngle;
         this.lidDownLidPosition = lidUpLidPosition;
+        this.intakeSpeed = intakeSpeed;
       }
 
       public double getNodeCannonAngleLidUp(){
