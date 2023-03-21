@@ -25,9 +25,9 @@ public final class Constants {
     public static final int SPARK_MASTER_ID = 4;
     public static final int SPARK_FOLLOWER_ID = 11;
 
-    public static final double KP = 1.0/30.0; //used to be 1/30.0
+    public static final double KP = 0.02; //used to be 1/30.0
     public static final double KI = 0;
-    public static final double KD = 0; //used to be 0
+    public static final double KD = 0.05; //used to be 0
     public static final double KS = 0.00;
     public static final double KG = 0.73;
     public static final double KV = 2.44;
@@ -42,7 +42,7 @@ public final class Constants {
     public static final int  CURRENT_LIMIT = 60; //used to be 70
     public static final float FORWARD_LIMIT = 220.0f;
     public static final float REVERSE_LIMIT = -20.0f;
-    public static final double INITIALIZED_ANGLE = 85.0;
+    public static final double INITIALIZED_ANGLE = 90.0;
     public static final double ERROR = 20.0;
   }
 

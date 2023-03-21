@@ -45,7 +45,7 @@ public class Intake extends SubsystemBase implements Loggable, Disableable, Enab
         motorConfig.CurrentLimits.StatorCurrentLimit = 80;
         motorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
         motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-        motorConfig.Slot0.kP = 1;
+        motorConfig.Slot0.kP = 5;
         motorConfig.Slot0.kI= 0;
         motorConfig.Slot0.kD = 0;
 
@@ -53,13 +53,6 @@ public class Intake extends SubsystemBase implements Loggable, Disableable, Enab
         m_intakeMotor.getConfigurator().apply(motorConfig);
         // cannonExtension.setInverted(true);
         //changed idle mode to help with troubleshooting    
-    }
-
-    @Config.NumberSlider(defaultValue = 1,min = 0,max = 5)
-    public void setKp(double input) {
-        m_intakeMotor.getConfigurator().refresh(motorConfig);
-        motorConfig.Slot0.kP = input;
-        m_intakeMotor.getConfigurator().apply(motorConfig);
     }
 
     @Override

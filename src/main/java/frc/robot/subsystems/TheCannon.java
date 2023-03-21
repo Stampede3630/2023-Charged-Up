@@ -29,7 +29,7 @@ import io.github.oblarg.oblog.annotations.Log;
 public class TheCannon extends SubsystemBase implements Loggable {
   /** Creates a new TheCannon. */
 @Log(tabName = "NodeSelector")
-public double extensionInches = ExtendoConstants.INITIALIZED_INCHES;
+public double extensionReference = ExtendoConstants.INITIALIZED_INCHES;
 @Log
 public double cannonRotation = CannonConstants.INITIALIZED_ANGLE;
 
@@ -97,6 +97,16 @@ private ArmFeedforward m_feedforward =
     
      
   }
+
+  @Log
+  public double extendoTemp() {
+    return cannonExtension.getMotorTemperature();
+  }
+
+  @Log
+  public double extendoCurrent() {
+    return cannonExtension.getOutputCurrent();
+  }
   
   @Override
   public void periodic() {
@@ -104,7 +114,7 @@ private ArmFeedforward m_feedforward =
 
     setAdaptiveFeedForward();
 
-    cannonExtensionPID.setReference(extensionInches, ControlType.kPosition); 
+    cannonExtensionPID.setReference(extensionReference, ControlType.kPosition); 
     cannonRotLeadPID.setReference(getRevReferenceAngleSetpoint(), ControlType.kPosition, 0, getArbitraryFeedForward(), ArbFFUnits.kVoltage);
 
     if (Preferences.getBoolean("Wanna PID Cannon", false)) {
@@ -139,8 +149,8 @@ private ArmFeedforward m_feedforward =
 
   
   @Log(tabName = "NodeSelector")
-  public double getExtensionInches(){
-    return extensionInches;
+  public double getExtensionReference(){
+    return extensionReference;
   }
 
   public void setCannonToCoast(){
@@ -164,7 +174,7 @@ private ArmFeedforward m_feedforward =
   public void setExtensionZero(){
     if (extensionHardStop.isPressed()){
       extensionEncoder.setPosition(0);
-      extensionInches = 0;
+      extensionReference = 0;
     }
   }
 
@@ -175,18 +185,18 @@ private ArmFeedforward m_feedforward =
 
   @Log
   public boolean extensionErrorWithinRange(){
-    return Math.abs(extensionInches - getExtensionEncoder()) < ExtendoConstants.ERROR;
+    return Math.abs(extensionReference - getExtensionEncoder()) < ExtendoConstants.ERROR;
   }
 
   public void manExtend() {
     // extension motor spins
-    extensionInches += 1;
+    extensionReference += 1;
 
   }
 
   public void manRetract() {
     // extension motor spins the other way
-    extensionInches -= 1;
+    extensionReference -= 1;
   }
 
   public void manRotUp() {
@@ -223,8 +233,8 @@ private ArmFeedforward m_feedforward =
   }
 
   @Config.NumberSlider(max=45,min=0)
-  public void setExtensionInches(double input){
-    extensionInches = input;
+  public void setExtensionReference(double input){
+    extensionReference = input;
   }
   @Config.NumberSlider(max = 230, min = -20, defaultValue = CannonConstants.INITIALIZED_ANGLE)
   public void setCannonAngle(double input){
@@ -235,7 +245,7 @@ private ArmFeedforward m_feedforward =
     double angleToSet = cannonRotation; // no change
     if (robotFacing == FacingPOI.COMMUNITY)
       angleToSet = 180-angle;
-    else // hp or nothing
+    else if (robotFacing == FacingPOI.HUMAN_PLAYER)// hp or nothing
       angleToSet = angle;
 
     setCannonAngle(angleToSet);

@@ -34,11 +34,14 @@ public class Lid extends SubsystemBase implements Loggable{
         m_lidMotor.setSoftLimit(SoftLimitDirection.kReverse, LidConstants.REVERSE_LIMIT);
         m_lidAbsolute.setZeroOffset(LidConstants.ZERO_OFFSET);
 
+        m_lidAbsolute.setPositionConversionFactor(360);
+        m_lidAbsolute.setVelocityConversionFactor(360);
+
         m_lidMotor.setSmartCurrentLimit(LidConstants.CURRENT_LIMIT);
                 
         // cannonExtension.setInverted(true);
         //changed idle mode to help with troubleshooting    
-        m_lidMotor.setIdleMode(IdleMode.kBrake);
+        m_lidMotor.setIdleMode(IdleMode.kBrake); 
         m_lidMotor.setInverted(true);
 
         m_lidPid.setFeedbackDevice(m_lidAbsolute);
