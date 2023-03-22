@@ -1,5 +1,8 @@
 package frc.robot.subsystems;
 
+import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
+
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.StatorCurrentLimitConfiguration;
@@ -126,7 +129,7 @@ public class Intake extends SubsystemBase implements Loggable, Disableable, Enab
         haveGamePiece = false;
     }
 
-    public Command inALittle(double intakeSpeed, LidPosition lidPosition){
+    public Command inALittle(DoubleSupplier intakeSpeed, Supplier<LidPosition> lidPosition){
         // double intakeSign = Math.copySign(1, intakeSpeed);
         // return new FunctionalCommand(
         //         () -> setEncoderPosition(0),   // first zero the encoder
@@ -145,7 +148,7 @@ public class Intake extends SubsystemBase implements Loggable, Disableable, Enab
         //         }); // it is finished when the encoder goes down by 15 rotations
         return Commands.none();
     }
-    public Command outALittle(double intakeSpeed, LidPosition lidPosition){
+    public Command outALittle(DoubleSupplier intakeSpeed, Supplier<LidPosition> lidPosition){
         return Commands.none();
 
         // double intakeSign = Math.copySign(1, intakeSpeed);

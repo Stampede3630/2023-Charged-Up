@@ -297,16 +297,16 @@ public class RobotContainer {
 
     // combined triggers
 
-    xBox.b().onTrue(s_Cannon.setExtensionWait(intakeExtensionInches)
-    .andThen(s_Cannon.setCannonAngleWait(intakeCannonAngle)));
+    xBox.b().onTrue(s_Cannon.setExtensionWait(() -> intakeExtensionInches)
+    .andThen(s_Cannon.setCannonAngleWait(() -> intakeCannonAngle)));
     //-> intake trigger
     xBox.rightTrigger(.1).debounce(.1, DebounceType.kFalling)
         .onTrue(
           Commands.either(
-            s_Cannon.setCannonAngleWait(intakeCannonAngle)
-              .andThen(s_Cannon.setExtensionWait(intakeExtensionInches)),
-            s_Cannon.setExtensionWait(intakeExtensionInches)
-              .andThen(s_Cannon.setCannonAngleWait(intakeCannonAngle)),
+            s_Cannon.setCannonAngleWait(() -> intakeCannonAngle)
+              .andThen(s_Cannon.setExtensionWait(() -> intakeExtensionInches)),
+            s_Cannon.setExtensionWait(() -> intakeExtensionInches)
+              .andThen(s_Cannon.setCannonAngleWait(() -> intakeCannonAngle)),
             () -> s_Cannon.getExtensionEncoder() < 10) // "dangerous" or not
           .alongWith(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle)))
           .andThen(Commands.runOnce(()-> s_Intake.setIntake(intakeSpeed)))
@@ -389,7 +389,7 @@ public class RobotContainer {
           break;
         case TIPPED_CONE: //non existent
         case UPRIGHT_CONE://revise, should be same as tipped
-          intakeCannonAngle = 40.5;
+          intakeCannonAngle = 44.5;
             intakeLidAngle = 46;
             intakeSpeed = 1.0;
             intakeExtensionInches = 27.63;

@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems;
 
+import java.util.function.DoubleSupplier;
+
 import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.ControlType;
@@ -223,27 +225,17 @@ private final SparkMaxPIDController cannonExtensionPID = cannonExtension.getPIDC
   }
 
 
-  public Command setCannonAngleWait(double angle) {
+  public Command setCannonAngleWait(DoubleSupplier angleGetter) {
     return new FunctionalCommand(
-      () -> setCannonAngle(angle), 
-      () -> {
-        try { // need to wait for periodic to be run
-          wait(20);
-        } catch (InterruptedException e) {
-          throw new RuntimeException(e);
-        }
-      },
+      () -> setCannonAngle(angleGetter.getAsDouble()), 
+      () -> {},
       (success) -> {System.out.println("rotate done");}, 
       this::cannonErrorWithinRange);
   }
-  public Command setExtensionWait(double inches) {
+  public Command setExtensionWait(DoubleSupplier inchesGetter) {
     return new FunctionalCommand(
-      () -> setExtensionReference(inches), 
-      () -> {try { // need to wait for periodic to be run
-        wait(20);
-      } catch (InterruptedException e) {
-        throw new RuntimeException(e);
-      }},
+      () -> setExtensionReference(inchesGetter.getAsDouble()), 
+      () -> {},
       (success) -> {System.out.println("extend done");},
       this::extensionErrorWithinRange);
   }
