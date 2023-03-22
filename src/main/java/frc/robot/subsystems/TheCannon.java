@@ -18,6 +18,8 @@ import com.revrobotics.SparkMaxPIDController.ArbFFUnits;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.wpilibj.Preferences;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.CannonConstants;
 import frc.robot.Constants.ExtendoConstants;
@@ -28,7 +30,6 @@ import io.github.oblarg.oblog.annotations.Log;
 
 public class TheCannon extends SubsystemBase implements Loggable {
   /** Creates a new TheCannon. */
-@Log(tabName = "NodeSelector")
 public double extensionReference = ExtendoConstants.INITIALIZED_INCHES;
 @Log
 public double cannonRotation = CannonConstants.INITIALIZED_ANGLE;
@@ -89,7 +90,9 @@ private ArmFeedforward m_feedforward =
     cannonExtensionPID.setOutputRange(-.5, 1);
 
     cannonExtension.setSoftLimit(SoftLimitDirection.kForward, 40);
-    cannonExtension.setSoftLimit(SoftLimitDirection.kReverse, 2);
+    cannonExtension.setSoftLimit(SoftLimitDirection.kReverse, 0);
+    extensionHardStop.enableLimitSwitch(true);
+    
     
     cannonRotLead.burnFlash();
     cannonRotFollow.burnFlash();
@@ -241,6 +244,21 @@ private ArmFeedforward m_feedforward =
     cannonRotation = input;
   }
 
+
+  public Command setCannonAngleWait(double angle) {
+    return new FunctionalCommand(
+      () -> setCannonAngle(angle), 
+      () -> {}, 
+      (success) -> {System.out.println("rotate done");}, 
+      this::cannonErrorWithinRange);
+  }
+  public Command setExtensionWait(double inches) {
+    return new FunctionalCommand(
+      () -> setExtensionReference(inches), 
+      () -> {}, 
+      (success) -> {System.out.println("extend done");},
+      this::extensionErrorWithinRange);
+  }
   public double setCannonAngleSides(FacingPOI robotFacing, double angle) {
     double angleToSet = cannonRotation; // no change
     if (robotFacing == FacingPOI.COMMUNITY)

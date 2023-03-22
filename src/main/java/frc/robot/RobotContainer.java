@@ -297,18 +297,16 @@ public class RobotContainer {
 
     // combined triggers
 
+    xBox.b().onTrue(s_Cannon.setExtensionWait(intakeExtensionInches)
+    .andThen(s_Cannon.setCannonAngleWait(intakeCannonAngle)));
     //-> intake trigger
     xBox.rightTrigger(.1).debounce(.1, DebounceType.kFalling)
         .onTrue(
           Commands.either(
-            Commands.runOnce(()-> s_Cannon.setCannonAngle(intakeCannonAngle))
-              .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
-              .andThen(Commands.runOnce(() -> s_Cannon.setExtensionReference(intakeExtensionInches)))
-              .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange)),
-            Commands.runOnce(() -> s_Cannon.setExtensionReference(intakeExtensionInches))
-              .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
-              .andThen(Commands.runOnce(() -> s_Cannon.setCannonAngle(intakeCannonAngle))
-              .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))),
+            s_Cannon.setCannonAngleWait(intakeCannonAngle)
+              .andThen(s_Cannon.setExtensionWait(intakeExtensionInches)),
+            s_Cannon.setExtensionWait(intakeExtensionInches)
+              .andThen(s_Cannon.setCannonAngleWait(intakeCannonAngle)),
             () -> s_Cannon.getExtensionEncoder() < 10) // "dangerous" or not
           .alongWith(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle)))
           .andThen(Commands.runOnce(()-> s_Intake.setIntake(intakeSpeed)))
@@ -389,13 +387,13 @@ public class RobotContainer {
           intakeSpeed = -1.0;
           intakeExtensionInches = 0.5; 
           break;
+        case TIPPED_CONE: //non existent
         case UPRIGHT_CONE://revise, should be same as tipped
-        case TIPPED_CONE: //revise, should be same as upright
-          intakeCannonAngle = 180.0;
-          intakeLidAngle = 210.0;
-          intakeSpeed = 1.0;
-          intakeExtensionInches = 0.5;
-          break;
+          intakeCannonAngle = 40.5;
+            intakeLidAngle = 46;
+            intakeSpeed = 1.0;
+            intakeExtensionInches = 27.63;
+            break;
         case NOTHING:
           intakeCannonAngle = 85.0;
           intakeLidAngle = 60.0;
@@ -446,10 +444,10 @@ public class RobotContainer {
             intakeExtensionInches = 0.5;
             break;
           case TIPPED_CONE: // no longer impossible
-            intakeCannonAngle = 4.0;
-            intakeLidAngle = 180.0;
+            intakeCannonAngle = -10.99;
+            intakeLidAngle = 112.82;
             intakeSpeed = 1.0;
-            intakeExtensionInches = 0.5;
+            intakeExtensionInches = 1;
             break;
           case NOTHING:
             intakeCannonAngle = 85.0;
@@ -475,10 +473,10 @@ public class RobotContainer {
             intakeExtensionInches = 1.0;
             break; 
           case TIPPED_CONE://Caleb 3/14/23
-          intakeCannonAngle = 195.5;
-          intakeLidAngle = 140.0;
+          intakeCannonAngle = -10.99;
+          intakeLidAngle = 112.82;
           intakeSpeed = 1.0;
-          intakeExtensionInches = 1.0;
+          intakeExtensionInches = 1;
             break; 
           case NOTHING: 
             intakeCannonAngle = 85.0;
