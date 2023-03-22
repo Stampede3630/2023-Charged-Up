@@ -19,8 +19,11 @@ import com.revrobotics.SparkMaxPIDController.ArbFFUnits;
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Constants;
 import frc.robot.Constants.CannonConstants;
 import frc.robot.Constants.ExtendoConstants;
 import frc.robot.RobotContainer.FacingPOI;
@@ -32,7 +35,7 @@ public class TheCannon extends SubsystemBase implements Loggable {
   /** Creates a new TheCannon. */
 public double extensionReference = ExtendoConstants.INITIALIZED_INCHES;
 @Log
-public double cannonRotation = CannonConstants.INITIALIZED_ANGLE;
+public double cannonReference = CannonConstants.INITIALIZED_ANGLE;
 
 private final CANSparkMax cannonRotLead = new CANSparkMax(CannonConstants.SPARK_MASTER_ID, MotorType.kBrushless);
 private final CANSparkMax cannonRotFollow = new CANSparkMax(CannonConstants.SPARK_FOLLOWER_ID, MotorType.kBrushless);
@@ -45,13 +48,6 @@ private final SparkMaxLimitSwitch extensionHardStop = cannonExtension.getReverse
 private final SparkMaxPIDController cannonRotLeadPID = cannonRotLead.getPIDController();
 private final SparkMaxPIDController cannonExtensionPID = cannonExtension.getPIDController();
 
-private ArmFeedforward m_feedforward =
-  new ArmFeedforward(
-    CannonConstants.KS, 
-    CannonConstants.KG,
-    CannonConstants.KV, 
-    CannonConstants.KA);
-  
   public TheCannon() {
     cannonAbsolute.setInverted(false);
     cannonAbsolute.setPositionConversionFactor(CannonConstants.CONVERSION_FACTOR);
@@ -97,7 +93,12 @@ private ArmFeedforward m_feedforward =
     cannonRotLead.burnFlash();
     cannonRotFollow.burnFlash();
     cannonExtension.burnFlash();
-    
+
+    new Trigger(extensionHardStop::isPressed).onTrue(
+            Commands.runOnce(() -> {
+              extensionEncoder.setPosition(0);
+              extensionReference = 0;
+            }));
      
   }
 
@@ -114,12 +115,6 @@ private ArmFeedforward m_feedforward =
   @Override
   public void periodic() {
 
-
-    setAdaptiveFeedForward();
-
-    cannonExtensionPID.setReference(extensionReference, ControlType.kPosition); 
-    cannonRotLeadPID.setReference(getRevReferenceAngleSetpoint(), ControlType.kPosition, 0, getArbitraryFeedForward(), ArbFFUnits.kVoltage);
-
     if (Preferences.getBoolean("Wanna PID Cannon", false)) {
       cannonRotLeadPID.setP(Preferences.getDouble("CannonKP", CannonConstants.KP));
       cannonRotLeadPID.setI(Preferences.getDouble("CannonKI", CannonConstants.KI));
@@ -130,26 +125,7 @@ private ArmFeedforward m_feedforward =
     cannonExtensionPID.setD(Preferences.getDouble("ExtensionKD", ExtendoConstants.KD));
       Preferences.setBoolean("Wanna PID Cannon", false);
     }
-
-
-    setExtensionZero();
-
   }
-  // This method will be called once per scheduler run
-
-
-  //TODO: max extension 47inches, 0 is actually 13 inches
-  public void setAdaptiveFeedForward() {
-    double extensionPosition = extensionEncoder.getPosition();
-    m_feedforward = 
-      new ArmFeedforward(
-        CannonConstants.KS,
-        CannonConstants.KGM * extensionPosition + CannonConstants.KGB,
-        CannonConstants.KV,
-        CannonConstants.KAM * extensionPosition + CannonConstants.KAB
-      );
-  }
-
   
   @Log(tabName = "NodeSelector")
   public double getExtensionReference(){
@@ -160,7 +136,6 @@ private ArmFeedforward m_feedforward =
     cannonRotLead.setIdleMode(IdleMode.kCoast);
     cannonRotFollow.setIdleMode(IdleMode.kCoast);
     cannonExtension.setIdleMode(IdleMode.kCoast);
-
   }
 
   public void setCannonToBrake(){
@@ -174,16 +149,9 @@ private ArmFeedforward m_feedforward =
     return extensionHardStop.isPressed();
   }
 
-  public void setExtensionZero(){
-    if (extensionHardStop.isPressed()){
-      extensionEncoder.setPosition(0);
-      extensionReference = 0;
-    }
-  }
-
   @Log
   public boolean cannonErrorWithinRange (){
-    return Math.abs(cannonRotation - getCannonAngleEncoder()) < CannonConstants.ERROR; 
+    return Math.abs(cannonReference - getCannonAngleEncoder()) < CannonConstants.ERROR;
   }
 
   @Log
@@ -204,12 +172,12 @@ private ArmFeedforward m_feedforward =
 
   public void manRotUp() {
     // rotation motor spins
-    setCannonAngle(cannonRotation  + 1.0);
+    setCannonAngle(cannonReference + 1.0);
 
   }
 
   public void manRotDown() {
-    setCannonAngle(cannonRotation  - 1.0);
+    setCannonAngle(cannonReference - 1.0);
 
   }
 
@@ -225,8 +193,16 @@ private ArmFeedforward m_feedforward =
     return cannonAbsolute.getPosition() - 90;
   }
 
+  //TODO: max extension 47inches, 0 is actually 13 inches
   public double getArbitraryFeedForward() {
-    return m_feedforward.calculate(Math.toRadians(getCannonAngleEncoder()),
+    double extensionPosition = extensionEncoder.getPosition();
+    ArmFeedforward feedforward = new ArmFeedforward(
+            CannonConstants.KS,
+            CannonConstants.KGM * extensionPosition + CannonConstants.KGB,
+            CannonConstants.KV,
+            CannonConstants.KAM * extensionPosition + CannonConstants.KAB
+    );
+    return feedforward.calculate(Math.toRadians(getCannonAngleEncoder()),
         Math.toRadians(getCannonVelocity()));
   }
 
@@ -238,29 +214,41 @@ private ArmFeedforward m_feedforward =
   @Config.NumberSlider(max=45,min=0)
   public void setExtensionReference(double input){
     extensionReference = input;
+    cannonExtensionPID.setReference(extensionReference, ControlType.kPosition);
   }
   @Config.NumberSlider(max = 230, min = -20, defaultValue = CannonConstants.INITIALIZED_ANGLE)
   public void setCannonAngle(double input){
-    cannonRotation = input;
+    cannonReference = input;
+    cannonRotLeadPID.setReference(getRevReferenceAngleSetpoint(), ControlType.kPosition, 0, getArbitraryFeedForward(), ArbFFUnits.kVoltage);
   }
 
 
   public Command setCannonAngleWait(double angle) {
     return new FunctionalCommand(
       () -> setCannonAngle(angle), 
-      () -> {}, 
+      () -> {
+        try { // need to wait for periodic to be run
+          wait(20);
+        } catch (InterruptedException e) {
+          throw new RuntimeException(e);
+        }
+      },
       (success) -> {System.out.println("rotate done");}, 
       this::cannonErrorWithinRange);
   }
   public Command setExtensionWait(double inches) {
     return new FunctionalCommand(
       () -> setExtensionReference(inches), 
-      () -> {}, 
+      () -> {try { // need to wait for periodic to be run
+        wait(20);
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }},
       (success) -> {System.out.println("extend done");},
       this::extensionErrorWithinRange);
   }
   public double setCannonAngleSides(FacingPOI robotFacing, double angle) {
-    double angleToSet = cannonRotation; // no change
+    double angleToSet = cannonReference; // no change
     if (robotFacing == FacingPOI.COMMUNITY)
       angleToSet = 180-angle;
     else if (robotFacing == FacingPOI.HUMAN_PLAYER)// hp or nothing
@@ -271,6 +259,6 @@ private ArmFeedforward m_feedforward =
   }
 
   public double getRevReferenceAngleSetpoint() {
-     return (cannonRotation + 90);
+     return (cannonReference + 90);
   }
 }
