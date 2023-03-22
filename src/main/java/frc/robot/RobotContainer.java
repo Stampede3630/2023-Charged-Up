@@ -318,7 +318,8 @@ public class RobotContainer {
           //.unless(s_Intake::haveGamePiece))
         .onFalse(Commands.runOnce(s_Intake::stopIntake)
           .andThen(() -> s_Cannon.setExtensionReference(1))
-          .alongWith(Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), 90))));      
+          .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
+          .andThen(Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), 90))));
     //-> Outtake trigger
     xBox.leftTrigger(.55).debounce(.1, DebounceType.kFalling)
         .onTrue(Commands.runOnce(()-> s_Intake.setIntake(nodeGridChooser.getSelected().intakeSpeed)).alongWith(Commands.runOnce(s_Intake::leaveGamePiece)))
@@ -349,7 +350,7 @@ public class RobotContainer {
     new Trigger(s_Intake::haveGamePiece)
       .onTrue(Commands.runOnce(()-> s_Cannon.setExtensionReference(1))
         .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange)
-          .andThen(Commands.runOnce(() -> s_Intake.setIntake(Math.copySign(.02, intakeSpeed))))
+          .andThen(Commands.runOnce(() -> s_Intake.setIntake(Math.copySign(.1, intakeSpeed))))
           .andThen(()-> s_Cannon.setCannonAngleSides(robotFacing(), 90.0)))
         .alongWith(Commands.runOnce(() -> {s_LEDs.setChaseColorsSlot(0); s_LEDs.setMode(LEDs.LEDMode.CHASING);}))) // chasing leds because we have a game piece
       .onFalse(Commands.either(

@@ -37,7 +37,7 @@ public class Intake extends SubsystemBase implements Loggable, Disableable, Enab
     public double MAX_SPEED_RPS = 75;
     @Log
     private double filteredCurrent;
-    private final Debouncer m_debouncer = new Debouncer(0.30, DebounceType.kRising);
+    private final Debouncer m_debouncer = new Debouncer(0.17, DebounceType.kRising);
     public Intake() {
          m_intakeMotor = new TalonFX(14, "rio");
          intakeLimitSwitch = m_intakeMotor.getReverseLimit().getValue();
