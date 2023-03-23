@@ -36,6 +36,7 @@ import frc.robot.Constants;
 import frc.robot.subsystems.swerve.QuadFalconSwerveDrive;
 import frc.robot.subsystems.swerve.SwerveConstants;
 import frc.robot.subsystems.swerve.SwerveModule;
+import frc.robot.util.LimelightPose2d;
 import frc.robot.util.SimGyroSensorModel;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Config;
@@ -129,12 +130,14 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
 
     robotPose = updateOdometry();
 
-    if (aprilTagDetectedFront && limelightLatencyFront() < 1.5) {
-      m_odometry.addVisionMeasurement(limelightBotPoseFront(), Timer.getFPGATimestamp() - limelightLatencyFront());
+    LimelightPose2d frontPose = limelightBotPoseFront();
+    if (aprilTagDetectedFront && frontPose.getLatency() < 1.5) {
+      m_odometry.addVisionMeasurement(frontPose, Timer.getFPGATimestamp() - frontPose.getLatency());
     }
 
-    if(aprilTagDetectedBack && limelightLatencyBack() < 1.5) {
-      m_odometry.addVisionMeasurement(limelightBotPoseBack(), Timer.getFPGATimestamp() - limelightLatencyBack());
+    LimelightPose2d backPose = limelightBotPoseBack();
+    if(aprilTagDetectedBack && backPose.getLatency() < 1.5) {
+      m_odometry.addVisionMeasurement(backPose, Timer.getFPGATimestamp() - backPose.getLatency());
     }
 
     drawRobotOnField(m_field);
@@ -332,11 +335,11 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
     return _input*SwerveConstants.MAX_SPEED_RADIANSperSECOND;
   }
   
-  public Pose2d limelightBotPoseFront(){
+  public LimelightPose2d limelightBotPoseFront(){
 
     String allianceColorBotPose = DriverStation.getAlliance() == Alliance.Red ? "botpose_wpired" : "botpose_wpiblue";
 
-    double[] myArray = {0, 0, 0, 0, 0, 0};
+    double[] myArray = {0, 0, 0, 0, 0, 0, 0};
     
     myArray = NetworkTableInstance.getDefault().getTable("limelight-front").getEntry(allianceColorBotPose).getDoubleArray(myArray);
 
@@ -349,13 +352,13 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
       rot = myArray[5];
     }
 
-    return new Pose2d(x, y, Rotation2d.fromDegrees(rot));
+    return new LimelightPose2d(x, y, Rotation2d.fromDegrees(rot), myArray[6]/1000.0);
 
   }
 
-  public Pose2d limelightBotPoseBack(){
+  public LimelightPose2d limelightBotPoseBack(){
 
-    double[] myArray = {0, 0, 0, 0, 0, 0, 0};
+    double[] myArray = {0, 0, 0, 0, 0, 0, 0, 6};
     String allianceColorBotPose = DriverStation.getAlliance() == Alliance.Red ? "botpose_wpired" : "botpose_wpiblue";
 
       myArray = NetworkTableInstance.getDefault().getTable("limelight-back").getEntry(allianceColorBotPose).getDoubleArray(myArray);
@@ -370,39 +373,8 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
       rot = myArray[5];
     }
 
-    return new Pose2d(x, y, Rotation2d.fromDegrees(rot));
+    return new LimelightPose2d(x, y, Rotation2d.fromDegrees(rot), myArray[6]/1000.0);
 
-  }
-
-  public double limelightLatencyFront(){
-
-    // double vLatency = 0;
-    // vLatency = NetworkTableInstance.getDefault().getTable("limelight-front").getEntry("tl").getDouble(vLatency);
-   
-    // return (vLatency * 0.001) + (11 * 0.001);
-
-    double[] myArray = {0, 0, 0, 0, 0, 0, 0};
-    String allianceColorBotPose = DriverStation.getAlliance() == Alliance.Red ? "botpose_wpired" : "botpose_wpiblue";
-
-    myArray = NetworkTableInstance.getDefault().getTable("limelight-front").getEntry(allianceColorBotPose).getDoubleArray(myArray);
-    
-
-    return myArray[6]/1000.0;
-  }
-
-  public double limelightLatencyBack(){
-    // double vLatency = 0;
-    // vLatency = NetworkTableInstance.getDefault().getTable("limelight-back").getEntry("tl").getDouble(vLatency);
-   
-    // return (vLatency * 0.001) + (11 * 0.001);
-
-    double[] myArray = {0, 0, 0, 0, 0, 0, 0};
-    String allianceColorBotPose = DriverStation.getAlliance() == Alliance.Red ? "botpose_wpired" : "botpose_wpiblue";
-
-    myArray = NetworkTableInstance.getDefault().getTable("limelight-back").getEntry(allianceColorBotPose).getDoubleArray(myArray);
-    
-
-    return myArray[6]/1000.0;
   }
 
   @Config(defaultValueBoolean = false)
