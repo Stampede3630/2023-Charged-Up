@@ -631,17 +631,14 @@ public class RobotContainer {
   }
   
   public List<PathPlannerTrajectory> autoPathGroupOnTheFly() {
+    double x = Units.inchesToMeters(nodeGroupChooser.getSelected().xCoord);
+    double y = Units.inchesToMeters(NodePosition.getNodePosition(nodeGroupChooser.getSelected(),nodeGridChooser.getSelected()).getYCoord());
     List<PathPlannerTrajectory> PGOTF = new ArrayList<>();
     PGOTF.add(
       PathPlanner.generatePath(
         new PathConstraints(4, 3),
         new PathPoint(s_SwerveDrive.getOdometryPose().getTranslation(), s_SwerveDrive.getOdometryPose().getRotation()),
-        new PathPoint(new Translation2d(
-          Units.inchesToMeters(nodeGroupChooser.getSelected().xCoord), 
-          Units.inchesToMeters(NodePosition.getNodePosition(nodeGroupChooser.getSelected(),nodeGridChooser.getSelected()).getYCoord())), 
-          new Rotation2d(robotFacing() == FacingPOI.COMMUNITY ? 0:180), 
-          new Rotation2d(robotFacing() == FacingPOI.COMMUNITY ? 0:180)
-        )
+        new PathPoint(new Translation2d(x, y), calculateHeading(x,y), new Rotation2d(robotFacing() == FacingPOI.COMMUNITY ? 180:0))
       )
     );
     return PGOTF;
@@ -702,15 +699,17 @@ public class RobotContainer {
     GROUND, SHELF, CHUTE
   }
 
-  public Rotation2d calculateHeading(){
-    Pose2d roboTranslationX = s_SwerveDrive.getOdometryPose();
-    double desiredTranslationX = (Units.inchesToMeters(nodeGroupChooser.getSelected().xCoord));
-    double desiredTranslationY = Units.inchesToMeters(nodeGroupChooser.getSelected().yCoord + getYOffset());
+  public Rotation2d calculateHeading(double desiredX, double desiredY){
+    Pose2d roboTranslation = s_SwerveDrive.getOdometryPose();
+    double adj = desiredX - roboTranslation.getX();
+    double opp = desiredY - roboTranslation.getY();
 
-    double oOfOA = roboTranslationX.getX() - desiredTranslationX;
-    double aOfOA = roboTranslationX.getY() - desiredTranslationY;
-    
-    return new Rotation2d(-Math.atan(oOfOA/aOfOA));
+    if (adj >= 0) // quad I or IV
+      return new Rotation2d(Math.atan(opp/adj));
+    else if (opp > 0) // quad II
+      return new Rotation2d(Math.atan(opp/adj)+Math.PI);
+    else // opp < 0, quad III
+      return new Rotation2d(-(Math.PI/2)-Math.atan(opp/adj));
   }
   
 
