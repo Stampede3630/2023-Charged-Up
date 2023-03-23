@@ -105,17 +105,15 @@ public class Lid extends SubsystemBase implements Loggable{
     public enum LidPosition {
         TOP, BOTTOM, UNKNOWN;
 
-        public static LidPosition getLidPosition(FacingPOI robotFacing, FacingPOI cannonFacing) {
-            if (robotFacing==FacingPOI.HUMAN_PLAYER && cannonFacing == FacingPOI.HUMAN_PLAYER)
+        public static LidPosition getLidPosition(boolean cannonFacingRSL) {
+            if (cannonFacingRSL)
                 return TOP;
-            else if (robotFacing==FacingPOI.HUMAN_PLAYER && cannonFacing == FacingPOI.COMMUNITY)
-                return BOTTOM;
-            else if (robotFacing==FacingPOI.COMMUNITY && cannonFacing == FacingPOI.COMMUNITY)
-                return TOP;
-            else if (robotFacing==FacingPOI.COMMUNITY && cannonFacing == FacingPOI.HUMAN_PLAYER)
-                return BOTTOM;
             else
-                return UNKNOWN;
+                return BOTTOM;
+        }
+
+        public static LidPosition getLidPosition(double cannonAngle) {
+            return getLidPosition(cannonAngle < 90);
         }
     }
 }
