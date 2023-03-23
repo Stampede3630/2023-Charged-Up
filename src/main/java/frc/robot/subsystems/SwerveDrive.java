@@ -63,6 +63,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
 
   boolean balanced=false;
 
+  @Log
   public Field2d m_field;
 
   public SwerveDrive() {
@@ -369,7 +370,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
     myArray = NetworkTableInstance.getDefault().getTable("limelight-front").getEntry(allianceColorBotPose).getDoubleArray(myArray);
     
 
-    return Timer.getFPGATimestamp() - myArray[6]/1000.0;
+    return myArray[6]/1000.0;
   }
 
   public double limelightLatencyBack(){
@@ -384,7 +385,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
     myArray = NetworkTableInstance.getDefault().getTable("limelight-back").getEntry(allianceColorBotPose).getDoubleArray(myArray);
     
 
-    return Timer.getFPGATimestamp() - myArray[6]/1000.0;
+    return myArray[6]/1000.0;
   }
 
   @Config(defaultValueBoolean = false)
