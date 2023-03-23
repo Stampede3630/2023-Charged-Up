@@ -28,6 +28,7 @@ import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -68,6 +69,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
 
   @Log
   public Field2d m_field;
+  public double[] akitPose = {0,0,0};
 
   public SwerveDrive() {
     rollRotationController =new ProfiledPIDController(5.4/67, 0, 0, 
@@ -300,7 +302,11 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
       robotPose.transformBy(new Transform2d(m_driveTrain.BackLeftSwerveModule.moduleXYTranslation, m_driveTrain.BackLeftSwerveModule.getPosition().angle)));
     field.getObject("backRight").setPose(
       robotPose.transformBy(new Transform2d(m_driveTrain.BackRightSwerveModule.moduleXYTranslation, m_driveTrain.BackRightSwerveModule.getPosition().angle)));
-  } 
+    akitPose[0] = robotPose.getX();
+    akitPose[1] = robotPose.getY();
+    akitPose[2] = robotPose.getRotation().getRadians();
+    SmartDashboard.putNumberArray("akitPose", akitPose);
+  }
 
   public void setToBrake(){
     m_driveTrain.setToBrake();

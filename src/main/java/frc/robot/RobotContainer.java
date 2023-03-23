@@ -101,15 +101,13 @@ public class RobotContainer {
 
   private boolean sniperMode;
   private HashMap<String, Command> eventMap = new HashMap<>();
-  private double[] akitPose = new double[6];
+  private final double[] akitPose = new double[3];
 
   // private GamePieceType prev;  
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
    */
   public RobotContainer() {
-
-    SmartDashboard.putNumberArray("pgotf", akitPose);
     /*
      * Preferences are cool. they store the values in the roborio flash memory so
      * they don't necessarily get reset to default.
@@ -527,7 +525,7 @@ public class RobotContainer {
     return Commands.runOnce(()->s_Lid.setLid(NodePosition.NodeGrid.MID_LEFT.getNodeLidPositionLidDown()))
       .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(NodePosition.NodeGrid.MID_LEFT.getNodeCannonAngleLidDown())))
       .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
-      .andThen(s_Cannon.setExtensionWait(() -> NodePosition.NodeGrid.MID_LEFT.getExtension()))
+      .andThen(s_Cannon.setExtensionWait(NodeGrid.MID_LEFT::getExtension))
       .andThen(()->s_Intake.setIntake(-1.0))
       .andThen(Commands.waitSeconds(0.5))
       .andThen(Commands.runOnce(s_Intake::stopIntake))
@@ -620,21 +618,52 @@ public class RobotContainer {
   public List<PathPlannerTrajectory> autoPathGroupOnTheFly() {
     double x = Units.inchesToMeters(nodeGroupChooser.getSelected().xCoord);
     double y = Units.inchesToMeters(NodePosition.getNodePosition(nodeGroupChooser.getSelected(),nodeGridChooser.getSelected()).getYCoord());
+    if (DriverStation.getAlliance() == DriverStation.Alliance.Red) {
+      NodeGroup nodeGroup;
+      NodeGrid nodeGrid;
+      switch (nodeGroupChooser.getSelected()) { // flip things when on red
+        case LEFT:
+          nodeGroup = NodeGroup.RIGHT; break;
+        case RIGHT:
+          nodeGroup = NodeGroup.LEFT; break;
+        default:
+          nodeGroup = nodeGroupChooser.getSelected(); break;
+      }
+      switch (nodeGridChooser.getSelected()) { // flip things when on red
+        case MID_LEFT:
+          nodeGrid = NodeGrid.MID_RIGHT; break;
+        case LOW_LEFT:
+          nodeGrid = NodeGrid.LOW_RIGHT; break;
+        case HIGH_LEFT:
+          nodeGrid = NodeGrid.HIGH_RIGHT; break;
+        case MID_RIGHT:
+          nodeGrid = NodeGrid.MID_LEFT; break;
+        case LOW_RIGHT:
+          nodeGrid = NodeGrid.LOW_LEFT; break;
+        case HIGH_RIGHT:
+          nodeGrid = NodeGrid.HIGH_LEFT; break;
+        default:
+          nodeGrid = nodeGridChooser.getSelected();
+          break;
+      }
+      y = Units.inchesToMeters(NodePosition.getNodePosition(nodeGroup,nodeGrid).getYCoord());
+      y = 8.01367968 - y;
+    }
     List<PathPlannerTrajectory> PGOTF = new ArrayList<>();
     PGOTF.add(
       PathPlanner.generatePath(
         new PathConstraints(4, 3),
         new PathPoint(s_SwerveDrive.getOdometryPose().getTranslation(), s_SwerveDrive.getOdometryPose().getRotation()),
-        new PathPoint(new Translation2d(x, y), calculateHeading(x,y), new Rotation2d(robotFacing() == FacingPOI.COMMUNITY ? 180:0))
+        new PathPoint(new Translation2d(x, y), Rotation2d.fromDegrees(180))
       )
     );
-    akitPose[0] = PGOTF.get(0).getInitialPose().getX();
-    akitPose[1] = PGOTF.get(0).getInitialPose().getY();
-    akitPose[2] = PGOTF.get(0).getInitialPose().getRotation().getRadians();
-    akitPose[3] = PGOTF.get(0).getEndState().poseMeters.getX();
-    akitPose[4] = PGOTF.get(0).getEndState().poseMeters.getY();
-    akitPose[5] = PGOTF.get(0).getEndState().poseMeters.getRotation().getRadians();
-
+//    akitPose[0] = PGOTF.get(0).getInitialPose().getX();
+//    akitPose[1] = PGOTF.get(0).getInitialPose().getY();
+//    akitPose[2] = PGOTF.get(0).getInitialPose().getRotation().getRadians();
+    akitPose[0] = PGOTF.get(0).getEndState().poseMeters.getX();
+    akitPose[1] = PGOTF.get(0).getEndState().poseMeters.getY();
+    akitPose[2] = PGOTF.get(0).getEndState().poseMeters.getRotation().getRadians();
+    SmartDashboard.putNumberArray("pgotf", akitPose);
     return PGOTF;
   }
 
