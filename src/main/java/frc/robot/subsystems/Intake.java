@@ -192,7 +192,7 @@ public class Intake extends SubsystemBase implements Loggable, Disableable, Enab
   public double getVelocity() {
     return m_intakeMotor.getRotorVelocity().getValue();
   }
-
+  
   public Command waitUntilHaveGamePiece() {
     return Commands.waitUntil(()-> Math.abs(getVelocity()) > 30)//.raceWith(Commands.waitSeconds(.2)) // wait for spin up
             .andThen(Commands.waitUntil(() -> m_debouncer.calculate(Math.abs(getVelocity()) < 15))) // wait for stopped TODO adjust the numbers

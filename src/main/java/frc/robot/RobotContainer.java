@@ -29,6 +29,7 @@ import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -100,6 +101,7 @@ public class RobotContainer {
 
   private boolean sniperMode;
   private HashMap<String, Command> eventMap = new HashMap<>();
+  private double[] akitPose = new double[6];
 
   // private GamePieceType prev;  
   /**
@@ -107,7 +109,7 @@ public class RobotContainer {
    */
   public RobotContainer() {
 
-    
+    SmartDashboard.putNumberArray("pgotf", akitPose);
     /*
      * Preferences are cool. they store the values in the roborio flash memory so
      * they don't necessarily get reset to default.
@@ -317,15 +319,13 @@ public class RobotContainer {
           .andThen(Commands.runOnce(s_Intake::stopIntake)))
           //.unless(s_Intake::haveGamePiece))
         .onFalse(Commands.runOnce(s_Intake::stopIntake)
-          .andThen(() -> s_Cannon.setExtensionReference(1))
-          .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
+          .andThen(s_Cannon.setExtensionWait(() -> 1))
           .andThen(Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), 90))));
     //-> Outtake trigger
     xBox.leftTrigger(.55).debounce(.15, DebounceType.kBoth)
         .onTrue(Commands.runOnce(()-> s_Intake.setIntake(nodeGridChooser.getSelected().intakeSpeed)).alongWith(Commands.runOnce(s_Intake::leaveGamePiece)))
         .onFalse(Commands.runOnce(s_Intake::stopIntake)
-          .andThen(Commands.runOnce(()-> s_Cannon.setExtensionReference(1)))
-          .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
+          .andThen(s_Cannon.setExtensionWait(() -> 1))
           .andThen(s_Cannon.setCannonAngleWait(() -> 90))
           .alongWith(Commands.runOnce(()-> s_Lid.setLid(60.0))));
     
@@ -348,9 +348,8 @@ public class RobotContainer {
 
      //logic/no controller triggers
     new Trigger(s_Intake::haveGamePiece)
-      .onTrue(Commands.runOnce(()-> s_Cannon.setExtensionReference(1))
-        .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange)
-          .andThen(()-> s_Cannon.setCannonAngleSides(robotFacing(), 90.0)))
+      .onTrue(s_Cannon.setExtensionWait(() -> 1)
+          .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngleSides(robotFacing(), 90.0)))
         .alongWith(Commands.runOnce(() -> {s_LEDs.setChaseColorsSlot(0); s_LEDs.setMode(LEDs.LEDMode.CHASING);}))) // chasing leds because we have a game piece
       .onFalse(Commands.either(
         Commands.runOnce(s_LEDs::bePurple), 
@@ -366,11 +365,11 @@ public class RobotContainer {
         s_Intake::haveGamePiece));
     
 // //TODO: Commented this out because it's not ready  
-    xBox.a().onTrue(new
-    ProxyCommand(()->autoBuilder.followPathGroup(autoPathGroupOnTheFly()))
-    .beforeStarting(new
-    InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
+    // xBox.a().onTrue(new
+    // ProxyCommand(()-> autoBuilder.followPathGroup(autoPathGroupOnTheFly()))
+    // .beforeStarting(new InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
 
+    xBox.a().onTrue(Commands.runOnce(() -> autoPathGroupOnTheFly()));
     new Trigger(gamePieceTypeChooser::didValueChange).and(() -> !s_Intake.haveGamePiece())
       .onTrue(Commands.either(
         Commands.runOnce(s_LEDs::bePurple), 
@@ -396,7 +395,7 @@ public class RobotContainer {
             intakeExtensionInches = 30;
             break;
         case NOTHING:
-          intakeCannonAngle = 85.0;
+          intakeCannonAngle = 90.0;
           intakeLidAngle = 60.0;
           intakeSpeed = 0.0;
           intakeExtensionInches = 0.0;
@@ -423,7 +422,7 @@ public class RobotContainer {
             intakeExtensionInches = 0.5;
           break;
         case NOTHING:
-          intakeCannonAngle = 85.0;
+          intakeCannonAngle = 90.0;
           intakeLidAngle = 60.0;
           intakeSpeed = 0.0;
           intakeExtensionInches = 0.0;
@@ -454,7 +453,7 @@ public class RobotContainer {
             intakeExtensionInches = 1;
             break;
           case NOTHING:
-            intakeCannonAngle = 85.0;
+            intakeCannonAngle = 90.0;
             intakeLidAngle = 60.0;
             intakeSpeed = 0.0;
             intakeExtensionInches = 0.5;
@@ -483,7 +482,7 @@ public class RobotContainer {
           intakeExtensionInches = 1;
             break; 
           case NOTHING: 
-            intakeCannonAngle = 85.0;
+            intakeCannonAngle = 90.0;
             intakeLidAngle = 60.0;
             intakeSpeed = 0.0;
             intakeExtensionInches = 0.5;
@@ -505,8 +504,7 @@ public class RobotContainer {
       .andThen(Commands.waitSeconds(0.5))
       .andThen(Commands.runOnce(s_Intake::stopIntake))
       .andThen(s_Intake::leaveGamePiece)
-      .andThen(Commands.runOnce(()-> s_Cannon.setExtensionReference(1.0)))
-      .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
+      .andThen(s_Cannon.setExtensionWait(() -> 1))
       .andThen(Commands.runOnce(()-> s_Lid.setLid(60.0)))
       .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(120.0)));
       }
@@ -515,14 +513,12 @@ public class RobotContainer {
     return Commands.runOnce(()->s_Lid.setLid(NodePosition.NodeGrid.HIGH_LEFT.getNodeLidPositionLidDown()))
       .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(NodePosition.NodeGrid.HIGH_LEFT.getNodeCannonAngleLidDown())))
       .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
-      .andThen(Commands.runOnce(()-> s_Cannon.setExtensionReference(NodePosition.NodeGrid.HIGH_LEFT.getExtension())))
-      .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
+      .andThen(s_Cannon.setExtensionWait(() -> NodePosition.NodeGrid.HIGH_LEFT.getExtension()))
       .andThen(()->s_Intake.setIntake(-1.0))
       .andThen(Commands.waitSeconds(0.5))
       .andThen(Commands.runOnce(s_Intake::stopIntake))
       .andThen(s_Intake::leaveGamePiece)
-      .andThen(Commands.runOnce(()-> s_Cannon.setExtensionReference(1.0)))
-      .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
+      .andThen(s_Cannon.setExtensionWait(() -> 1))
       .andThen(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle)))
       .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(177.0)));
   }
@@ -531,14 +527,12 @@ public class RobotContainer {
     return Commands.runOnce(()->s_Lid.setLid(NodePosition.NodeGrid.MID_LEFT.getNodeLidPositionLidDown()))
       .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(NodePosition.NodeGrid.MID_LEFT.getNodeCannonAngleLidDown())))
       .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
-      .andThen(Commands.runOnce(()-> s_Cannon.setExtensionReference(NodePosition.NodeGrid.MID_LEFT.getExtension())))
-      .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
+      .andThen(s_Cannon.setExtensionWait(() -> NodePosition.NodeGrid.MID_LEFT.getExtension()))
       .andThen(()->s_Intake.setIntake(-1.0))
       .andThen(Commands.waitSeconds(0.5))
       .andThen(Commands.runOnce(s_Intake::stopIntake))
       .andThen(s_Intake::leaveGamePiece)
-      .andThen(Commands.runOnce(()-> s_Cannon.setExtensionReference(1.0)))
-      .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
+      .andThen(s_Cannon.setExtensionWait(() -> 1))
       .andThen(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle)))
       .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(177.0)));
   } 
@@ -547,14 +541,12 @@ public class RobotContainer {
     return Commands.runOnce(()->s_Lid.setLid(100.0))
     .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(38.0)))
     .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
-    .andThen(Commands.runOnce(()-> s_Cannon.setExtensionReference(2.0)))
-    .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
+    .andThen(s_Cannon.setExtensionWait(() -> 2))
     .andThen(()->s_Intake.setIntake(0.4))
     .andThen(Commands.waitSeconds(0.5))
     .andThen(Commands.runOnce(s_Intake::stopIntake))
     .andThen(s_Intake::leaveGamePiece)
-    .andThen(Commands.runOnce(()-> s_Cannon.setExtensionReference(1.0)))
-    .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
+    .andThen(s_Cannon.setExtensionWait(() -> 1))
     .andThen(Commands.runOnce(()-> s_Lid.setLid(100.0)))
     .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(177.0)));
   }
@@ -563,14 +555,12 @@ public class RobotContainer {
     return Commands.runOnce(()->s_Cannon.setCannonAngle(-7.5))
     .andThen(Commands.runOnce(()->  s_Lid.setLid(80.0)))
     .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
-    .andThen(Commands.runOnce(()-> s_Cannon.setExtensionReference(1.0)))
-    .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
+    .andThen(s_Cannon.setExtensionWait(() -> 1))
     .andThen(()->s_Intake.setIntake(0.4))
     .andThen(Commands.waitSeconds(0.5))
     .andThen(Commands.runOnce(s_Intake::stopIntake))
     .andThen(s_Intake::leaveGamePiece)
-    .andThen(Commands.runOnce(()-> s_Cannon.setExtensionReference(1.0)))
-    .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
+    .andThen(s_Cannon.setExtensionWait(() -> 1))
     .andThen(Commands.runOnce(()-> s_Lid.setLid(100.0)))
     .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(100.0)));
   }
@@ -638,6 +628,13 @@ public class RobotContainer {
         new PathPoint(new Translation2d(x, y), calculateHeading(x,y), new Rotation2d(robotFacing() == FacingPOI.COMMUNITY ? 180:0))
       )
     );
+    akitPose[0] = PGOTF.get(0).getInitialPose().getX();
+    akitPose[1] = PGOTF.get(0).getInitialPose().getY();
+    akitPose[2] = PGOTF.get(0).getInitialPose().getRotation().getRadians();
+    akitPose[3] = PGOTF.get(0).getEndState().poseMeters.getX();
+    akitPose[4] = PGOTF.get(0).getEndState().poseMeters.getY();
+    akitPose[5] = PGOTF.get(0).getEndState().poseMeters.getRotation().getRadians();
+
     return PGOTF;
   }
 

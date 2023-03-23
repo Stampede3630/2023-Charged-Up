@@ -88,7 +88,7 @@ public class LEDs extends SubsystemBase {
   }
 
   public void beYellow () {
-    setRGB(255, 243, 0);
+    setRGB(255, 120, 0);
     setMode(LEDMode.SOLID);
   }
   public void chaseColors() {

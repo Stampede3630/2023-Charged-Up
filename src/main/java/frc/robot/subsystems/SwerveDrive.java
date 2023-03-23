@@ -15,6 +15,7 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
@@ -40,6 +41,7 @@ import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
 
+import java.sql.Driver;
 import java.util.function.DoubleSupplier;
 
 
@@ -154,12 +156,22 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
           y = Math.signum(y) * Math.sqrt(Math.abs(y));
           rot = Math.signum(rot) * Math.sqrt(Math.abs(rot));
         }
-        setDriveSpeeds(
-          new Translation2d(
-            convertToMetersPerSecond(x)*joystickDriveGovernor,
-            convertToMetersPerSecond(y)*joystickDriveGovernor), 
-          convertToRadiansPerSecond(rot)* joystickDriveGovernor, 
-          Preferences.getBoolean("pFieldRelative", Constants.DriverConstants.FIELD_RELATIVE));
+
+        if (Math.abs(x) < 0.00001 || Math.abs(y) < 0.00001 || Math.abs(rot) < 0.00001) {
+          SwerveModuleState[] noMoveStates = new SwerveModuleState[4];
+          SwerveModulePosition[] currentPositions = m_driveTrain.getModulePositions();
+          for (int i = 0; i < currentPositions.length; i++) {
+            noMoveStates[i] = new SwerveModuleState(0, currentPositions[i].angle);
+          }
+          m_driveTrain.setModuleSpeeds(noMoveStates);
+        } else {
+          setDriveSpeeds(
+            new Translation2d(
+              convertToMetersPerSecond(x)*joystickDriveGovernor,
+              convertToMetersPerSecond(y)*joystickDriveGovernor), 
+            convertToRadiansPerSecond(rot)* joystickDriveGovernor, 
+            Preferences.getBoolean("pFieldRelative", Constants.DriverConstants.FIELD_RELATIVE));
+        }
         }, this);
   }
 
@@ -227,6 +239,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
                         );
     SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, SwerveConstants.MAX_SPEED_METERSperSECOND);
     m_driveTrain.setModuleSpeeds(swerveModuleStates);
+    
   }
 
   /** 
@@ -270,17 +283,21 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
    * then rotated around its own center by the angle of the module.
    */
   public void drawRobotOnField(Field2d field) {
-    field.setRobotPose(m_odometry.getEstimatedPosition());
-
+    Pose2d robotPose = m_odometry.getEstimatedPosition();
+    if (DriverStation.getAlliance() == Alliance.Red) {
+      robotPose = new Pose2d(new Translation2d(16.541748984 - robotPose.getX(), 8.01367968 - robotPose.getY()), robotPose.getRotation().rotateBy(Rotation2d.fromDegrees(180)));
+    }
+    field.setRobotPose(robotPose);
+    
     field.getObject("frontLeft").setPose(
-      m_odometry.getEstimatedPosition().transformBy(new Transform2d(m_driveTrain.FrontLeftSwerveModule.moduleXYTranslation, m_driveTrain.FrontLeftSwerveModule.getPosition().angle)));
+      robotPose.transformBy(new Transform2d(m_driveTrain.FrontLeftSwerveModule.moduleXYTranslation, m_driveTrain.FrontLeftSwerveModule.getPosition().angle)));
     field.getObject("frontRight").setPose(
-      m_odometry.getEstimatedPosition().transformBy(new Transform2d(m_driveTrain.FrontRightSwerveModule.moduleXYTranslation, m_driveTrain.FrontRightSwerveModule.getPosition().angle)));
+      robotPose.transformBy(new Transform2d(m_driveTrain.FrontRightSwerveModule.moduleXYTranslation, m_driveTrain.FrontRightSwerveModule.getPosition().angle)));
     field.getObject("backLeft").setPose(
-      m_odometry.getEstimatedPosition().transformBy(new Transform2d(m_driveTrain.BackLeftSwerveModule.moduleXYTranslation, m_driveTrain.BackLeftSwerveModule.getPosition().angle)));
+      robotPose.transformBy(new Transform2d(m_driveTrain.BackLeftSwerveModule.moduleXYTranslation, m_driveTrain.BackLeftSwerveModule.getPosition().angle)));
     field.getObject("backRight").setPose(
-      m_odometry.getEstimatedPosition().transformBy(new Transform2d(m_driveTrain.BackRightSwerveModule.moduleXYTranslation, m_driveTrain.BackRightSwerveModule.getPosition().angle)));
-  }
+      robotPose.transformBy(new Transform2d(m_driveTrain.BackRightSwerveModule.moduleXYTranslation, m_driveTrain.BackRightSwerveModule.getPosition().angle)));
+  } 
 
   public void setToBrake(){
     m_driveTrain.setToBrake();
