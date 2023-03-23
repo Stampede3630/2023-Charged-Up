@@ -3,13 +3,7 @@ package frc.robot.subsystems;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
-import com.ctre.phoenix.motorcontrol.ControlMode;
-import com.ctre.phoenix.motorcontrol.NeutralMode;
-import com.ctre.phoenix.motorcontrol.StatorCurrentLimitConfiguration;
-import com.ctre.phoenix.motorcontrol.TalonFXSensorCollection;
-import com.ctre.phoenixpro.configs.Slot0Configs;
 import com.ctre.phoenixpro.configs.TalonFXConfiguration;
-import com.ctre.phoenixpro.controls.TorqueCurrentFOC;
 import com.ctre.phoenixpro.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenixpro.hardware.TalonFX;
 import com.ctre.phoenixpro.signals.NeutralModeValue;
@@ -19,7 +13,6 @@ import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.wpilibj2.command.*;
-import frc.robot.subsystems.Lid;
 import frc.robot.subsystems.Lid.LidPosition;
 import frc.robot.util.Disableable;
 import frc.robot.util.Enableable;
@@ -181,7 +174,7 @@ public class Intake extends SubsystemBase implements Loggable, Disableable, Enab
   @Log.BooleanBox(tabName = "nodeSelector")
   public boolean isLimitSwitchPressed() {
 
-    return intakeLimitSwitch.value == 0;
+    return intakeLimitSwitch.value == ReverseLimitValue.ClosedToGround.value;
   }
 
     /**

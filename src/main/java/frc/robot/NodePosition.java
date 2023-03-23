@@ -24,9 +24,9 @@ public class NodePosition {
 
     }
     public enum NodeGroup{ // from the blue side
-        LEFT(61.0,132+42.19), // 4.37 m for y????
-        CENTER(61.0,66+42.19), // 2.65 meters for y??
-        RIGHT(61.0,42.19); //.96 meters for y?? 37.79in??
+        LEFT(61.0+126,132+42.19), // 4.37 m for y????
+        CENTER(61.0+26,66+42.19), // 2.65 meters for y??
+        RIGHT(61.0+26,42.19); //.96 meters for y?? 37.79in??
       public final double xCoord;
       public final double yCoord;
 
@@ -47,34 +47,32 @@ public class NodePosition {
     * R 132 + 42.19
     */
     public enum NodeGrid { //.5 meters offset??? from the blue side
-      LOW_RIGHT(0, -22, 0, "leftLow", 180, 37.5, 0.0, 150.0, .5),
-      LOW_CENTER(0, 0, 0, "midLow", 180, 100, 0, 100, .5),
-      LOW_LEFT(0, 22, 0,"rightLow", 180, 37.5, 0.0, 150.0, .5),
+      LOW_LEFT(0, 22, 0, 180, 37.5, 0.0, 150.0, .5),
+      LOW_CENTER(0, 0, 0, 180, 100, 0, 100, .5),
+      LOW_RIGHT(0, -22, 0, 180, 37.5, 0.0, 150.0, .5),
   
-      MID_RIGHT(16.0, -22, 0, "leftMid", 148.0, 150.75, 52.0, 130.0, -.5),
-      MID_CENTER(3.5, 0, 0, "midMid", 152.0, 100.0, 28.0, 100.0, .4), // cl3/21
-      MID_LEFT(16.0, 22, 0,"rightMid", 148.0, 150.75, 52.0, 130.0, -.5),
-  
-      HIGH_RIGHT(32.4, -22, 0, "leftHigh", 148.0, 164, 52.0, 40.0, -.5), //ej 3/16
-      HIGH_CENTER(0.0, 0, 0, "midHigh", 148.0, 100.0, 28.0, 100.0, 1), //cl3/21
-      HIGH_LEFT(32.4, 22, 0, "rightHigh", 148.0, 164, 52.0, 40.0, -.5); //ej3/16
+      MID_LEFT(19.0, 22, 0, 148.0, 150.75, 43.0, 37.0, -.5),
+      MID_CENTER(3.5, 0, 0, 152.0, 100.0, 28.0, 100.0, .4), // cl3/21
+      MID_RIGHT(1.0, -22, 0, 148.0, 150.75, 43.0, 37.0, -.5),
+
+      HIGH_LEFT(37.0, 22, 0, 148.0, 164, 43.0, 37.0, -.5), //ej3/16
+      HIGH_CENTER(0.0, 0, 0, 148.0, 100.0, 28.0, 100.0, 1), //cl3/21
+      HIGH_RIGHT(37.0, -22, 0, 148.0, 164, 43.0, 37.0, -.5); //ej 3/16
       
   
       public final double extension;
       public final double xOffset;
       public final double yOffset;
-      public final String widgetName;
       public final double lidUpCannonAngle;
       public final double lidUpLidPosition;
       public final double lidDownCannonAngle;
       public final double lidDownLidPosition;
       public final double intakeSpeed;
-      private NodeGrid(double extension, double yOffset, double xOffset, String widgetName, double lidUpCannonAngle, double lidUpLidPosition, double lidDownCannonAngle, double lidDownLidPosition, double intakeSpeed) {
+      private NodeGrid(double extension, double yOffset, double xOffset, double lidUpCannonAngle, double lidUpLidPosition, double lidDownCannonAngle, double lidDownLidPosition, double intakeSpeed) {
         this.extension = extension;
         this.xOffset = xOffset;
         this.yOffset = yOffset;
         this.lidUpCannonAngle = lidUpCannonAngle;
-        this.widgetName = widgetName;
         this.lidUpLidPosition = lidUpLidPosition;
         this.lidDownCannonAngle = lidDownCannonAngle;
         this.lidDownLidPosition = lidDownLidPosition;

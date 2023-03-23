@@ -286,9 +286,9 @@ public class RobotContainer {
     xBox.povDown()
         .whileTrue(new RepeatCommand(Commands.runOnce(s_Cannon::manRotDown)));
     xBox.povRight()
-        .whileTrue(new RepeatCommand(Commands.runOnce(s_Cannon::manExtend, s_Cannon)));
+        .whileTrue(new RepeatCommand(Commands.runOnce(s_Cannon::manExtend)));
     xBox.povLeft()
-        .whileTrue(new RepeatCommand(Commands.runOnce(s_Cannon::manRetract, s_Cannon)));
+        .whileTrue(new RepeatCommand(Commands.runOnce(s_Cannon::manRetract)));
         //MANUAL INTAKE
     xBox.leftBumper().debounce(.1, DebounceType.kFalling)
         .whileTrue(Commands.runOnce(()-> s_Intake.setIntake(1)))
@@ -363,11 +363,11 @@ public class RobotContainer {
         s_Intake::haveGamePiece));
     
 // //TODO: Commented this out because it's not ready  
-    // xBox.a().onTrue(new
-    // ProxyCommand(()-> autoBuilder.followPathGroup(autoPathGroupOnTheFly()))
-    // .beforeStarting(new InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
+    xBox.a().onTrue(new
+    ProxyCommand(()-> autoBuilder.followPathGroup(autoPathGroupOnTheFly()))
+    .beforeStarting(new InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
 
-    xBox.a().onTrue(Commands.runOnce(() -> autoPathGroupOnTheFly()));
+    // xBox.a().onTrue(Commands.runOnce(() -> autoPathGroupOnTheFly()));
     new Trigger(gamePieceTypeChooser::didValueChange).and(() -> !s_Intake.haveGamePiece())
       .onTrue(Commands.either(
         Commands.runOnce(s_LEDs::bePurple), 
@@ -440,8 +440,8 @@ public class RobotContainer {
             break;
           case UPRIGHT_CONE://fill in
             intakeCannonAngle = 6.16;
-            intakeLidAngle = 204.0;
-            intakeSpeed = -1.0;
+            intakeLidAngle = 46.0;
+            intakeSpeed = 1.0;
             intakeExtensionInches = 0.5;
             break;
           case TIPPED_CONE: // no longer impossible
@@ -654,7 +654,7 @@ public class RobotContainer {
       PathPlanner.generatePath(
         new PathConstraints(4, 3),
         new PathPoint(s_SwerveDrive.getOdometryPose().getTranslation(), s_SwerveDrive.getOdometryPose().getRotation()),
-        new PathPoint(new Translation2d(x, y), Rotation2d.fromDegrees(180))
+        new PathPoint(new Translation2d(x, y), calculateHeading(x,y), Rotation2d.fromDegrees(180))
       )
     );
 //    akitPose[0] = PGOTF.get(0).getInitialPose().getX();
@@ -728,11 +728,11 @@ public class RobotContainer {
     double opp = desiredY - roboTranslation.getY();
 
     if (adj >= 0) // quad I or IV
-      return new Rotation2d(Math.atan(opp/adj));
+      return new Rotation2d(Math.atan(opp/adj)).rotateBy(Rotation2d.fromDegrees(180));
     else if (opp > 0) // quad II
-      return new Rotation2d(Math.atan(opp/adj)+Math.PI);
+      return new Rotation2d(Math.atan(opp/adj)+Math.PI).rotateBy(Rotation2d.fromDegrees(180));
     else // opp < 0, quad III
-      return new Rotation2d(-(Math.PI/2)-Math.atan(opp/adj));
+      return new Rotation2d(-(Math.PI/2)-Math.atan(opp/adj)).rotateBy(Rotation2d.fromDegrees(180));
   }
   
 

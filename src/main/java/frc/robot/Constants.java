@@ -70,7 +70,7 @@ public final class Constants {
     public static final double INITIALIZED_ANGLE = 100;
     public static final double CONVERSION_FACTOR = 360;
     public static final float FORWARD_LIMIT = 260.0f;
-    public static final float REVERSE_LIMIT = 35.0f;
+    public static final float REVERSE_LIMIT = 28.0f;
     public static final double ZERO_OFFSET = 12.0;
     public static final int  CURRENT_LIMIT = 10; 
     public static final double ERROR = 10;

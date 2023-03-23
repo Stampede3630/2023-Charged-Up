@@ -73,7 +73,7 @@ public class Lid extends SubsystemBase implements Loggable{
     }
 
     
-    @Config.NumberSlider(defaultValue = LidConstants.INITIALIZED_ANGLE, max = 260, min = 35, blockIncrement = 1)
+    @Config.NumberSlider(defaultValue = LidConstants.INITIALIZED_ANGLE, max = 260, min = 28, blockIncrement = 1)
     public void setLidReference(double input) {
         this.lidReference = input;
     }

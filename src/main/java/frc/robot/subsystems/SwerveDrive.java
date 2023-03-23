@@ -162,21 +162,21 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
           rot = Math.signum(rot) * Math.sqrt(Math.abs(rot));
         }
 
-        if (Math.abs(x) < 0.00001 || Math.abs(y) < 0.00001 || Math.abs(rot) < 0.00001) {
-          SwerveModuleState[] noMoveStates = new SwerveModuleState[4];
-          SwerveModulePosition[] currentPositions = m_driveTrain.getModulePositions();
-          for (int i = 0; i < currentPositions.length; i++) {
-            noMoveStates[i] = new SwerveModuleState(0, currentPositions[i].angle);
-          }
-          m_driveTrain.setModuleSpeeds(noMoveStates);
-        } else {
+        // if (Math.abs(x) < 0.00001 || Math.abs(y) < 0.00001 || Math.abs(rot) < 0.00001) {
+        //   SwerveModuleState[] noMoveStates = new SwerveModuleState[4];
+        //   SwerveModulePosition[] currentPositions = m_driveTrain.getModulePositions();
+        //   for (int i = 0; i < currentPositions.length; i++) {
+        //     noMoveStates[i] = new SwerveModuleState(0, currentPositions[i].angle);
+        //   }
+        //   m_driveTrain.setModuleSpeeds(noMoveStates);
+        // } else {
           setDriveSpeeds(
             new Translation2d(
               convertToMetersPerSecond(x)*joystickDriveGovernor,
               convertToMetersPerSecond(y)*joystickDriveGovernor), 
             convertToRadiansPerSecond(rot)* joystickDriveGovernor, 
             Preferences.getBoolean("pFieldRelative", Constants.DriverConstants.FIELD_RELATIVE));
-        }
+        // }
         }, this);
   }
 
@@ -302,8 +302,8 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
       robotPose.transformBy(new Transform2d(m_driveTrain.BackLeftSwerveModule.moduleXYTranslation, m_driveTrain.BackLeftSwerveModule.getPosition().angle)));
     field.getObject("backRight").setPose(
       robotPose.transformBy(new Transform2d(m_driveTrain.BackRightSwerveModule.moduleXYTranslation, m_driveTrain.BackRightSwerveModule.getPosition().angle)));
-    akitPose[0] = robotPose.getX();
-    akitPose[1] = robotPose.getY();
+    akitPose[0] = DriverStation.getAlliance() == Alliance.Blue ? robotPose.getX() : 16.541748984 - robotPose.getX();
+    akitPose[0] = DriverStation.getAlliance() == Alliance.Blue ? robotPose.getY() : 8.01367968 - robotPose.getX();
     akitPose[2] = robotPose.getRotation().getRadians();
     SmartDashboard.putNumberArray("akitPose", akitPose);
   }
