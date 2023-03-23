@@ -36,13 +36,12 @@ import frc.robot.Constants;
 import frc.robot.subsystems.swerve.QuadFalconSwerveDrive;
 import frc.robot.subsystems.swerve.SwerveConstants;
 import frc.robot.subsystems.swerve.SwerveModule;
-import frc.robot.util.LimelightPose2d;
-import frc.robot.util.SimGyroSensorModel;
-import frc.robot.util.SwerveKinematics2;
-import frc.robot.util.SwerveModuleState2;
+import frc.robot.util.*;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
+
+import java.sql.Driver;
 import java.util.function.DoubleSupplier;
 
 
@@ -313,7 +312,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
     field.getObject("backRight").setPose(
       robotPose.transformBy(new Transform2d(m_driveTrain.BackRightSwerveModule.moduleXYTranslation, m_driveTrain.BackRightSwerveModule.getPosition().angle)));
     akitPose[0] = DriverStation.getAlliance() == Alliance.Blue ? robotPose.getX() : 16.541748984 - robotPose.getX();
-    akitPose[0] = DriverStation.getAlliance() == Alliance.Blue ? robotPose.getY() : 8.01367968 - robotPose.getX();
+    akitPose[1] = DriverStation.getAlliance() == Alliance.Blue ? robotPose.getY() : 8.01367968 - robotPose.getY();
     akitPose[2] = robotPose.getRotation().getRadians();
     SmartDashboard.putNumberArray("akitPose", akitPose);
   }
@@ -353,22 +352,16 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
   
   public LimelightPose2d limelightBotPoseFront(){
 
-    String allianceColorBotPose = DriverStation.getAlliance() == Alliance.Red ? "botpose_wpired" : "botpose_wpiblue";
+    Pose2d pose;
+    LimelightHelpers.LimelightResults results = LimelightHelpers.getLatestResults("limelight-front");
+    if (DriverStation.getAlliance() == Alliance.Blue)
+      pose = results.targetingResults.getBotPose2d_wpiBlue();
+    else
+      pose = results.targetingResults.getBotPose2d_wpiRed();
+    // sum the latency: depending on latency of parse, might be better to just get data directly TODO: Compare methods: LL lib, json parse, plain NT
+    double latency = results.targetingResults.latency_jsonParse+results.targetingResults.latency_capture+results.targetingResults.latency_pipeline;
 
-    double[] myArray = {0, 0, 0, 0, 0, 0, 0};
-    
-    myArray = NetworkTableInstance.getDefault().getTable("limelight-front").getEntry(allianceColorBotPose).getDoubleArray(myArray);
-
-    double x = 0;
-    double y = 0;
-    double rot = 0;
-    if (myArray.length > 0){
-      x = myArray[0];
-      y = myArray[1];
-      rot = myArray[5];
-    }
-
-    return new LimelightPose2d(x, y, Rotation2d.fromDegrees(rot), myArray[6]/1000.0);
+    return new LimelightPose2d(pose, latency);
 
   }
 

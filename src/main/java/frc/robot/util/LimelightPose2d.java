@@ -10,6 +10,11 @@ public class LimelightPose2d extends Pose2d {
         this.latency = latency;
     }
 
+    public LimelightPose2d(Pose2d pose, double latency) {
+        super(pose.getX(), pose.getY(), pose.getRotation());
+        this.latency = latency;
+    }
+
     public double getLatency() {
         return latency;
     }

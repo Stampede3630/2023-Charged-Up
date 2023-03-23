@@ -66,6 +66,7 @@ public class RobotContainer {
   private final CommandXboxController xBox = new CommandXboxController(0);
 
   SwerveAutoBuilder autoBuilder;
+  private SwerveAutoBuilder otfBuilder;
 
   // This is just an example event map. It would be better to have a constant,
   // global event map
@@ -102,6 +103,8 @@ public class RobotContainer {
   private boolean sniperMode;
   private HashMap<String, Command> eventMap = new HashMap<>();
   private final double[] akitPose = new double[3];
+  private final double[] akitInitPose = new double[3];
+
 
   // private GamePieceType prev;  
   /**
@@ -209,7 +212,21 @@ public class RobotContainer {
         true,
         s_SwerveDrive // The drive subsystem. Used to properly set the requirements of path following
                       // commands
-    ); 
+    );
+
+    otfBuilder = new SwerveAutoBuilder(
+            s_SwerveDrive::getOdometryPose, // Pose2d supplier
+            s_SwerveDrive::resetOdometry, // Pose2d consumer, used to reset odometry at the beginning of auto
+            new PIDConstants(AutoConstants.KP, 0.0, 0.0), // PID constants to correct for translation error (used to create the X and Y
+            // PID controllers)
+            new PIDConstants(AutoConstants.KP, 0.0, 0.0), // PID constants to correct for rotation error (used to create the rotation
+            // controller)
+            s_SwerveDrive::setAutoChassisSpeeds, // Module states consumer used to output to the drive subsystem
+            eventMap,
+            false,
+            s_SwerveDrive // The drive subsystem. Used to properly set the requirements of path following
+            // commands
+    );
 
     loadPaths();
 
@@ -361,10 +378,9 @@ public class RobotContainer {
           .alongWith(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle)))
           .unless(xBox.rightTrigger(.1)),
         s_Intake::haveGamePiece));
-    
-// //TODO: Commented this out because it's not ready  
+
     xBox.a().onTrue(new
-    ProxyCommand(()-> autoBuilder.followPathGroup(autoPathGroupOnTheFly()))
+    ProxyCommand(()-> otfBuilder.followPathGroup(autoPathGroupOnTheFly()))
     .beforeStarting(new InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
 
     // xBox.a().onTrue(Commands.runOnce(() -> autoPathGroupOnTheFly()));
@@ -611,7 +627,6 @@ public class RobotContainer {
 
   public Command getAutonomousCommand() {
     return autoBuilder.fullAuto(autoSelect.getSelected());
-    // return autoScoreHighCube();
   }
   
   public List<PathPlannerTrajectory> autoPathGroupOnTheFly() {
@@ -649,20 +664,22 @@ public class RobotContainer {
       y = 8.01367968 - y;
     }
     List<PathPlannerTrajectory> PGOTF = new ArrayList<>();
+    Pose2d initialPose = s_SwerveDrive.getOdometryPose();
     PGOTF.add(
       PathPlanner.generatePath(
         new PathConstraints(4, 3),
-        new PathPoint(s_SwerveDrive.getOdometryPose().getTranslation(), s_SwerveDrive.getOdometryPose().getRotation()),
-        new PathPoint(new Translation2d(x, y), calculateHeading(x,y), Rotation2d.fromDegrees(180))
+        new PathPoint(initialPose.getTranslation(), calculateHeading(x,y), initialPose.getRotation()),
+        new PathPoint(new Translation2d(x, y), calculateHeading(x,y), Rotation2d.fromDegrees(0))
       )
     );
-//    akitPose[0] = PGOTF.get(0).getInitialPose().getX();
-//    akitPose[1] = PGOTF.get(0).getInitialPose().getY();
-//    akitPose[2] = PGOTF.get(0).getInitialPose().getRotation().getRadians();
+    akitInitPose[0] = PGOTF.get(0).getInitialPose().getX();
+    akitInitPose[1] = PGOTF.get(0).getInitialPose().getY();
+    akitInitPose[2] = PGOTF.get(0).getInitialPose().getRotation().getRadians();
     akitPose[0] = PGOTF.get(0).getEndState().poseMeters.getX();
     akitPose[1] = PGOTF.get(0).getEndState().poseMeters.getY();
     akitPose[2] = PGOTF.get(0).getEndState().poseMeters.getRotation().getRadians();
     SmartDashboard.putNumberArray("pgotf", akitPose);
+    SmartDashboard.putNumberArray("pgotfInit", akitInitPose);
     return PGOTF;
   }
 
