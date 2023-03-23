@@ -23,7 +23,7 @@ public class Lid extends SubsystemBase implements Loggable{
     private final SparkMaxAbsoluteEncoder m_lidAbsolute = m_lidMotor.getAbsoluteEncoder(Type.kDutyCycle);
     private final SparkMaxPIDController m_lidPid = m_lidMotor.getPIDController();
     private static Lid instance;
-    @Log(tabName = "NodeSelector")
+    @Log(tabName = "nodeSelector")
     public double lidReference = LidConstants.INITIALIZED_ANGLE;
 
     private Lid() {
@@ -78,7 +78,7 @@ public class Lid extends SubsystemBase implements Loggable{
         this.lidReference = input;
     }
 
-    @Log(tabName = "NodeSelector")
+    @Log(tabName = "nodeSelector")
     public double lidPosition() {
         return m_lidAbsolute.getPosition();
     }

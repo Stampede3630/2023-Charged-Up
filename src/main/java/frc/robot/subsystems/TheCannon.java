@@ -129,7 +129,7 @@ private final SparkMaxPIDController cannonExtensionPID = cannonExtension.getPIDC
     }
   }
   
-  @Log(tabName = "NodeSelector")
+  @Log(tabName = "nodeSelector")
   public double getExtensionReference(){
     return extensionReference;
   }

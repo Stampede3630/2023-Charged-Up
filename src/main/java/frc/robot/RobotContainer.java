@@ -87,11 +87,11 @@ public class RobotContainer {
   private final LEDs s_LEDs = new LEDs();
   private final Lid s_Lid = Lid.getInstance();
   private final Intake s_Intake = new Intake();
-  @Log(tabName = "NodeSelector")
+  @Log(tabName = "nodeSelector")
   public double intakeCannonAngle;
-  @Log(tabName = "NodeSelector")
+  @Log(tabName = "nodeSelector")
   public double intakeLidAngle=Constants.LidConstants.INITIALIZED_ANGLE;
-  @Log(tabName = "NodeSelector")
+  @Log(tabName = "nodeSelector")
   public double intakeSpeed;
 
   public boolean facingOverrideButton;
