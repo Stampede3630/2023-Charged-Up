@@ -23,7 +23,6 @@ import io.github.oblarg.oblog.annotations.Log;
 public class Intake extends SubsystemBase implements Loggable, Disableable, Enableable {
     private final TalonFX m_intakeMotor;
     private final SparkMaxLimitSwitch intakeHardStop = Lid.getInstance().getReverseLimitSwitch();
-    private final ReverseLimitValue intakeLimitSwitch;
     private double speed = 0;
     private boolean haveGamePiece = false;
     private final LinearFilter currentFilter = LinearFilter.movingAverage(10);
@@ -35,8 +34,7 @@ public class Intake extends SubsystemBase implements Loggable, Disableable, Enab
     private double filteredCurrent;
     private final Debouncer m_debouncer = new Debouncer(0.1, DebounceType.kRising);
     public Intake() {
-         m_intakeMotor = new TalonFX(14, "rio");
-         intakeLimitSwitch = m_intakeMotor.getReverseLimit().getValue();
+        m_intakeMotor = new TalonFX(14, "rio");
         m_intakeMotor.getConfigurator().refresh(motorConfig);
         motorConfig.CurrentLimits.StatorCurrentLimit = 80;
         motorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
@@ -174,7 +172,7 @@ public class Intake extends SubsystemBase implements Loggable, Disableable, Enab
   @Log.BooleanBox(tabName = "nodeSelector")
   public boolean isLimitSwitchPressed() {
 
-    return intakeLimitSwitch.value == ReverseLimitValue.ClosedToGround.value;
+    return m_intakeMotor.getReverseLimit().getValue() == ReverseLimitValue.ClosedToGround;
   }
 
     /**
