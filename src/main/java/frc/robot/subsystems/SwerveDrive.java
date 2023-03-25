@@ -9,6 +9,7 @@ import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
@@ -61,6 +62,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
   boolean holdHeadingEnabled = false;
   ProfiledPIDController rotationController, rollRotationController, pitchRotationController;
   double rotationControllerOutput;
+  SlewRateLimiter xLimiter, yLimiter, rotLimiter;
 
   boolean aprilTagDetectedFront = false;
   boolean aprilTagDetectedBack = false;
@@ -72,6 +74,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
   public double[] akitPose = {0,0,0};
 
   public SwerveDrive() {
+    rotLimiter = new SlewRateLimiter(4.5*4*2); //max rate 9.52
     rollRotationController =new ProfiledPIDController(5.4/67, 0, 0, 
       new TrapezoidProfile.Constraints(.7,.7));
     pitchRotationController = new ProfiledPIDController(5.4/67, 0, 0, 
@@ -174,7 +177,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
             new Translation2d(
               convertToMetersPerSecond(x)*joystickDriveGovernor,
               convertToMetersPerSecond(y)*joystickDriveGovernor), 
-            convertToRadiansPerSecond(rot)* joystickDriveGovernor, 
+            rotLimiter.calculate(convertToRadiansPerSecond(rot)* joystickDriveGovernor), 
             Preferences.getBoolean("pFieldRelative", Constants.DriverConstants.FIELD_RELATIVE));
         // }
         }, this);

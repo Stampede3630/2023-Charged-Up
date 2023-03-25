@@ -218,9 +218,9 @@ public class RobotContainer {
     
     s_SwerveDrive.setDefaultCommand(
       s_SwerveDrive.joystickDriveCommand(
-          () -> xBox.getLeftY() * (sniperMode ? 0.25 : 1),
-          () -> xBox.getLeftX() * (sniperMode ? 0.25 : 1),
-          () -> xBox.getRightX() * (sniperMode ? 0.25 : 1))
+          () -> xBox.getLeftY() * (sniperMode ? 0.4 : 1),
+          () -> xBox.getLeftX() * (sniperMode ? 0.4 : 1),
+          () -> xBox.getRightX() * (sniperMode ? 0.3 : 1))
       .withName("DefaultDrive"));
 
           Logger.configureLoggingAndConfig(this, false);
@@ -387,7 +387,7 @@ public class RobotContainer {
           break;
         case TIPPED_CONE: //non existent
         case UPRIGHT_CONE://revise, should be same as tipped
-          intakeCannonAngle = 44.5;
+          intakeCannonAngle = 47;
             intakeLidAngle = 35;
             intakeSpeed = 1.0;
             intakeExtensionInches = 30;
@@ -433,10 +433,10 @@ public class RobotContainer {
         //facing community, lid up, not able to get tipped cones
         switch (gamePieceTypeChooser.getSelected()) {
           case CUBE://unfavorable cubbe intake!! BOOOOOOO
-          intakeCannonAngle = -20.0;//fix
-          intakeLidAngle = 35.0;
+          intakeCannonAngle = 200.0;
+          intakeLidAngle = 60.0;
           intakeSpeed = -1.0;
-          intakeExtensionInches = 2.5;//fix
+          intakeExtensionInches = 2.5;
             break;
           case UPRIGHT_CONE://fill in
             intakeCannonAngle = 6.16;

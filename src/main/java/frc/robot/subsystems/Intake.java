@@ -33,7 +33,7 @@ public class Intake extends SubsystemBase implements Loggable, Disableable, Enab
     public double MAX_SPEED_RPS = 75;
     @Log
     private double filteredCurrent;
-    private final Debouncer m_debouncer = new Debouncer(0.17, DebounceType.kRising);
+    private final Debouncer m_debouncer = new Debouncer(0.1, DebounceType.kRising);
     public Intake() {
          m_intakeMotor = new TalonFX(14, "rio");
          intakeLimitSwitch = m_intakeMotor.getReverseLimit().getValue();
@@ -187,8 +187,8 @@ public class Intake extends SubsystemBase implements Loggable, Disableable, Enab
   }
   
   public Command waitUntilHaveGamePiece() {
-    return Commands.waitUntil(()-> Math.abs(getVelocity()) > 30)//.raceWith(Commands.waitSeconds(.2)) // wait for spin up
-            .andThen(Commands.waitUntil(() -> m_debouncer.calculate(Math.abs(getVelocity()) < 15))) // wait for stopped TODO adjust the numbers
+    return Commands.waitUntil(()-> Math.abs(getVelocity()) > 50)//.raceWith(Commands.waitSeconds(1)) // wait for spin up
+            .andThen(Commands.waitUntil(() -> m_debouncer.calculate(Math.abs(getVelocity()) < 5 || isLimitSwitchPressed()))) // wait for stopped TODO adjust the numbers
             .andThen(Commands.runOnce(() -> haveGamePiece = true))  ;
   }
 }
