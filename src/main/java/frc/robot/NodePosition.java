@@ -24,7 +24,7 @@ public class NodePosition {
 
     }
     public enum NodeGroup{ // from the blue side
-        LEFT(61.0+126,132+42.19), // 4.37 m for y????
+        LEFT(61.0+26,132+42.19), // 4.37 m for y????
         CENTER(61.0+26,66+42.19), // 2.65 meters for y??
         RIGHT(61.0+26,42.19); //.96 meters for y?? 37.79in??
       public final double xCoord;
@@ -55,9 +55,9 @@ public class NodePosition {
       MID_CENTER(3.5, 0, 0, 152.0, 28.0, 28.0, 28.0, .4), // cl3/21
       MID_RIGHT(17.5, -22, 0, 148.0, 150.75, 43.0, 37.0, -.5),
 
-      HIGH_LEFT(37.0, 22, 0, 148.0, 164, 43.0, 37.0, -.5), //ej3/16
+      HIGH_LEFT(36.0, 22, 0, 148.0, 164, 44.0, 37.0, -.5), //ej3/16
       HIGH_CENTER(19.0, 0, 0, 153.0, 28.0, 38.0, 28.0, 1), //cl3/21
-      HIGH_RIGHT(37.0, -22, 0, 148.0, 164, 43.0, 37.0, -.5); //ej 3/16
+      HIGH_RIGHT(36.0, -22, 0, 148.0, 164, 44.0, 37.0, -.5); //ej 3/16
       
   
       public final double extension;

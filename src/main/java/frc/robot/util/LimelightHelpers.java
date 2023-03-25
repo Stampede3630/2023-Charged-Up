@@ -376,7 +376,7 @@ public class LimelightHelpers {
     /**
      * Print JSON Parse time to the console in milliseconds
      */
-    static boolean profileJSON = true; //TODO I CHANGED THIS
+    static boolean profileJSON = false;
 
     static final String sanitizeName(String name) {
         if (name == "" || name == null) {

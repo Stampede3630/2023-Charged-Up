@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
@@ -160,7 +161,7 @@ public class Intake extends SubsystemBase implements Loggable, Disableable, Enab
 
                 // }); // it is finished when the encoder goes down by 15 rotations
     }
-    public boolean checkForGamePiece() {
+    public boolean checkForCube() {
         haveGamePiece = haveGamePiece || intakeHardStop.isPressed(); // latching
         return haveGamePiece;
     }
@@ -184,9 +185,16 @@ public class Intake extends SubsystemBase implements Loggable, Disableable, Enab
     return m_intakeMotor.getRotorVelocity().getValue();
   }
   
-  public Command waitUntilHaveGamePiece() {
-    return Commands.waitUntil(()-> Math.abs(getVelocity()) > 50)//.raceWith(Commands.waitSeconds(1)) // wait for spin up
-            .andThen(Commands.waitUntil(() -> m_debouncer.calculate(Math.abs(getVelocity()) < 5 || isLimitSwitchPressed()))) // wait for stopped TODO adjust the numbers
+  public Command waitUntilHaveGamePiece(BooleanSupplier isItACube) {
+    if (isItACube.getAsBoolean()) {
+        return Commands.waitUntil(()-> Math.abs(getVelocity()) > 50)//.raceWith(Commands.waitSeconds(1)) // wait for spin up
+            .andThen(Commands.waitUntil(() -> m_debouncer.calculate(isLimitSwitchPressed()))) // wait for stopped TODO adjust the numbers
             .andThen(Commands.runOnce(() -> haveGamePiece = true))  ;
+    } else 
+        return Commands.waitUntil(()-> Math.abs(getVelocity()) > 50)//.raceWith(Commands.waitSeconds(1)) // wait for spin up
+                .andThen(Commands.waitUntil(() -> m_debouncer.calculate(Math.abs(getVelocity()) < 5))) // wait for stopped TODO adjust the numbers
+                .andThen(Commands.runOnce(() -> haveGamePiece = true))  ;
   }
+
+
 }

@@ -200,20 +200,6 @@ public class RobotContainer {
     eventMap.put("autoScoreMidCone", autoScoreMidCone());
     eventMap.put("autoScoreLowCube", autoScoreLowCube());
 
-    autoBuilder = new SwerveAutoBuilder(
-        s_SwerveDrive::getOdometryPose, // Pose2d supplier
-        s_SwerveDrive::resetOdometry, // Pose2d consumer, used to reset odometry at the beginning of auto
-        new PIDConstants(AutoConstants.KP, 0.0, 0.0), // PID constants to correct for translation error (used to create the X and Y
-                                       // PID controllers)
-        new PIDConstants(AutoConstants.KP, 0.0, 0.0), // PID constants to correct for rotation error (used to create the rotation
-                                       // controller)
-        s_SwerveDrive::setAutoChassisSpeeds, // Module states consumer used to output to the drive subsystem
-        eventMap,
-        true,
-        s_SwerveDrive // The drive subsystem. Used to properly set the requirements of path following
-                      // commands
-    );
-
     otfBuilder = new SwerveAutoBuilder(
             s_SwerveDrive::getOdometryPose, // Pose2d supplier
             s_SwerveDrive::resetOdometry, // Pose2d consumer, used to reset odometry at the beginning of auto
@@ -229,10 +215,8 @@ public class RobotContainer {
     );
 
     loadPaths();
-
     configureButtonBindings();
 
-    
     s_SwerveDrive.setDefaultCommand(
       s_SwerveDrive.joystickDriveCommand(
           () -> xBox.getLeftY() * (sniperMode ? 0.4 : 1),
@@ -316,8 +300,7 @@ public class RobotContainer {
 
     // combined triggers
 
-    xBox.b().onTrue(s_Cannon.setExtensionWait(() -> intakeExtensionInches)
-    .andThen(s_Cannon.setCannonAngleWait(() -> intakeCannonAngle)));
+    xBox.b().onTrue(Commands.runOnce(() -> autoPathGroupOnTheFly()).ignoringDisable(true)); // simulate the thing in akit
     //-> intake trigger
     xBox.rightTrigger(.1).debounce(.1, DebounceType.kFalling)
         .onTrue(
@@ -329,7 +312,7 @@ public class RobotContainer {
             () -> s_Cannon.getExtensionEncoder() < 10) // "dangerous" or not
           .alongWith(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle)))
           .andThen(Commands.runOnce(()-> s_Intake.setIntake(intakeSpeed)))
-          .andThen(s_Intake.waitUntilHaveGamePiece()
+          .andThen(s_Intake.waitUntilHaveGamePiece(() -> gamePieceTypeChooser.getSelected() == GamePieceType.CUBE)
             .raceWith(Commands.waitUntil(xBox.rightTrigger(.2).debounce(.2, DebounceType.kFalling).negate())))
           .andThen(Commands.runOnce(s_Intake::stopIntake)))
           //.unless(s_Intake::haveGamePiece))
@@ -380,7 +363,7 @@ public class RobotContainer {
         s_Intake::haveGamePiece));
 
     xBox.a().onTrue(new
-    ProxyCommand(()-> otfBuilder.followPathGroup(autoPathGroupOnTheFly()))
+    ProxyCommand(()-> otfBuilder.followPath(autoPathGroupOnTheFly()))
     .beforeStarting(new InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
 
     // xBox.a().onTrue(Commands.runOnce(() -> autoPathGroupOnTheFly()));
@@ -580,12 +563,13 @@ public class RobotContainer {
   }
 
   public Command autoIntakeCube() { //works -ej 3/15
-    return (Commands.runOnce(()-> s_Cannon.setCannonAngle(200)))
+    return s_Cannon.setCannonAngleWait(() -> 200)
+    .andThen(s_Cannon.setExtensionWait(() -> 2.5))
+    .andThen(Commands.runOnce(()->s_Lid.setLid(60.0)))
     .andThen(Commands.runOnce(()-> s_Intake.setIntake(-1.0)))
-    .andThen(Commands.runOnce(()->s_Lid.setLid(100.0)))
-    .andThen(Commands.waitSeconds(.1)
-    .andThen(Commands.waitSeconds(2.0)
-    .deadlineWith(Commands.waitUntil(s_Intake::checkForGamePiece))))
+      .andThen(Commands.waitSeconds(.1)
+        .andThen(Commands.waitSeconds(2.0)
+        .deadlineWith(Commands.waitUntil(s_Intake::checkForCube))))
     .andThen(Commands.runOnce(s_Intake::stopIntake))
     .andThen(Commands.runOnce(()->s_Lid.setLid(100.0)));
   }
@@ -620,16 +604,16 @@ public class RobotContainer {
     for (File file : files) {
       String pathName = file.getName().split("\\.")[0];
       autoSelect.addOption(pathName, PathPlanner.loadPathGroup(pathName,
-        new PathConstraints(4, 4)));
+        new PathConstraints(2.5, 2)));
     }
-    autoSelect.setDefaultOption(files.get(0).getName().split("\\.")[0], PathPlanner.loadPathGroup(files.get(0).getName().split("\\.")[0], new PathConstraints(4, 4)));
+    autoSelect.setDefaultOption(files.get(0).getName().split("\\.")[0], PathPlanner.loadPathGroup(files.get(0).getName().split("\\.")[0], new PathConstraints(2.5, 2)));
   }
 
   public Command getAutonomousCommand() {
     return autoBuilder.fullAuto(autoSelect.getSelected());
   }
   
-  public List<PathPlannerTrajectory> autoPathGroupOnTheFly() {
+  public PathPlannerTrajectory autoPathGroupOnTheFly() {
     double x = Units.inchesToMeters(nodeGroupChooser.getSelected().xCoord);
     double y = Units.inchesToMeters(NodePosition.getNodePosition(nodeGroupChooser.getSelected(),nodeGridChooser.getSelected()).getYCoord());
     if (DriverStation.getAlliance() == DriverStation.Alliance.Red) {
@@ -663,21 +647,18 @@ public class RobotContainer {
       y = Units.inchesToMeters(NodePosition.getNodePosition(nodeGroup,nodeGrid).getYCoord());
       y = 8.01367968 - y;
     }
-    List<PathPlannerTrajectory> PGOTF = new ArrayList<>();
     Pose2d initialPose = s_SwerveDrive.getOdometryPose();
-    PGOTF.add(
-      PathPlanner.generatePath(
-        new PathConstraints(4, 3),
+    PathPlannerTrajectory PGOTF = PathPlanner.generatePath(
+        new PathConstraints(0.5, 0.5),
         new PathPoint(initialPose.getTranslation(), calculateHeading(x,y), initialPose.getRotation()),
-        new PathPoint(new Translation2d(x, y), calculateHeading(x,y), Rotation2d.fromDegrees(0))
-      )
-    );
-    akitInitPose[0] = PGOTF.get(0).getInitialPose().getX();
-    akitInitPose[1] = PGOTF.get(0).getInitialPose().getY();
-    akitInitPose[2] = PGOTF.get(0).getInitialPose().getRotation().getRadians();
-    akitPose[0] = PGOTF.get(0).getEndState().poseMeters.getX();
-    akitPose[1] = PGOTF.get(0).getEndState().poseMeters.getY();
-    akitPose[2] = PGOTF.get(0).getEndState().poseMeters.getRotation().getRadians();
+        new PathPoint(new Translation2d(x, y), Rotation2d.fromDegrees(0), Rotation2d.fromDegrees(0))
+      );
+    akitInitPose[0] = PGOTF.getInitialPose().getX();
+    akitInitPose[1] = PGOTF.getInitialPose().getY();
+    akitInitPose[2] = PGOTF.getInitialPose().getRotation().getRadians();
+    akitPose[0] = PGOTF.getEndState().poseMeters.getX();
+    akitPose[1] = PGOTF.getEndState().poseMeters.getY();
+    akitPose[2] = PGOTF.getEndState().poseMeters.getRotation().getRadians();
     SmartDashboard.putNumberArray("pgotf", akitPose);
     SmartDashboard.putNumberArray("pgotfInit", akitInitPose);
     return PGOTF;
@@ -744,11 +725,11 @@ public class RobotContainer {
     double opp = desiredY - roboTranslation.getY();
 
     if (adj >= 0) // quad I or IV
-      return new Rotation2d(Math.atan(opp/adj)).rotateBy(Rotation2d.fromDegrees(180));
+      return new Rotation2d(Math.atan(opp/adj));
     else if (opp > 0) // quad II
-      return new Rotation2d(Math.atan(opp/adj)+Math.PI).rotateBy(Rotation2d.fromDegrees(180));
+      return new Rotation2d(Math.atan(opp/adj)+Math.PI);
     else // opp < 0, quad III
-      return new Rotation2d(-(Math.PI/2)-Math.atan(opp/adj)).rotateBy(Rotation2d.fromDegrees(180));
+      return new Rotation2d(-(Math.PI)+Math.atan(opp/adj));
   }
   
 

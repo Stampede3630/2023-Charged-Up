@@ -15,7 +15,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-
+import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.math.util.Units;
@@ -104,7 +105,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
       m_driveTrain.getModulePositions(), 
       robotPose, 
       VecBuilder.fill(0.001, 0.001, Units.degreesToRadians(.1)), 
-      VecBuilder.fill(0.05, 0.05, Units.degreesToRadians(30)));
+      VecBuilder.fill(0.9, 0.9, Units.degreesToRadians(30)));
 
     }
 
@@ -132,15 +133,17 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
 
     robotPose = updateOdometry();
 
-    LimelightPose2d frontPose = limelightBotPoseFront();
-    if (aprilTagDetectedFront && frontPose.getLatency() < 1.5) {
-      m_odometry.addVisionMeasurement(frontPose, Timer.getFPGATimestamp() - frontPose.getLatency());
-    }
+    limelightOdometry();
 
-    LimelightPose2d backPose = limelightBotPoseBack();
-    if(aprilTagDetectedBack && backPose.getLatency() < 1.5) {
-      m_odometry.addVisionMeasurement(backPose, Timer.getFPGATimestamp() - backPose.getLatency());
-    }
+    // LimelightPose2d frontPose = limelightBotPoseFront();
+    // if (aprilTagDetectedFront && frontPose.getLatency() < 1.5) {
+    //   m_odometry.addVisionMeasurement(frontPose, Timer.getFPGATimestamp() - frontPose.getLatency());
+    // }
+
+    // LimelightPose2d backPose = limelightBotPoseBack();
+    // if(aprilTagDetectedBack && backPose.getLatency() < 1.5) {
+    //   m_odometry.addVisionMeasurement(backPose, Timer.getFPGATimestamp() - backPose.getLatency());
+    // }
 
     drawRobotOnField(m_field);
     updateRotationController();
@@ -229,13 +232,13 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
    * @param fieldRelative (SUGGESTION: Telop use field centric, AUTO use robot centric)
    */
   public void setDriveSpeeds(Translation2d xySpeedsMetersPerSec, double rRadiansPerSecond, boolean fieldRelative){
-    SwerveModuleState2[] swerveModuleStates =
+    SwerveModuleState[] swerveModuleStates =
       m_driveTrain.m_kinematics.toSwerveModuleStates(
         fieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(
                             xySpeedsMetersPerSec.getX(), 
                             xySpeedsMetersPerSec.getY(), 
                             rRadiansPerSecond, 
-                            getRobotAngle()
+                            robotPose.getRotation()
                         )
                         : new ChassisSpeeds(
                             xySpeedsMetersPerSec.getX(), 
@@ -275,11 +278,11 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
     m_odometry.resetPosition(newPose.getRotation(), m_driveTrain.getModulePositions(), newPose);
   }
 
-  public SwerveKinematics2 getKinematics() {
+  public SwerveDriveKinematics getKinematics() {
     return m_driveTrain.m_kinematics;
   }
   
-  public void setAutoModuleStates (SwerveModuleState2[] states){
+  public void setAutoModuleStates (SwerveModuleState[] states){
     m_driveTrain.setModuleSpeeds(states);
   }
   
@@ -350,47 +353,60 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
     return _input*SwerveConstants.MAX_SPEED_RADIANSperSECOND;
   }
   
-  public LimelightPose2d limelightBotPoseFront(){
+  private LimelightPose2d getLimelightPose(String limelightName){
 
     Pose2d pose;
-    LimelightHelpers.LimelightResults results = LimelightHelpers.getLatestResults("limelight-front");
+    LimelightHelpers.LimelightResults results = LimelightHelpers.getLatestResults(limelightName);
     if (DriverStation.getAlliance() == Alliance.Blue)
       pose = results.targetingResults.getBotPose2d_wpiBlue();
     else
       pose = results.targetingResults.getBotPose2d_wpiRed();
     // sum the latency: depending on latency of parse, might be better to just get data directly TODO: Compare methods: LL lib, json parse, plain NT
     double latency = results.targetingResults.latency_jsonParse+results.targetingResults.latency_capture+results.targetingResults.latency_pipeline;
+    int aprilTagAmount = results.targetingResults.targets_Fiducials.length;
 
-    return new LimelightPose2d(pose, latency);
+    return new LimelightPose2d(pose, latency, aprilTagAmount);
 
   }
 
-  public LimelightPose2d limelightBotPoseBack(){
+  private void limelightOdometry() {
+    LimelightPose2d front = getLimelightPose("limelight-front");
+    LimelightPose2d back = getLimelightPose("limelight-back");
+    if (front.aprilTagAmount > 1 && front.latency < 120) 
+      m_odometry.resetPosition(gyro.getRotation2d(), m_driveTrain.getModulePositions(), front);
 
-    double[] myArray = {0, 0, 0, 0, 0, 0, 0, 6};
-    String allianceColorBotPose = DriverStation.getAlliance() == Alliance.Red ? "botpose_wpired" : "botpose_wpiblue";
 
-      myArray = NetworkTableInstance.getDefault().getTable("limelight-back").getEntry(allianceColorBotPose).getDoubleArray(myArray);
+    if (back.aprilTagAmount > 1 && front.latency < 120)
+      m_odometry.resetPosition(gyro.getRotation2d(), m_driveTrain.getModulePositions(), back);
+
+  }
+
+  // public LimelightPose2d limelightBotPoseBack(){
+
+  //   double[] myArray = {0, 0, 0, 0, 0, 0, 0, 6};
+  //   String allianceColorBotPose = DriverStation.getAlliance() == Alliance.Red ? "botpose_wpired" : "botpose_wpiblue";
+
+  //     myArray = NetworkTableInstance.getDefault().getTable("limelight-back").getEntry(allianceColorBotPose).getDoubleArray(myArray);
     
 
-    double x = 0;
-    double y = 0;
-    double rot = 0;
-    if (myArray.length > 0){
-      x = myArray[0];
-      y = myArray[1];
-      rot = myArray[5];
-    }
+  //   double x = 0;
+  //   double y = 0;
+  //   double rot = 0;
+  //   if (myArray.length > 0){
+  //     x = myArray[0];
+  //     y = myArray[1];
+  //     rot = myArray[5];
+  //   }
 
-    return new LimelightPose2d(x, y, Rotation2d.fromDegrees(rot), myArray[6]/1000.0);
+  //   return new LimelightPose2d(x, y, Rotation2d.fromDegrees(rot), myArray[6]/1000.0);
 
-  }
+  // }
 
-  @Config(defaultValueBoolean = false)
-  public void zeroOdometry(boolean input){
+  @Config.ToggleSwitch(defaultValue = false)
+  public void resetToGyro(boolean input){
     if(input){
-      m_odometry.resetPosition(gyro.getRotation2d(), m_driveTrain.getModulePositions(), new Pose2d());
-      gyro.reset();
+      m_odometry.resetPosition(gyro.getRotation2d(), m_driveTrain.getModulePositions(), new Pose2d(robotPose.getTranslation(), new Rotation2d(0)));
+      System.out.println("resetting the stuff");
     }
   }
 

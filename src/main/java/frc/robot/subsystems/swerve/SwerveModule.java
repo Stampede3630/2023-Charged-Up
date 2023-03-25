@@ -16,6 +16,7 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.RobotBase;
 import frc.robot.util.SwerveModuleState2;
 
@@ -223,8 +224,8 @@ public class SwerveModule {
         //     driveMotor.setVoltage(driveMotorFeedforward.calculate(kState.speedMetersPerSecond));
         // }
 
-    public void setDesiredState(SwerveModuleState2 desiredState) {
-        var optimized = SwerveModuleState2.optimize(desiredState, m_internalState.angle);
+    public void setDesiredState(SwerveModuleState desiredState) {
+        var optimized = SwerveModuleState.optimize(desiredState, m_internalState.angle);
 
         double angleToSetDeg = optimized.angle.getRotations();
         steeringMotor.setControl(m_angleSetter.withPosition(angleToSetDeg).withSlot(0));
