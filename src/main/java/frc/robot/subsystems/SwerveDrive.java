@@ -14,9 +14,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.kinematics.SwerveModulePosition;
-import edu.wpi.first.math.kinematics.SwerveModuleState;
+
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.math.util.Units;
@@ -39,11 +37,11 @@ import frc.robot.subsystems.swerve.SwerveConstants;
 import frc.robot.subsystems.swerve.SwerveModule;
 import frc.robot.util.LimelightPose2d;
 import frc.robot.util.SimGyroSensorModel;
+import frc.robot.util.SwerveKinematics2;
+import frc.robot.util.SwerveModuleState2;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
-
-import java.sql.Driver;
 import java.util.function.DoubleSupplier;
 
 
@@ -229,7 +227,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
    * @param fieldRelative (SUGGESTION: Telop use field centric, AUTO use robot centric)
    */
   public void setDriveSpeeds(Translation2d xySpeedsMetersPerSec, double rRadiansPerSecond, boolean fieldRelative){
-    SwerveModuleState[] swerveModuleStates =
+    SwerveModuleState2[] swerveModuleStates =
       m_driveTrain.m_kinematics.toSwerveModuleStates(
         fieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(
                             xySpeedsMetersPerSec.getX(), 
@@ -242,7 +240,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
                             xySpeedsMetersPerSec.getY(), 
                             rRadiansPerSecond)
                         );
-    SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, SwerveConstants.MAX_SPEED_METERSperSECOND);
+    SwerveKinematics2.desaturateWheelSpeeds(swerveModuleStates, SwerveConstants.MAX_SPEED_METERSperSECOND);
     m_driveTrain.setModuleSpeeds(swerveModuleStates);
     
   }
@@ -275,12 +273,21 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
     m_odometry.resetPosition(newPose.getRotation(), m_driveTrain.getModulePositions(), newPose);
   }
 
-  public SwerveDriveKinematics getKinematics() {
+  public SwerveKinematics2 getKinematics() {
     return m_driveTrain.m_kinematics;
   }
   
-  public void setAutoModuleStates (SwerveModuleState[] states){
+  public void setAutoModuleStates (SwerveModuleState2[] states){
     m_driveTrain.setModuleSpeeds(states);
+  }
+  
+    /**
+   * Set chassis speeds with closed-loop velocity control.
+   *
+   * @param chassisSpeeds Chassis speeds to set.
+   */
+  public void setAutoChassisSpeeds(ChassisSpeeds chassisSpeeds) {
+     setAutoModuleStates(getKinematics().toSwerveModuleStates(chassisSpeeds));
   }
 
   /**
