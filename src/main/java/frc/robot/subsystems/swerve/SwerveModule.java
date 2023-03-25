@@ -16,8 +16,8 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
-import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.RobotBase;
+import frc.robot.util.SwerveModuleState2;
 
 public class SwerveModule {
 
@@ -223,8 +223,8 @@ public class SwerveModule {
         //     driveMotor.setVoltage(driveMotorFeedforward.calculate(kState.speedMetersPerSecond));
         // }
 
-    public void setDesiredState(SwerveModuleState desiredState) {
-        var optimized = SwerveModuleState.optimize(desiredState, m_internalState.angle);
+    public void setDesiredState(SwerveModuleState2 desiredState) {
+        var optimized = SwerveModuleState2.optimize(desiredState, m_internalState.angle);
 
         double angleToSetDeg = optimized.angle.getRotations();
         steeringMotor.setControl(m_angleSetter.withPosition(angleToSetDeg).withSlot(0));
@@ -276,17 +276,17 @@ public class SwerveModule {
 
 
 
-    public SwerveModuleState optimize(
-            SwerveModuleState desiredState, Rotation2d currentAngle) {
-        var delta = desiredState.angle.minus(currentAngle);
-        if (Math.abs(delta.getDegrees()) > 90.0) { // SJV: If this doesn'twork try 360
-            return new SwerveModuleState(
-                    -desiredState.speedMetersPerSecond,
-                    desiredState.angle.rotateBy(Rotation2d.fromDegrees(180.0)));
-        } else {
-            return new SwerveModuleState(desiredState.speedMetersPerSecond, desiredState.angle);
-        }
-    }
+    // public SwerveModuleState optimize(
+    //         SwerveModuleState desiredState, Rotation2d currentAngle) {
+    //     var delta = desiredState.angle.minus(currentAngle);
+    //     if (Math.abs(delta.getDegrees()) > 90.0) { // SJV: If this doesn'twork try 360
+    //         return new SwerveModuleState(
+    //                 -desiredState.speedMetersPerSecond,
+    //                 desiredState.angle.rotateBy(Rotation2d.fromDegrees(180.0)));
+    //     } else {
+    //         return new SwerveModuleState(desiredState.speedMetersPerSecond, desiredState.angle);
+    //     }
+    // }
 
     public static class SteeringMotor extends TalonFX {
         public SwerveConstants.Gains kGAINS;

@@ -6,9 +6,10 @@ import com.ctre.phoenixpro.signals.NeutralModeValue;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
-import edu.wpi.first.math.kinematics.SwerveModuleState;
+import frc.robot.util.SwerveKinematics2;
+import frc.robot.util.SwerveModuleState2;
 
 public class QuadFalconSwerveDrive {
   public NeutralModeValue NeutralMode = NeutralModeValue.Brake;
@@ -42,7 +43,7 @@ public class QuadFalconSwerveDrive {
       new SwerveModule.SteeringSensor(SwerveConstants.FRSensorID, SwerveConstants.FRSensorOffset),
       new Translation2d(SwerveConstants.WHEEL_BASE_METERS / 2, -SwerveConstants.TRACK_WIDE / 2));
 
-  public SwerveDriveKinematics m_kinematics = new SwerveDriveKinematics(
+  public SwerveKinematics2 m_kinematics = new SwerveKinematics2(
       FrontLeftSwerveModule.moduleXYTranslation,
       FrontRightSwerveModule.moduleXYTranslation,
       BackLeftSwerveModule.moduleXYTranslation,
@@ -63,13 +64,13 @@ public class QuadFalconSwerveDrive {
   }
 
   public void activateDefensiveStop(Rotation2d robotAngle) {
-    FrontLeftSwerveModule.setDesiredState(new SwerveModuleState(0, robotAngle.rotateBy(Rotation2d.fromDegrees(90))));
-    FrontRightSwerveModule.setDesiredState(new SwerveModuleState(0, robotAngle.rotateBy(Rotation2d.fromDegrees(90))));
-    BackLeftSwerveModule.setDesiredState(new SwerveModuleState(0, robotAngle.rotateBy(Rotation2d.fromDegrees(90))));
-    BackRightSwerveModule.setDesiredState(new SwerveModuleState(0, robotAngle.rotateBy(Rotation2d.fromDegrees(90)))); 
+    FrontLeftSwerveModule.setDesiredState(new SwerveModuleState2(0, robotAngle.rotateBy(Rotation2d.fromDegrees(90)),0));
+    FrontRightSwerveModule.setDesiredState(new SwerveModuleState2(0, robotAngle.rotateBy(Rotation2d.fromDegrees(90)),0));
+    BackLeftSwerveModule.setDesiredState(new SwerveModuleState2(0, robotAngle.rotateBy(Rotation2d.fromDegrees(90)),0));
+    BackRightSwerveModule.setDesiredState(new SwerveModuleState2(0, robotAngle.rotateBy(Rotation2d.fromDegrees(90)),0)); 
   }
 
-  public void setModuleSpeeds(SwerveModuleState[] _swerveModuleStates) {
+  public void setModuleSpeeds(SwerveModuleState2[] _swerveModuleStates) {
     FrontLeftSwerveModule.setDesiredState(_swerveModuleStates[0]);
     BackLeftSwerveModule.setDesiredState(_swerveModuleStates[2]);
     BackRightSwerveModule.setDesiredState(_swerveModuleStates[3]);

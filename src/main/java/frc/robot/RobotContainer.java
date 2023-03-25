@@ -200,13 +200,13 @@ public class RobotContainer {
     autoBuilder = new SwerveAutoBuilder(
         s_SwerveDrive::getOdometryPose, // Pose2d supplier
         s_SwerveDrive::resetOdometry, // Pose2d consumer, used to reset odometry at the beginning of auto
-        s_SwerveDrive.getKinematics(), // SwerveDriveKinematics
-        new PIDConstants(4, 0.0, 0.0), // PID constants to correct for translation error (used to create the X and Y
+        new PIDConstants(AutoConstants.KP, 0.0, 0.0), // PID constants to correct for translation error (used to create the X and Y
                                        // PID controllers)
-        new PIDConstants(4, 0.0, 0.0), // PID constants to correct for rotation error (used to create the rotation
+        new PIDConstants(AutoConstants.KP, 0.0, 0.0), // PID constants to correct for rotation error (used to create the rotation
                                        // controller)
-        s_SwerveDrive::setAutoModuleStates, // Module states consumer used to output to the drive subsystem
+        s_SwerveDrive::setAutoChassisSpeeds, // Module states consumer used to output to the drive subsystem
         eventMap,
+        true,
         s_SwerveDrive // The drive subsystem. Used to properly set the requirements of path following
                       // commands
     ); 
@@ -578,12 +578,11 @@ public class RobotContainer {
     autoBuilder = new SwerveAutoBuilder(
             s_SwerveDrive::getOdometryPose, // Pose2d supplier
             s_SwerveDrive::resetOdometry, // Pose2d consumer, used to reset odometry at the beginning of auto
-            s_SwerveDrive.getKinematics(), // SwerveDriveKinematics
-            new PIDConstants(4, 0.0, 0.0), // PID constants to correct for translation error (used to create the X and Y
+            new PIDConstants(AutoConstants.KP, 0.0, 0.0), // PID constants to correct for translation error (used to create the X and Y
             // PID controllers)
-            new PIDConstants(4, 0.0, 0.0), // PID constants to correct for rotation error (used to create the rotation
+            new PIDConstants(AutoConstants.KP, 0.0, 0.0), // PID constants to correct for rotation error (used to create the rotation
             // controller)
-            s_SwerveDrive::setAutoModuleStates, // Module states consumer used to output to the drive subsystem
+            s_SwerveDrive::setAutoChassisSpeeds, // Module states consumer used to output to the drive subsystem
             eventMap,
             true,
             s_SwerveDrive // The drive subsystem. Used to properly set the requirements of path following
