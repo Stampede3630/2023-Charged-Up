@@ -320,7 +320,7 @@ public class RobotContainer {
           .andThen(s_Cannon.setExtensionWait(() -> 1))
           .andThen(Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), 90))));
     //-> Outtake trigger
-    xBox.leftTrigger(.55).debounce(.15, DebounceType.kBoth)
+    xBox.leftTrigger(.2).debounce(.15, DebounceType.kBoth)
         .onTrue(Commands.runOnce(()-> s_Intake.setIntake(nodeGridChooser.getSelected().intakeSpeed)).alongWith(Commands.runOnce(s_Intake::leaveGamePiece)))
         .onFalse(Commands.runOnce(s_Intake::stopIntake)
           .andThen(s_Cannon.setExtensionWait(() -> 1))

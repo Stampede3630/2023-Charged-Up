@@ -24,9 +24,9 @@ public class NodePosition {
 
     }
     public enum NodeGroup{ // from the blue side
-        LEFT(61.0+26,132+42.19), // 4.37 m for y????
-        CENTER(61.0+26,66+42.19), // 2.65 meters for y??
-        RIGHT(61.0+26,42.19); //.96 meters for y?? 37.79in??
+        LEFT(61.0+15,132+42.19), // 4.37 m for y????
+        CENTER(61.0+15,66+42.19), // 2.65 meters for y??
+        RIGHT(61.0+15,42.19); //.96 meters for y?? 37.79in??
       public final double xCoord;
       public final double yCoord;
 

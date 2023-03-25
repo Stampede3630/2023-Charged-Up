@@ -105,7 +105,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
       m_driveTrain.getModulePositions(), 
       robotPose, 
       VecBuilder.fill(0.001, 0.001, Units.degreesToRadians(.1)), 
-      VecBuilder.fill(0.9, 0.9, Units.degreesToRadians(30)));
+      VecBuilder.fill(0.01, 0.01, Units.degreesToRadians(10)));
 
     }
 
@@ -300,23 +300,25 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
    * then rotated around its own center by the angle of the module.
    */
   public void drawRobotOnField(Field2d field) {
-    Pose2d robotPose = m_odometry.getEstimatedPosition();
-    if (DriverStation.getAlliance() == Alliance.Red) {
-      robotPose = new Pose2d(new Translation2d(16.541748984 - robotPose.getX(), 8.01367968 - robotPose.getY()), robotPose.getRotation().rotateBy(Rotation2d.fromDegrees(180)));
-    }
-    field.setRobotPose(robotPose);
+    Pose2d fieldRobotPose = robotPose;
+    // if (DriverStation.getAlliance() == Alliance.Red) {
+    //    fieldRobotPose = new Pose2d(new Translation2d(16.541748984 - robotPose.getX(), 8.01367968 - robotPose.getY()), robotPose.getRotation().rotateBy(Rotation2d.fromDegrees(180)));
+      
+    // }
+    field.setRobotPose(fieldRobotPose);
+      
+      field.getObject("frontLeft").setPose(
+        fieldRobotPose.transformBy(new Transform2d(m_driveTrain.FrontLeftSwerveModule.moduleXYTranslation, m_driveTrain.FrontLeftSwerveModule.getPosition().angle)));
+      field.getObject("frontRight").setPose(
+        fieldRobotPose.transformBy(new Transform2d(m_driveTrain.FrontRightSwerveModule.moduleXYTranslation, m_driveTrain.FrontRightSwerveModule.getPosition().angle)));
+      field.getObject("backLeft").setPose(
+        fieldRobotPose.transformBy(new Transform2d(m_driveTrain.BackLeftSwerveModule.moduleXYTranslation, m_driveTrain.BackLeftSwerveModule.getPosition().angle)));
+      field.getObject("backRight").setPose(
+        fieldRobotPose.transformBy(new Transform2d(m_driveTrain.BackRightSwerveModule.moduleXYTranslation, m_driveTrain.BackRightSwerveModule.getPosition().angle)));
     
-    field.getObject("frontLeft").setPose(
-      robotPose.transformBy(new Transform2d(m_driveTrain.FrontLeftSwerveModule.moduleXYTranslation, m_driveTrain.FrontLeftSwerveModule.getPosition().angle)));
-    field.getObject("frontRight").setPose(
-      robotPose.transformBy(new Transform2d(m_driveTrain.FrontRightSwerveModule.moduleXYTranslation, m_driveTrain.FrontRightSwerveModule.getPosition().angle)));
-    field.getObject("backLeft").setPose(
-      robotPose.transformBy(new Transform2d(m_driveTrain.BackLeftSwerveModule.moduleXYTranslation, m_driveTrain.BackLeftSwerveModule.getPosition().angle)));
-    field.getObject("backRight").setPose(
-      robotPose.transformBy(new Transform2d(m_driveTrain.BackRightSwerveModule.moduleXYTranslation, m_driveTrain.BackRightSwerveModule.getPosition().angle)));
-    akitPose[0] = DriverStation.getAlliance() == Alliance.Blue ? robotPose.getX() : 16.541748984 - robotPose.getX();
-    akitPose[1] = DriverStation.getAlliance() == Alliance.Blue ? robotPose.getY() : 8.01367968 - robotPose.getY();
-    akitPose[2] = robotPose.getRotation().getRadians();
+    akitPose[0] = fieldRobotPose.getX();
+    akitPose[1] = fieldRobotPose.getY();
+    akitPose[2] = fieldRobotPose.getRotation().getRadians();
     SmartDashboard.putNumberArray("akitPose", akitPose);
   }
 
@@ -372,12 +374,22 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
   private void limelightOdometry() {
     LimelightPose2d front = getLimelightPose("limelight-front");
     LimelightPose2d back = getLimelightPose("limelight-back");
-    if (front.aprilTagAmount > 1 && front.latency < 120) 
-      m_odometry.resetPosition(gyro.getRotation2d(), m_driveTrain.getModulePositions(), front);
+    if (front.aprilTagAmount > 1 && front.latency < 120)  {
+      Transform2d deltaFront = front.minus(robotPose);
+      if (Math.abs(deltaFront.getX())+Math.abs(deltaFront.getY()) > .1)
+        m_odometry.resetPosition(getRobotAngle(), m_driveTrain.getModulePositions(), front);
+      else
+      m_odometry.addVisionMeasurement(front, Timer.getFPGATimestamp() - front.latency);
+    }
 
 
-    if (back.aprilTagAmount > 1 && front.latency < 120)
-      m_odometry.resetPosition(gyro.getRotation2d(), m_driveTrain.getModulePositions(), back);
+    if (back.aprilTagAmount > 1 && back.latency < 120) {
+      Transform2d deltaBack = back.minus(robotPose);
+      if (Math.abs(deltaBack.getX())+Math.abs(deltaBack.getY()) > .1)
+        m_odometry.resetPosition(getRobotAngle(), m_driveTrain.getModulePositions(), back);
+      else
+      m_odometry.addVisionMeasurement(back, Timer.getFPGATimestamp() - back.latency);
+    }
 
   }
 
