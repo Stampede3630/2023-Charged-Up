@@ -164,7 +164,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
             new Translation2d(
               convertToMetersPerSecond(x)*joystickDriveGovernor,
               convertToMetersPerSecond(y)*joystickDriveGovernor), 
-            rotLimiter.calculate(convertToRadiansPerSecond(rot)* joystickDriveGovernor), 
+ convertToRadiansPerSecond(rot)* joystickDriveGovernor,
             Preferences.getBoolean("pFieldRelative", Constants.DriverConstants.FIELD_RELATIVE));
         // }
         }, this);
