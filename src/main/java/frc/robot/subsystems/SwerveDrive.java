@@ -351,10 +351,11 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
 
   private void limelightOdometry(String limelightName) {
     LimelightPose2d llPose = getLimelightPose(limelightName);
-    if (llPose.latency < 120) {
+    if (llPose.latency < 120) { // probably don't need to do this since it's limited to 1.5 sec anyways
       if (llPose.aprilTagAmount > 1) {
         double dist = llPose.minus(robotPose).getTranslation().getNorm();
         if (dist > .1)
+          // maybe we should do an addVisionMeasurement with a really high trust, since just resetting odometry doesn't compensate for encoders
           m_odometry.resetPosition(getRobotAngle(), m_driveTrain.getModulePositions(), llPose);
         else
           m_odometry.addVisionMeasurement(llPose, Timer.getFPGATimestamp() - llPose.latency, VecBuilder.fill(0.001, 0.001, Units.degreesToRadians(5)));

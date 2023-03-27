@@ -219,9 +219,9 @@ public class RobotContainer {
 
     s_SwerveDrive.setDefaultCommand(
       s_SwerveDrive.joystickDriveCommand(
-          () -> xBox.getLeftY() * (sniperMode ? 0.4 : 1),
-          () -> xBox.getLeftX() * (sniperMode ? 0.4 : 1),
-          () -> xBox.getRightX() * (sniperMode ? 0.3 : 1))
+          () -> xBox.getLeftY() * (sniperMode ? 0.6 : 1),
+          () -> xBox.getLeftX() * (sniperMode ? 0.6 : 1),
+          () -> xBox.getRightX() * (sniperMode ? 1 : 1))
       .withName("DefaultDrive"));
 
           Logger.configureLoggingAndConfig(this, false);
