@@ -50,13 +50,12 @@ public final class Constants {
     public static final int SPARK_MAX_ID = 17;
     public static final double INITIALIZED_INCHES = 1.0;
     public static final int CURRENT_LIMIT = 50; //changed from 50
-    public static final double MAGIC_TO_INCHES = 1.802406002431152;
+    public static final double MAGIC_TO_INCHES = 1.1862800738; // old gearing: 1.802406002431152
     public static final double ERROR = 5.0;
     
     public static final double KP = 1.0/6.0; //used to be 1/30.0
     public static final double KI = 0;
     public static final double KD = 0; //used to be 0
-
   }
 
   public static final class IntakeConstants{

@@ -164,7 +164,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
             new Translation2d(
               convertToMetersPerSecond(x)*joystickDriveGovernor,
               convertToMetersPerSecond(y)*joystickDriveGovernor), 
- convertToRadiansPerSecond(rot)* joystickDriveGovernor,
+              convertToRadiansPerSecond(rot)* joystickDriveGovernor,
             Preferences.getBoolean("pFieldRelative", Constants.DriverConstants.FIELD_RELATIVE));
         // }
         }, this);
@@ -286,6 +286,11 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
    * then rotated around its own center by the angle of the module.
    */
   public void drawRobotOnField(Field2d field) {
+    Pose2d robotPose = m_odometry.getEstimatedPosition();
+    if (DriverStation.getAlliance() == Alliance.Red) {
+      robotPose = new Pose2d(new Translation2d(16.541748984 - robotPose.getX(), 8.01367968 - robotPose.getY()), robotPose.getRotation().rotateBy(Rotation2d.fromDegrees(180)));
+    }
+
     field.setRobotPose(robotPose);
       
       field.getObject("frontLeft").setPose(
@@ -297,9 +302,9 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
       field.getObject("backRight").setPose(
         robotPose.transformBy(new Transform2d(m_driveTrain.BackRightSwerveModule.moduleXYTranslation, m_driveTrain.BackRightSwerveModule.getPosition().angle)));
     
-    akitPose[0] = robotPose.getX();
-    akitPose[1] = robotPose.getY();
-    akitPose[2] = robotPose.getRotation().getRadians();
+    akitPose[0] = this.robotPose.getX();
+    akitPose[1] = this.robotPose.getY();
+    akitPose[2] = this.robotPose.getRotation().getRadians();
     SmartDashboard.putNumberArray("akitPose", akitPose);
   }
 
@@ -353,14 +358,16 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
     LimelightPose2d llPose = getLimelightPose(limelightName);
     if (llPose.latency < 120) { // probably don't need to do this since it's limited to 1.5 sec anyways
       if (llPose.aprilTagAmount > 1) {
+        Commands.print(">1 tag").schedule();
         double dist = llPose.minus(robotPose).getTranslation().getNorm();
-        if (dist > .1)
-          // maybe we should do an addVisionMeasurement with a really high trust, since just resetting odometry doesn't compensate for encoders
-          m_odometry.resetPosition(getRobotAngle(), m_driveTrain.getModulePositions(), llPose);
+        if (dist > .1){}
+          // m_odometry.resetPosition(getRobotAngle(), m_driveTrain.getModulePositions(), llPose);
         else
-          m_odometry.addVisionMeasurement(llPose, Timer.getFPGATimestamp() - llPose.latency, VecBuilder.fill(0.001, 0.001, Units.degreesToRadians(5)));
-      } else
+          m_odometry.addVisionMeasurement(llPose, Timer.getFPGATimestamp() - llPose.latency, VecBuilder.fill(0.0001, 0.0001, Units.degreesToRadians(5)));
+      } else {
+        Commands.print("1 tag").schedule();
         m_odometry.addVisionMeasurement(llPose, Timer.getFPGATimestamp() - llPose.latency, VecBuilder.fill(0.1, 0.1, Units.degreesToRadians(30)));
+      }
     }
 
   }

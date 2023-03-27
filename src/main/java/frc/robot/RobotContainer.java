@@ -158,7 +158,7 @@ public class RobotContainer {
 
     Shuffleboard.getTab("nodeSelector")
         .add("orientation", gamePieceTypeChooser)
-        .withWidget(BuiltInWidgets.kSplitButtonChooser)
+        .withWidget("Big Split Button Chooser")
         .withPosition(0, 0)
         .withSize(8, 3);
 
@@ -170,23 +170,23 @@ public class RobotContainer {
 
     Shuffleboard.getTab("nodeSelector")
       .add("Node Group Chooser", nodeGroupChooser)
-      .withWidget(BuiltInWidgets.kSplitButtonChooser)
+      .withWidget("Big Split Button Chooser")
       .withPosition(0, 6)
       .withSize(8, 3);
       
     Shuffleboard.getTab("nodeSelector")
       .add("Node Grid Chooser", nodeGridChooser)
       .withWidget("GridChooserWidget")
-      .withProperties(Map.of("Cone Image","C:\\Users\\Mustangs\\Documents\\evanArtwork\\cone.png",
-      "Cube Image","C:\\Users\\Mustangs\\Documents\\evanArtwork\\cube.png",
-      "Hybrid Image","C:\\Users\\Mustangs\\Documents\\evanArtwork\\hybrid.png",
+      .withProperties(Map.of("Cone","C:\\Users\\Mustangs\\Documents\\evanArtwork\\cone.png",
+      "Cube","C:\\Users\\Mustangs\\Documents\\evanArtwork\\cube.png",
+      "Hybrid","C:\\Users\\Mustangs\\Documents\\evanArtwork\\hybrid.png",
       "R", 1))
       .withPosition(8, 0)
       .withSize(9, 9);
 
     Shuffleboard.getTab("nodeSelector")
       .add("Pickup Location", pickupLocationChooser)
-      .withWidget(BuiltInWidgets.kSplitButtonChooser)
+      .withWidget("Big Split Button Chooser")
       .withPosition(0, 3)
       .withSize(8, 3);
 
@@ -571,6 +571,19 @@ public class RobotContainer {
         .andThen(Commands.waitSeconds(2.0)
         .deadlineWith(Commands.waitUntil(s_Intake::checkForCube))))
     .andThen(Commands.runOnce(s_Intake::stopIntake))
+    .andThen(Commands.runOnce(()->s_Lid.setLid(100.0)))
+    .andThen(s_Cannon.setCannonAngleWait(() -> 90));
+  }
+
+  public Command autoIntakeCone() { 
+    return s_Cannon.setCannonAngleWait(() -> 193)
+    .andThen(s_Cannon.setExtensionWait(() -> 1))
+    .andThen(Commands.runOnce(()->s_Lid.setLid(140.0)))
+    .andThen(Commands.runOnce(()-> s_Intake.setIntake(1.0))
+      .andThen(Commands.waitSeconds(.1)
+        .andThen(Commands.waitSeconds(2.0)))
+        .deadlineWith(s_Intake.waitUntilHaveGamePiece(() -> false)))
+    .andThen(Commands.runOnce(s_Intake::stopIntake))
     .andThen(Commands.runOnce(()->s_Lid.setLid(100.0)));
   }
 
@@ -592,6 +605,7 @@ public class RobotContainer {
     eventMap.put("autoScoreHigh", autoScoreHighCube());
     eventMap.put("autoScoreHighCone", autoScoreHighCone());
     eventMap.put("autoIntake", autoIntakeCube());
+    eventMap.put("autoIntakeCone", autoIntakeCone());
     eventMap.put("autoBalance", s_SwerveDrive.autoBalanceCommand());
     eventMap.put("autoScoreMidCube", autoScoreMidCube());
     eventMap.put("autoScoreMidCone", autoScoreMidCone());
@@ -604,9 +618,9 @@ public class RobotContainer {
     for (File file : files) {
       String pathName = file.getName().split("\\.")[0];
       autoSelect.addOption(pathName, PathPlanner.loadPathGroup(pathName,
-        new PathConstraints(2.5, 2)));
+        new PathConstraints(3.25, 2)));
     }
-    autoSelect.setDefaultOption(files.get(0).getName().split("\\.")[0], PathPlanner.loadPathGroup(files.get(0).getName().split("\\.")[0], new PathConstraints(2.5, 2)));
+    autoSelect.setDefaultOption(files.get(0).getName().split("\\.")[0], PathPlanner.loadPathGroup(files.get(0).getName().split("\\.")[0], new PathConstraints(3.25, 2)));
   }
 
   public Command getAutonomousCommand() {

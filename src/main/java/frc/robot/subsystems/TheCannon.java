@@ -96,12 +96,7 @@ private final SparkMaxPIDController cannonExtensionPID = cannonExtension.getPIDC
     cannonRotFollow.burnFlash();
     cannonExtension.burnFlash();
 
-    new Trigger(extensionHardStop::isPressed).onTrue(
-            Commands.runOnce(() -> {
-              extensionEncoder.setPosition(0);
-              extensionReference = 0;
-            }));
-     
+
   }
 
   @Log
@@ -126,6 +121,10 @@ private final SparkMaxPIDController cannonExtensionPID = cannonExtension.getPIDC
     cannonExtensionPID.setI(Preferences.getDouble("ExtensionKI", ExtendoConstants.KI));
     cannonExtensionPID.setD(Preferences.getDouble("ExtensionKD", ExtendoConstants.KD));
       Preferences.setBoolean("Wanna PID Cannon", false);
+    }
+    if (getExtensionHardStop()){
+      extensionEncoder.setPosition(0);
+      setExtensionReference(0);
     }
   }
   
@@ -163,13 +162,12 @@ private final SparkMaxPIDController cannonExtensionPID = cannonExtension.getPIDC
 
   public void manExtend() {
     // extension motor spins
-    extensionReference += 1;
-
+    setExtensionReference(extensionReference + 1);
   }
 
   public void manRetract() {
     // extension motor spins the other way
-    extensionReference -= 1;
+    setExtensionReference(extensionReference - 1);
   }
 
   public void manRotUp() {
