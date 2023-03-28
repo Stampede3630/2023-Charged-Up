@@ -10,7 +10,7 @@ public final class SwerveConstants {
     // SWERVE MODULE CHARACTERISTICS
     // OG WHEEL_RADIUS_METERS = 0.10033/2
     // NEW WHEEL_RADIUS_METERS = 0.13000/2
-    public static final double WHEEL_RADIUS_METERS = .10033 / 2;
+    public static final double WHEEL_RADIUS_METERS = .10 / 2; //.10033 / 2
     public static final double WHEEL_BASE_METERS = 20.1 * 2.54 / 100; // 18 inch wheel base to meters track width is
                                                                         // 24in and wheel base is 22.5 in
     public static final double MAX_SPEED_TICKSper100MS = 21900;

@@ -86,6 +86,7 @@ public final class Constants {
   };
 
   public static final class AutoConstants {
-    public static final double KP = 4; 
+    public static final double t_KP = 15.0; 
+    public static final double r_KP = 7.0;
   }
 }

@@ -195,6 +195,7 @@ public class RobotContainer {
     eventMap.put("autoScoreHigh", autoScoreHighCube());
     eventMap.put("autoScoreHighCone", autoScoreHighCone());
     eventMap.put("autoIntake", autoIntakeCube());
+    eventMap.put("autoIntakeCone", autoIntakeCone());
     eventMap.put("autoBalance", s_SwerveDrive.autoBalanceCommand());
     eventMap.put("autoScoreMidCube", autoScoreMidCube());
     eventMap.put("autoScoreMidCone", autoScoreMidCone());
@@ -203,9 +204,9 @@ public class RobotContainer {
     otfBuilder = new SwerveAutoBuilder(
             s_SwerveDrive::getOdometryPose, // Pose2d supplier
             s_SwerveDrive::resetOdometry, // Pose2d consumer, used to reset odometry at the beginning of auto
-            new PIDConstants(AutoConstants.KP, 0.0, 0.0), // PID constants to correct for translation error (used to create the X and Y
+            new PIDConstants(AutoConstants.t_KP, 0.0, 0.0), // PID constants to correct for translation error (used to create the X and Y
             // PID controllers)
-            new PIDConstants(AutoConstants.KP, 0.0, 0.0), // PID constants to correct for rotation error (used to create the rotation
+            new PIDConstants(AutoConstants.r_KP, 0.0, 0.0), // PID constants to correct for rotation error (used to create the rotation
             // controller)
             s_SwerveDrive::setAutoChassisSpeeds, // Module states consumer used to output to the drive subsystem
             eventMap,
@@ -591,9 +592,9 @@ public class RobotContainer {
     autoBuilder = new SwerveAutoBuilder(
             s_SwerveDrive::getOdometryPose, // Pose2d supplier
             s_SwerveDrive::resetOdometry, // Pose2d consumer, used to reset odometry at the beginning of auto
-            new PIDConstants(AutoConstants.KP, 0.0, 0.0), // PID constants to correct for translation error (used to create the X and Y
+            new PIDConstants(AutoConstants.t_KP, 0.0, 0.0), // PID constants to correct for translation error (used to create the X and Y
             // PID controllers)
-            new PIDConstants(AutoConstants.KP, 0.0, 0.0), // PID constants to correct for rotation error (used to create the rotation
+            new PIDConstants(AutoConstants.r_KP, 0.0, 0.0), // PID constants to correct for rotation error (used to create the rotation
             // controller)
             s_SwerveDrive::setAutoChassisSpeeds, // Module states consumer used to output to the drive subsystem
             eventMap,
@@ -618,7 +619,7 @@ public class RobotContainer {
     for (File file : files) {
       String pathName = file.getName().split("\\.")[0];
       autoSelect.addOption(pathName, PathPlanner.loadPathGroup(pathName,
-        new PathConstraints(3.25, 2)));
+        new PathConstraints(2.0, 2.0)));
     }
     autoSelect.setDefaultOption(files.get(0).getName().split("\\.")[0], PathPlanner.loadPathGroup(files.get(0).getName().split("\\.")[0], new PathConstraints(3.25, 2)));
   }
