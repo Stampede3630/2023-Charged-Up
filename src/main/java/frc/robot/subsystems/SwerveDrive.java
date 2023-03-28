@@ -360,12 +360,12 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
       if (llPose.aprilTagAmount > 1) {
         Commands.print(">1 tag").schedule();
         double dist = llPose.minus(robotPose).getTranslation().getNorm();
-        if (dist > .1){}
-          // m_odometry.resetPosition(getRobotAngle(), m_driveTrain.getModulePositions(), llPose);
-        else
+        if (dist > .1) // reset the pose if we're off by more than 10 cm
+           m_odometry.resetPosition(getRobotAngle(), m_driveTrain.getModulePositions(), llPose);
+        else // otherwise if we're pretty close, add a visions measurement with a high trust
           m_odometry.addVisionMeasurement(llPose, Timer.getFPGATimestamp() - llPose.latency, VecBuilder.fill(0.0001, 0.0001, Units.degreesToRadians(5)));
       } else {
-        Commands.print("1 tag").schedule();
+        Commands.print("1 tag").schedule(); //  if only 1 tag then do vision measurement with lower trust
         m_odometry.addVisionMeasurement(llPose, Timer.getFPGATimestamp() - llPose.latency, VecBuilder.fill(0.1, 0.1, Units.degreesToRadians(30)));
       }
     }
