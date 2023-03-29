@@ -33,11 +33,7 @@ import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.ProxyCommand;
-import edu.wpi.first.wpilibj2.command.RepeatCommand;
+import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.NodePosition.NodeGrid;
@@ -48,6 +44,7 @@ import frc.robot.subsystems.*;
 import frc.robot.subsystems.LEDs.LEDMode;
 import frc.robot.subsystems.swerve.SwerveConstants;
 import frc.robot.util.ChangeChecker;
+import frc.robot.util.SendableChooserEnum;
 import frc.robot.util.SendableChooserWrapper;
 import io.github.oblarg.oblog.Logger;
 import io.github.oblarg.oblog.annotations.Config;
@@ -81,12 +78,12 @@ public class RobotContainer {
   // This is just an example event map. It would be better to have a constant,
   // global event map
 
-  private final SendableChooserWrapper<GamePieceType> gamePieceTypeChooser = new SendableChooserWrapper<>();
-  private final SendableChooser<frc.robot.NodePosition.NodeGroup> nodeGroupChooser = new SendableChooser<>();
-  private final SendableChooser<NodeGrid> nodeGridChooser = new SendableChooser<>();
-  private final SendableChooser<PickupLocation> pickupLocationChooser = new SendableChooser<>();
+  private final SendableChooserEnum<GamePieceType> gamePieceTypeChooser = new SendableChooserEnum<>(GamePieceType.class, GamePieceType.UPRIGHT_CONE);
+  private final SendableChooserEnum<frc.robot.NodePosition.NodeGroup> nodeGroupChooser = new SendableChooserEnum<>(NodeGroup.class, NodeGroup.CENTER);
+  private final SendableChooserEnum<NodeGrid> nodeGridChooser = new SendableChooserEnum<>(NodeGrid.class, NodeGrid.MID_CENTER);
+  private final SendableChooserEnum<PickupLocation> pickupLocationChooser = new SendableChooserEnum<>(PickupLocation.class, PickupLocation.GROUND);
   private final SendableChooser<List<PathPlannerTrajectory>> autoSelect = new SendableChooser<>();
-  private PowerDistribution pdh = new PowerDistribution(1,ModuleType.kRev);
+  private final PowerDistribution pdh = new PowerDistribution(1,ModuleType.kRev);
 
   private final SwerveDrive s_SwerveDrive = SwerveDrive.getInstance();
   // The robot's subsystems and commands are defined here...
@@ -148,25 +145,8 @@ public class RobotContainer {
       .add("PDH", pdh)
       .withWidget(BuiltInWidgets.kPowerDistribution);
 
-    for (GamePieceType orientation : GamePieceType.values()) {
-      gamePieceTypeChooser.addOption(orientation.name(), orientation);
-    }
-    gamePieceTypeChooser.setDefaultOption(GamePieceType.TIPPED_CONE.name(), GamePieceType.TIPPED_CONE);
-    for (NodeGroup group : NodeGroup.values()) {
-      nodeGroupChooser.addOption(group.name(), group);
-    }
-    nodeGroupChooser.setDefaultOption(NodeGroup.CENTER.name(), NodeGroup.CENTER);
-    for (NodeGrid child : NodeGrid.values()) {
-      nodeGridChooser.addOption(child.name(), child);
-    }
-    nodeGridChooser.setDefaultOption(NodeGrid.MID_CENTER.name(), NodeGrid.MID_CENTER);
-    for (PickupLocation loc : PickupLocation.values()) {
-      pickupLocationChooser.addOption(loc.name(), loc);
-    }
-    pickupLocationChooser.setDefaultOption(PickupLocation.GROUND.name(), PickupLocation.GROUND);
-
     Shuffleboard.getTab("nodeSelector")
-        .add("orientation", gamePieceTypeChooser)
+        .add("Game Piece Type", gamePieceTypeChooser)
         .withWidget("Big Split Button Chooser")
         .withPosition(0, 0)
         .withSize(8, 3);
