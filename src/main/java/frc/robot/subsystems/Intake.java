@@ -34,7 +34,8 @@ public class Intake extends SubsystemBase implements Loggable, Disableable, Enab
     @Log
     private double filteredCurrent;
     private final Debouncer m_debouncer = new Debouncer(0.1, DebounceType.kRising);
-    public Intake() {
+    private static Intake instance;
+    private Intake() {
         m_intakeMotor = new TalonFX(14, "rio");
         m_intakeMotor.getConfigurator().refresh(motorConfig);
         motorConfig.CurrentLimits.StatorCurrentLimit = 80;
@@ -48,6 +49,12 @@ public class Intake extends SubsystemBase implements Loggable, Disableable, Enab
         m_intakeMotor.getConfigurator().apply(motorConfig);
         // cannonExtension.setInverted(true);
         //changed idle mode to help with troubleshooting    
+    }
+
+    public static Intake getInstance() {
+        if (instance == null)
+            instance = new Intake();
+        return instance;
     }
 
     @Override

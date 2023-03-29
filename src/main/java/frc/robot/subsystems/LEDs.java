@@ -27,16 +27,23 @@ public class LEDs extends SubsystemBase {
   private int chaseColorsSlot = 0;
   private double chaseSeparator = 0; 
   private LEDMode mode = LEDMode.RAINBOW;
+  private static LEDs instance;
   
   /** Creates a new LEDs. */
-  public LEDs() {
+  private LEDs() {
     this(9, 156);
   }
 
-  public LEDs(int port, int length) {
-    m_led = new AddressableLED(9);
+  private LEDs(int port, int length) {
+    m_led = new AddressableLED(port);
     m_led.setLength(length);
     m_LEDBuffer = new AddressableLEDBuffer(length);
+  }
+
+  public static LEDs getInstance() {
+    if (instance == null)
+      instance = new LEDs();
+    return instance;
   }
 
   @Override

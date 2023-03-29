@@ -21,11 +21,8 @@ import com.revrobotics.SparkMaxPIDController.ArbFFUnits;
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.Constants;
 import frc.robot.Constants.CannonConstants;
 import frc.robot.Constants.ExtendoConstants;
 import frc.robot.RobotContainer.FacingPOI;
@@ -33,7 +30,7 @@ import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
 
-public class TheCannon extends SubsystemBase implements Loggable {
+public class Cannon extends SubsystemBase implements Loggable {
   /** Creates a new TheCannon. */
 public double extensionReference = ExtendoConstants.INITIALIZED_INCHES;
 @Log
@@ -49,8 +46,9 @@ private final SparkMaxLimitSwitch extensionHardStop = cannonExtension.getReverse
 
 private final SparkMaxPIDController cannonRotLeadPID = cannonRotLead.getPIDController();
 private final SparkMaxPIDController cannonExtensionPID = cannonExtension.getPIDController();
+private static Cannon instance;
 
-  public TheCannon() {
+  private Cannon() {
     cannonAbsolute.setInverted(false);
     cannonAbsolute.setPositionConversionFactor(CannonConstants.CONVERSION_FACTOR);
     cannonAbsolute.setVelocityConversionFactor(CannonConstants.CONVERSION_FACTOR);
@@ -97,6 +95,12 @@ private final SparkMaxPIDController cannonExtensionPID = cannonExtension.getPIDC
     cannonExtension.burnFlash();
 
 
+  }
+
+  public static Cannon getInstance() {
+    if (instance == null)
+      instance = new Cannon();
+    return instance;
   }
 
   @Log

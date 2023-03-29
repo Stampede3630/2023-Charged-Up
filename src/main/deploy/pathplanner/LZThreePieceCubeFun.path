@@ -158,13 +158,13 @@
     {
       "position": 3.6,
       "names": [
-        "autoIntake"
+        "autoIntakeCube"
       ]
     },
     {
       "position": 2.563636363636362,
       "names": [
-        "autoIntake"
+        "autoIntakeCube"
       ]
     }
   ]

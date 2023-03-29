@@ -71,8 +71,9 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
   @Log
   public Field2d m_field;
   public double[] akitPose = {0,0,0};
+  private static SwerveDrive instance;
 
-  public SwerveDrive() {
+  private SwerveDrive() {
     rotLimiter = new SlewRateLimiter(4.5*4*2); //max rate 9.52
     rollRotationController =new ProfiledPIDController(5.4/67, 0, 0, 
       new TrapezoidProfile.Constraints(.7,.7));
@@ -136,6 +137,11 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
     drawRobotOnField(m_field);
   }
 
+  public static SwerveDrive getInstance() {
+    if (instance == null)
+      instance = new SwerveDrive();
+    return instance;
+  }
 
   public CommandBase joystickDriveCommand(DoubleSupplier _x, DoubleSupplier _y, DoubleSupplier _rot){
     return Commands.run(

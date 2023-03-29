@@ -58,6 +58,8 @@ sourceSets {
 // Also defines JUnit 5.
 dependencies {
     implementation "com.github.Oblarg:Oblog:5.1.0"
+    implementation 'org.reflections:reflections:0.10.2'
+
     implementation wpi.java.deps.wpilib()
     implementation wpi.java.vendor.java()
 

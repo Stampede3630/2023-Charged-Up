@@ -5,7 +5,9 @@
 package frc.robot;
 
 import java.io.File;
+import java.lang.reflect.Method;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import com.pathplanner.lib.PathConstraints;
 import com.pathplanner.lib.PathPlanner;
@@ -36,7 +38,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ProxyCommand;
 import edu.wpi.first.wpilibj2.command.RepeatCommand;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.NodePosition.NodeGrid;
@@ -51,6 +52,10 @@ import frc.robot.util.SendableChooserWrapper;
 import io.github.oblarg.oblog.Logger;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
+import org.reflections.Reflections;
+import org.reflections.scanners.Scanners;
+import org.reflections.util.ConfigurationBuilder;
+import org.reflections.util.FilterBuilder;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -66,8 +71,8 @@ public class RobotContainer {
   /* Controller setup. For simulations google: x360CE */
   private final CommandXboxController xBox = new CommandXboxController(0);
 
-  SwerveAutoBuilder autoBuilder;
-  private SwerveAutoBuilder otfBuilder;
+  private SwerveAutoBuilder autoBuilder;
+  private final SwerveAutoBuilder otfBuilder;
 
   // This is just an example event map. It would be better to have a constant,
   // global event map
@@ -76,20 +81,20 @@ public class RobotContainer {
   // This is just an example event map. It would be better to have a constant,
   // global event map
 
-  SendableChooserWrapper<GamePieceType> gamePieceTypeChooser = new SendableChooserWrapper<>();
-  SendableChooser<frc.robot.NodePosition.NodeGroup> nodeGroupChooser = new SendableChooser<>();
-  SendableChooser<NodeGrid> nodeGridChooser = new SendableChooser<>();
-  SendableChooser<PickupLocation> pickupLocationChooser = new SendableChooser<>();
-  SendableChooser<List<PathPlannerTrajectory>> autoSelect = new SendableChooser<>();
-  PowerDistribution pdh = new PowerDistribution(1,ModuleType.kRev);
+  private final SendableChooserWrapper<GamePieceType> gamePieceTypeChooser = new SendableChooserWrapper<>();
+  private final SendableChooser<frc.robot.NodePosition.NodeGroup> nodeGroupChooser = new SendableChooser<>();
+  private final SendableChooser<NodeGrid> nodeGridChooser = new SendableChooser<>();
+  private final SendableChooser<PickupLocation> pickupLocationChooser = new SendableChooser<>();
+  private final SendableChooser<List<PathPlannerTrajectory>> autoSelect = new SendableChooser<>();
+  private PowerDistribution pdh = new PowerDistribution(1,ModuleType.kRev);
 
-  private final SwerveDrive s_SwerveDrive = new SwerveDrive();
+  private final SwerveDrive s_SwerveDrive = SwerveDrive.getInstance();
   // The robot's subsystems and commands are defined here...
-  private final TheCannon s_Cannon = new TheCannon();
+  private final Cannon s_Cannon = Cannon.getInstance();
 
-  private final LEDs s_LEDs = new LEDs();
+  private final LEDs s_LEDs = LEDs.getInstance();
   private final Lid s_Lid = Lid.getInstance();
-  private final Intake s_Intake = new Intake();
+  private final Intake s_Intake = Intake.getInstance();
   @Log(tabName = "nodeSelector")
   public double intakeCannonAngle;
   @Log(tabName = "nodeSelector")
@@ -106,6 +111,7 @@ public class RobotContainer {
   private final double[] akitPose = new double[3];
   private final double[] akitInitPose = new double[3];
 
+  @Config.ToggleButton()
   private boolean cancelAutoTurn;
 
 
@@ -193,16 +199,6 @@ public class RobotContainer {
       .withPosition(0, 3)
       .withSize(8, 3);
 
-    HashMap<String, Command> eventMap = new HashMap<>();
-    eventMap.put("1stBallPickup", new WaitCommand(2));
-    eventMap.put("autoScoreHigh", autoScoreHighCube());
-    eventMap.put("autoScoreHighCone", autoScoreHighCone());
-    eventMap.put("autoIntake", autoIntakeCube());
-    eventMap.put("autoIntakeCone", autoIntakeCone());
-    eventMap.put("autoBalance", s_SwerveDrive.autoBalanceCommand());
-    eventMap.put("autoScoreMidCube", autoScoreMidCube());
-    eventMap.put("autoScoreMidCone", autoScoreMidCone());
-    eventMap.put("autoScoreLowCube", autoScoreLowCube());
 
     otfBuilder = new SwerveAutoBuilder(
             s_SwerveDrive::getOdometryPose, // Pose2d supplier
@@ -505,103 +501,6 @@ public class RobotContainer {
         }
     }
   }
-  
-  public Command autoScoreHighCube() { //works if running as NOT first command (for some reason) -ej 3/15
-    return Commands.runOnce(()->s_Lid.setLid(100.0))
-      .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(NodePosition.NodeGrid.HIGH_CENTER.getNodeCannonAngleLidDown())))
-      .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
-      .andThen(Commands.runOnce(()-> s_Cannon.setExtensionReference(23.5)).alongWith(Commands.print("extendo")))
-      .andThen(Commands.waitSeconds(0.2))
-      .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
-      .andThen(()->s_Intake.setIntake(0.4))
-      .andThen(Commands.waitSeconds(0.5))
-      .andThen(Commands.runOnce(s_Intake::stopIntake))
-      .andThen(s_Intake::leaveGamePiece)
-      .andThen(s_Cannon.setExtensionWait(() -> 1))
-      .andThen(Commands.runOnce(()-> s_Lid.setLid(60.0)))
-      .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(120.0)));
-      }
-
-  public Command autoScoreHighCone() {
-    return Commands.runOnce(()->s_Lid.setLid(NodePosition.NodeGrid.HIGH_LEFT.getNodeLidPositionLidDown()))
-      .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(NodePosition.NodeGrid.HIGH_LEFT.getNodeCannonAngleLidDown())))
-      .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
-      .andThen(s_Cannon.setExtensionWait(() -> NodePosition.NodeGrid.HIGH_LEFT.getExtension()))
-      .andThen(()->s_Intake.setIntake(-1.0))
-      .andThen(Commands.waitSeconds(0.5))
-      .andThen(Commands.runOnce(s_Intake::stopIntake))
-      .andThen(s_Intake::leaveGamePiece)
-      .andThen(s_Cannon.setExtensionWait(() -> 1))
-      .andThen(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle)))
-      .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(177.0)));
-  }
-
-  public Command autoScoreMidCone() {
-    return Commands.runOnce(()->s_Lid.setLid(NodePosition.NodeGrid.MID_LEFT.getNodeLidPositionLidDown()))
-      .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(NodePosition.NodeGrid.MID_LEFT.getNodeCannonAngleLidDown())))
-      .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
-      .andThen(s_Cannon.setExtensionWait(NodeGrid.MID_LEFT::getExtension))
-      .andThen(()->s_Intake.setIntake(-1.0))
-      .andThen(Commands.waitSeconds(0.5))
-      .andThen(Commands.runOnce(s_Intake::stopIntake))
-      .andThen(s_Intake::leaveGamePiece)
-      .andThen(s_Cannon.setExtensionWait(() -> 1))
-      .andThen(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle)))
-      .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(177.0)));
-  } 
-
-  public Command autoScoreMidCube() { //works -ej 3/15
-    return Commands.runOnce(()->s_Lid.setLid(100.0))
-    .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(38.0)))
-    .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
-    .andThen(s_Cannon.setExtensionWait(() -> 2))
-    .andThen(()->s_Intake.setIntake(0.4))
-    .andThen(Commands.waitSeconds(0.5))
-    .andThen(Commands.runOnce(s_Intake::stopIntake))
-    .andThen(s_Intake::leaveGamePiece)
-    .andThen(s_Cannon.setExtensionWait(() -> 1))
-    .andThen(Commands.runOnce(()-> s_Lid.setLid(100.0)))
-    .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(177.0)));
-  }
-
-  public Command autoScoreLowCube() { 
-    return Commands.runOnce(()->s_Cannon.setCannonAngle(-7.5))
-    .andThen(Commands.runOnce(()->  s_Lid.setLid(80.0)))
-    .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
-    .andThen(s_Cannon.setExtensionWait(() -> 1))
-    .andThen(()->s_Intake.setIntake(0.4))
-    .andThen(Commands.waitSeconds(0.5))
-    .andThen(Commands.runOnce(s_Intake::stopIntake))
-    .andThen(s_Intake::leaveGamePiece)
-    .andThen(s_Cannon.setExtensionWait(() -> 1))
-    .andThen(Commands.runOnce(()-> s_Lid.setLid(100.0)))
-    .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(100.0)));
-  }
-
-  public Command autoIntakeCube() { //works -ej 3/15
-    return s_Cannon.setCannonAngleWait(() -> 200)
-    .andThen(s_Cannon.setExtensionWait(() -> 2.5))
-    .andThen(Commands.runOnce(()->s_Lid.setLid(60.0)))
-    .andThen(Commands.runOnce(()-> s_Intake.setIntake(-1.0)))
-      .andThen(Commands.waitSeconds(.1)
-        .andThen(Commands.waitSeconds(2.0)
-        .deadlineWith(Commands.waitUntil(s_Intake::checkForCube))))
-    .andThen(Commands.runOnce(s_Intake::stopIntake))
-    .andThen(Commands.runOnce(()->s_Lid.setLid(100.0)))
-    .andThen(s_Cannon.setCannonAngleWait(() -> 90));
-  }
-
-  public Command autoIntakeCone() { 
-    return s_Cannon.setCannonAngleWait(() -> 193)
-    .andThen(s_Cannon.setExtensionWait(() -> 1))
-    .andThen(Commands.runOnce(()->s_Lid.setLid(140.0)))
-    .andThen(Commands.runOnce(()-> s_Intake.setIntake(1.0))
-      .andThen(Commands.waitSeconds(.1)
-        .andThen(Commands.waitSeconds(2.0)))
-        .deadlineWith(s_Intake.waitUntilHaveGamePiece(() -> false)))
-    .andThen(Commands.runOnce(s_Intake::stopIntake))
-    .andThen(Commands.runOnce(()->s_Lid.setLid(100.0)));
-  }
 
   private void loadPaths() {
     autoBuilder = new SwerveAutoBuilder(
@@ -617,15 +516,13 @@ public class RobotContainer {
             s_SwerveDrive // The drive subsystem. Used to properly set the requirements of path following
             // commands
     );
-    eventMap.put("1stBallPickup", new WaitCommand(2));
-    eventMap.put("autoScoreHigh", autoScoreHighCube());
-    eventMap.put("autoScoreHighCone", autoScoreHighCone());
-    eventMap.put("autoIntake", autoIntakeCube());
-    eventMap.put("autoIntakeCone", autoIntakeCone());
-    eventMap.put("autoBalance", s_SwerveDrive.autoBalanceCommand());
-    eventMap.put("autoScoreMidCube", autoScoreMidCube());
-    eventMap.put("autoScoreMidCone", autoScoreMidCone());
-    eventMap.put("autoScoreLowCube", autoScoreLowCube());
+    Reflections reflections = new Reflections(new ConfigurationBuilder().forPackage("frc.robot").addScanners(Scanners.MethodsReturn).filterInputsBy(new FilterBuilder().includePackage("frc.robot")));
+    Set<Method> methods = reflections.getMethodsReturn(Command.class).stream().filter(method -> method.getParameterCount() == 0 && method.getDeclaringClass().equals(AutonomousCommands.class)).collect(Collectors.toSet());
+    methods.forEach(method -> {
+      try {
+        eventMap.put(method.getName(), (Command) method.invoke(AutonomousCommands.getInstance()));
+      } catch (Exception ignored) {}
+    });
 
     // load autos completely dynamically -- any autos in pathplanner folder will be added to selector
     List<File> files = List.of(
