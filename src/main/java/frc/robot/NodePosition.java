@@ -15,13 +15,17 @@ public class NodePosition {
     public double getYCoord() {
         return yCoord;
     }
-
+    public NodeGrid getNodeGrid() {
+        return nodeGrid;
+    }
+    public NodeGroup getNodeGroup() {
+        return nodeGroup;
+    }
     private NodePosition(double xCoord, double yCoord, NodeGrid nodeGrid, NodeGroup nodeGroup) {
       this.xCoord = xCoord;
       this.yCoord = yCoord;
       this.nodeGrid = nodeGrid;
       this.nodeGroup = nodeGroup;
-
     }
     public enum NodeGroup{ // from the blue side
         LEFT(61.0+15,132+42.19), // 4.37 m for y????

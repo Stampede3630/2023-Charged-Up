@@ -9,8 +9,6 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import frc.robot.util.SwerveKinematics2;
-import frc.robot.util.SwerveModuleState2;
 
 public class QuadFalconSwerveDrive {
   public NeutralModeValue NeutralMode = NeutralModeValue.Brake;
