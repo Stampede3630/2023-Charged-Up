@@ -206,5 +206,13 @@
     "properties": {
       "persistent": true
     }
+  },
+  {
+    "name": "/Preferences/CannonAngleOffset",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "persistent": true
+    }
   }
 ]

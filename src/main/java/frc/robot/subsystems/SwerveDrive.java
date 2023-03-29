@@ -79,7 +79,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
       Preferences.getDouble("pKPRotationController", SwerveConstants.P_ROTATION_CONTROLLER),
       Preferences.getDouble("pIPRotationController", SwerveConstants.I_ROTATION_CONTROLLER),
       Preferences.getDouble("pKDRotationController", SwerveConstants.D_ROTATION_CONTROLLER),
-      new TrapezoidProfile.Constraints(Units.radiansToDegrees(SwerveConstants.MAX_SPEED_RADIANSperSECOND), 5*Units.radiansToDegrees(SwerveConstants.MAX_SPEED_RADIANSperSECOND)));
+      new TrapezoidProfile.Constraints(SwerveConstants.MAX_SPEED_RADIANSperSECOND, 5*Units.radiansToDegrees(SwerveConstants.MAX_SPEED_RADIANSperSECOND)));
     rotationController.enableContinuousInput(-180.0, 180.0);
     rotationController.setTolerance(4.0);
     //NAVX gyro and sim setup
@@ -127,8 +127,8 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
 
     robotPose = updateOdometry();
 
-//    limelightOdometry("limelight-front");
-//    limelightOdometry("limelight-back");
+   limelightOdometry("limelight-front");
+   limelightOdometry("limelight-back");
 
     drawRobotOnField(m_field);
   }
@@ -174,8 +174,8 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
 
   public double updateRotationController(){
       rotationControllerOutput = rotationController.calculate(
-          Math.IEEEremainder(getRobotAngleDegrees(), 360),
-          new State(holdHeadingAngle, 0.0))/-Units.radiansToDegrees(SwerveConstants.MAX_SPEED_RADIANSperSECOND);
+          robotPose.getRotation().getRadians(),
+          new State(holdHeadingAngle, 0.0));
       return rotationControllerOutput;
   }
 

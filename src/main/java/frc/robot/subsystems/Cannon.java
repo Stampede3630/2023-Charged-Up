@@ -217,10 +217,9 @@ private static Cannon instance;
   }
   @Config.NumberSlider(max = 230, min = -20, defaultValue = CannonConstants.INITIALIZED_ANGLE)
   public void setCannonAngle(double input){
-    cannonReference = input;
+    cannonReference = input+Preferences.getDouble("CannonAngleOffset", CannonConstants.OFFSET);
     cannonRotLeadPID.setReference(getRevReferenceAngleSetpoint(), ControlType.kPosition, 0, getArbitraryFeedForward(), ArbFFUnits.kVoltage);
   }
-
 
   public Command setCannonAngleWait(DoubleSupplier angleGetter) {
     return new FunctionalCommand(

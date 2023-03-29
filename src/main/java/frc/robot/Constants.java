@@ -38,12 +38,13 @@ public final class Constants {
     public static final double KGB = 8.57E-3;
 
     public static final double CONVERSION_FACTOR = 360;
-    public static final double ZERO_OFFSET = 360+(143.6330116-180 - 6.0); //4.0 added for error compensation
+    public static final double ZERO_OFFSET = 320.6420803 + 180 - 360;
     public static final int  CURRENT_LIMIT = 60; //used to be 70
     public static final float FORWARD_LIMIT = 220.0f;
     public static final float REVERSE_LIMIT = -20.0f;
     public static final double INITIALIZED_ANGLE = 90.0;
     public static final double ERROR = 20.0;
+    public static final double OFFSET = 0;
   }
 
   public static final class ExtendoConstants{
@@ -70,7 +71,7 @@ public final class Constants {
     public static final double CONVERSION_FACTOR = 360;
     public static final float FORWARD_LIMIT = 260.0f;
     public static final float REVERSE_LIMIT = 28.0f;
-    public static final double ZERO_OFFSET = 360 - 12.0-29 + 20;
+    public static final double ZERO_OFFSET = 360 - 12.0-29 + 20+5;
     public static final int  CURRENT_LIMIT = 10; 
     public static final double ERROR = 10;
 
@@ -88,5 +89,7 @@ public final class Constants {
   public static final class AutoConstants {
     public static final double t_KP = 15.0; 
     public static final double r_KP = 7.0;
+    public static final double MAX_VELOCITY = 2;
+    public static final double MAX_ACCELERATION = 2;
   }
 }

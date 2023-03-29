@@ -45,7 +45,6 @@ import frc.robot.subsystems.LEDs.LEDMode;
 import frc.robot.subsystems.swerve.SwerveConstants;
 import frc.robot.util.ChangeChecker;
 import frc.robot.util.SendableChooserEnum;
-import frc.robot.util.SendableChooserWrapper;
 import io.github.oblarg.oblog.Logger;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
@@ -131,6 +130,7 @@ public class RobotContainer {
     Preferences.initDouble("CannonKP", CannonConstants.KP);
     Preferences.initDouble("CannonKI", CannonConstants.KI);
     Preferences.initDouble("CannonKD", CannonConstants.KD);
+    Preferences.initDouble("CannonAngleOffset", CannonConstants.OFFSET);
     Preferences.initDouble("ExtensionKP", ExtendoConstants.KP);
     Preferences.initDouble("ExtensionKI", ExtendoConstants.KI);
     Preferences.initDouble("ExtensionPD", ExtendoConstants.KD);
@@ -248,7 +248,7 @@ public class RobotContainer {
 
     xBox.rightStick()
       .debounce(.1)
-      .onTrue(Commands.runOnce(() -> {sniperMode = true; s_SwerveDrive.setHoldHeadingAngle(robotFacing() == FacingPOI.HUMAN_PLAYER ? 0 : 180); s_SwerveDrive.setHoldHeadingFlag(true);}))
+      .onTrue(Commands.runOnce(() -> {sniperMode = true; s_SwerveDrive.setHoldHeadingAngle(0); s_SwerveDrive.setHoldHeadingFlag(true);}))
       .onFalse(Commands.runOnce(() -> {sniperMode = false; s_SwerveDrive.setHoldHeadingFlag(false);}));
     // new Trigger(() -> Math.abs(xBox.getRightX()) < .1)
     //     .and(s_SwerveDrive::getHoldHeadingFlag)
@@ -288,9 +288,11 @@ public class RobotContainer {
     //-> intake trigger
     xBox.rightTrigger(.1).debounce(.1, DebounceType.kFalling)
         .onTrue(
-          Commands.runOnce(() -> {s_SwerveDrive.setHoldHeadingAngle(DriverStation.getAlliance() == Alliance.Red ? -90 : 90); s_SwerveDrive.setHoldHeadingFlag(true);})
+          Commands.runOnce(() -> {s_SwerveDrive.setHoldHeadingAngle(DriverStation.getAlliance() == Alliance.Red ? -Math.PI/2 : Math.PI/2); s_SwerveDrive.setHoldHeadingFlag(true);})
             .unless(() -> pickupLocationChooser.getSelected() != PickupLocation.CHUTE || cancelAutoTurn)
-          .andThen(Commands.waitUntil(s_SwerveDrive::getAtGoal))
+          .andThen(Commands.waitUntil(s_SwerveDrive::getAtGoal)
+            .unless(() -> pickupLocationChooser.getSelected() != PickupLocation.CHUTE || cancelAutoTurn)
+            .until(xBox.rightTrigger(.2).debounce(.2, DebounceType.kFalling).negate()))
           .andThen(
             Commands.either(
               s_Cannon.setCannonAngleWait(() -> intakeCannonAngle)
@@ -511,9 +513,9 @@ public class RobotContainer {
     for (File file : files) {
       String pathName = file.getName().split("\\.")[0];
       autoSelect.addOption(pathName, PathPlanner.loadPathGroup(pathName,
-        new PathConstraints(2.0, 2.0)));
+        new PathConstraints(AutoConstants.MAX_VELOCITY, AutoConstants.MAX_ACCELERATION)));
     }
-    autoSelect.setDefaultOption(files.get(0).getName().split("\\.")[0], PathPlanner.loadPathGroup(files.get(0).getName().split("\\.")[0], new PathConstraints(3.25, 2)));
+    autoSelect.setDefaultOption(files.get(0).getName().split("\\.")[0], PathPlanner.loadPathGroup(files.get(0).getName().split("\\.")[0], new PathConstraints(AutoConstants.MAX_VELOCITY, AutoConstants.MAX_ACCELERATION)));
   }
 
   public Command getAutonomousCommand() {
@@ -638,7 +640,4 @@ public class RobotContainer {
     else // opp < 0, quad III
       return new Rotation2d(-(Math.PI)+Math.atan(opp/adj));
   }
-  
-
-
 }
