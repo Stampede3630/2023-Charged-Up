@@ -312,7 +312,6 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
   public void setToCoast(){
     m_driveTrain.setToCoast();
   }
-  @Log
   public double xMeters(){
     return m_odometry.getEstimatedPosition().getX();
   }

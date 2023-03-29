@@ -31,7 +31,6 @@ public class Intake extends SubsystemBase implements Loggable, Disableable, Enab
     private TalonFXConfiguration motorConfig = new TalonFXConfiguration();
     @Config
     public double MAX_SPEED_RPS = 75;
-    @Log
     private double filteredCurrent;
     private final Debouncer m_debouncer = new Debouncer(0.1, DebounceType.kRising);
     private static Intake instance;
@@ -88,19 +87,12 @@ public class Intake extends SubsystemBase implements Loggable, Disableable, Enab
         speed = 0;
     }
 
-    @Log
     public double getMotorTemp() {
         return m_intakeMotor.getDeviceTemp().getValue();
     }
 
-    @Log.Graph
     public double getIntakeCurrent() {
         return m_intakeMotor.getStatorCurrent().getValue();
-    }
-
-    @Log
-    public double getVoltage() {
-        return m_intakeMotor.getSupplyVoltage().getValue();
     }
 
     /**
@@ -187,7 +179,6 @@ public class Intake extends SubsystemBase implements Loggable, Disableable, Enab
      * gets the velocity of the intake motor (rot/s)
      * @return velocity of the intake motor in rot/s
      */
-    @Log.Graph
   public double getVelocity() {
     return m_intakeMotor.getRotorVelocity().getValue();
   }
