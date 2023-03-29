@@ -44,6 +44,7 @@ import io.github.oblarg.oblog.annotations.Log;
 
 import java.sql.Driver;
 import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 
 
 public class SwerveDrive extends SubsystemBase implements Loggable {
@@ -133,7 +134,6 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
     limelightOdometry("limelight-back");
 
     drawRobotOnField(m_field);
-    updateRotationController();
   }
 
 
@@ -164,26 +164,17 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
             new Translation2d(
               convertToMetersPerSecond(x)*joystickDriveGovernor,
               convertToMetersPerSecond(y)*joystickDriveGovernor), 
-              convertToRadiansPerSecond(rot)* joystickDriveGovernor,
+              holdHeadingEnabled  ? updateRotationController() : convertToRadiansPerSecond(rot)* joystickDriveGovernor,
             Preferences.getBoolean("pFieldRelative", Constants.DriverConstants.FIELD_RELATIVE));
         // }
         }, this);
   }
 
-  public Command holdHeadingCommand(DoubleSupplier xSpeed, DoubleSupplier ySpeed) {
-    return joystickDriveCommand(
-                xSpeed,
-                ySpeed,
-                ()->rotationControllerOutput
-            );
-  }
-
-  public void updateRotationController(){
-    if(holdHeadingEnabled){
+  public double updateRotationController(){
       rotationControllerOutput = rotationController.calculate(
           Math.IEEEremainder(getRobotAngleDegrees(), 360),
           new State(holdHeadingAngle, 0.0))/-Units.radiansToDegrees(SwerveConstants.MAX_SPEED_RADIANSperSECOND);
-    }
+      return rotationControllerOutput;
   }
 
   public boolean getAtGoal(){

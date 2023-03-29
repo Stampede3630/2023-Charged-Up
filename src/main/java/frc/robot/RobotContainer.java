@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
@@ -104,6 +105,8 @@ public class RobotContainer {
   private HashMap<String, Command> eventMap = new HashMap<>();
   private final double[] akitPose = new double[3];
   private final double[] akitInitPose = new double[3];
+
+  private boolean cancelAutoTurn;
 
 
   // private GamePieceType prev;  
@@ -258,6 +261,10 @@ public class RobotContainer {
             .alongWith(Commands.runOnce(s_Cannon::setCannonToBrake))
             .alongWith(Commands.runOnce(s_Intake::onEnable)).ignoringDisable(true));
 
+          //   s_SwerveDrive.joystickDriveCommand(
+          // () -> xBox.getLeftY() * (sniperMode ? 0.6 : 1),
+          // () -> xBox.getLeftX() * (sniperMode ? 0.6 : 1),
+          // () -> xBox.getRightX() * (sniperMode ? 1 : 1))
 
     /*
      * HOLD HEADING mode and set a heading
@@ -265,22 +272,22 @@ public class RobotContainer {
 
     xBox.rightStick()
       .debounce(.1)
-      .onTrue(Commands.runOnce(() -> sniperMode = true))
-      .onFalse(Commands.runOnce(() -> sniperMode = false));
-    new Trigger(() -> Math.abs(xBox.getRightX()) < .1)
-        .and(s_SwerveDrive::getHoldHeadingFlag)
-        .and(new Trigger(s_SwerveDrive::getAtGoal).negate())
-        .whileTrue(
-            s_SwerveDrive.holdHeadingCommand(
-                xBox::getLeftY,
-                xBox::getLeftX)
-                .withName("holdHeading"))
-        .whileFalse(
-            s_SwerveDrive.joystickDriveCommand(
-                xBox::getLeftY,
-                xBox::getLeftX,
-                xBox::getRightX)
-                .withName("StandardOperatorDrive"));
+      .onTrue(Commands.runOnce(() -> {sniperMode = true; s_SwerveDrive.setHoldHeadingAngle(robotFacing() == FacingPOI.HUMAN_PLAYER ? 0 : 180); s_SwerveDrive.setHoldHeadingFlag(true);}))
+      .onFalse(Commands.runOnce(() -> {sniperMode = false; s_SwerveDrive.setHoldHeadingFlag(false);}));
+    // new Trigger(() -> Math.abs(xBox.getRightX()) < .1)
+    //     .and(s_SwerveDrive::getHoldHeadingFlag)
+    //     .and(new Trigger(s_SwerveDrive::getAtGoal).negate())
+    //     .whileTrue(
+    //         s_SwerveDrive.holdHeadingCommand(
+    //             xBox::getLeftY,
+    //             xBox::getLeftX)
+    //             .withName("holdHeading"))
+    //     .whileFalse(
+    //         s_SwerveDrive.joystickDriveCommand(
+    //             xBox::getLeftY,
+    //             xBox::getLeftX,
+    //             xBox::getRightX)
+    //             .withName("StandardOperatorDrive"));
 
     //-> Manual Cannon and Extension triggers    
     xBox.povUp()
@@ -305,21 +312,28 @@ public class RobotContainer {
     //-> intake trigger
     xBox.rightTrigger(.1).debounce(.1, DebounceType.kFalling)
         .onTrue(
-          Commands.either(
-            s_Cannon.setCannonAngleWait(() -> intakeCannonAngle)
-              .andThen(s_Cannon.setExtensionWait(() -> intakeExtensionInches)),
-            s_Cannon.setExtensionWait(() -> intakeExtensionInches)
-              .andThen(s_Cannon.setCannonAngleWait(() -> intakeCannonAngle)),
-            () -> s_Cannon.getExtensionEncoder() < 10) // "dangerous" or not
-          .alongWith(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle)))
-          .andThen(Commands.runOnce(()-> s_Intake.setIntake(intakeSpeed)))
-          .andThen(s_Intake.waitUntilHaveGamePiece(() -> gamePieceTypeChooser.getSelected() == GamePieceType.CUBE)
-            .raceWith(Commands.waitUntil(xBox.rightTrigger(.2).debounce(.2, DebounceType.kFalling).negate())))
-          .andThen(Commands.runOnce(s_Intake::stopIntake)))
+          Commands.runOnce(() -> {s_SwerveDrive.setHoldHeadingAngle(DriverStation.getAlliance() == Alliance.Red ? -90 : 90); s_SwerveDrive.setHoldHeadingFlag(true);})
+            .unless(() -> pickupLocationChooser.getSelected() != PickupLocation.CHUTE || cancelAutoTurn)
+          .andThen(Commands.waitUntil(s_SwerveDrive::getAtGoal))
+          .andThen(
+            Commands.either(
+              s_Cannon.setCannonAngleWait(() -> intakeCannonAngle)
+                .andThen(s_Cannon.setExtensionWait(() -> intakeExtensionInches)),
+              s_Cannon.setExtensionWait(() -> intakeExtensionInches)
+                .andThen(s_Cannon.setCannonAngleWait(() -> intakeCannonAngle)),
+              () -> s_Cannon.getExtensionEncoder() < 10) // "dangerous" or not
+            .alongWith(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle)))
+            .andThen(Commands.runOnce(()-> s_Intake.setIntake(intakeSpeed)))
+            .andThen(s_Intake.waitUntilHaveGamePiece(() -> gamePieceTypeChooser.getSelected() == GamePieceType.CUBE)
+              .raceWith(Commands.waitUntil(xBox.rightTrigger(.2).debounce(.2, DebounceType.kFalling).negate())))
+            .andThen(Commands.runOnce(s_Intake::stopIntake))))
           //.unless(s_Intake::haveGamePiece))
-        .onFalse(Commands.runOnce(s_Intake::stopIntake)
+        .onFalse(
+          Commands.runOnce(s_Intake::stopIntake)
           .andThen(s_Cannon.setExtensionWait(() -> 1))
-          .andThen(Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), 90))));
+          .andThen(Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), 90)))
+          .alongWith(Commands.runOnce(() -> s_SwerveDrive.setHoldHeadingFlag(false)))
+        );
     //-> Outtake trigger
     xBox.leftTrigger(.2).debounce(.15, DebounceType.kBoth)
         .onTrue(Commands.runOnce(()-> s_Intake.setIntake(nodeGridChooser.getSelected().intakeSpeed)).alongWith(Commands.runOnce(s_Intake::leaveGamePiece)))
@@ -426,6 +440,7 @@ public class RobotContainer {
           intakeExtensionInches = 0.0;
           break;
       } 
+
     
     } else if (pickupLocationChooser.getSelected() == PickupLocation.GROUND) { //either facing community or facing HP and picking up from gnd
       //ground
