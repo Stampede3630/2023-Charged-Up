@@ -103,12 +103,10 @@ private static Cannon instance;
     return instance;
   }
 
-  @Log
   public double extendoTemp() {
     return cannonExtension.getMotorTemperature();
   }
 
-  @Log
   public double extendoCurrent() {
     return cannonExtension.getOutputCurrent();
   }
@@ -149,17 +147,14 @@ private static Cannon instance;
     cannonExtension.setIdleMode(IdleMode.kBrake);
   }
 
-  @Log
   public boolean getExtensionHardStop(){
     return extensionHardStop.isPressed();
   }
 
-  @Log
   public boolean cannonErrorWithinRange (){
     return Math.abs(cannonReference - getCannonAngleEncoder()) < CannonConstants.ERROR;
   }
 
-  @Log
   public boolean extensionErrorWithinRange(){
     return Math.abs(extensionReference - getExtensionEncoder()) < ExtendoConstants.ERROR;
   }

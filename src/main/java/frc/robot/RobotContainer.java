@@ -640,9 +640,5 @@ public class RobotContainer {
   }
   
 
-  @Config
-  public void setCannonOffset(double input){
-    s_Cannon.cannonReference += input;
-  }
 
 }

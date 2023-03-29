@@ -20,7 +20,6 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -41,10 +40,7 @@ import frc.robot.util.*;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
-
-import java.sql.Driver;
 import java.util.function.DoubleSupplier;
-import java.util.function.Supplier;
 
 
 public class SwerveDrive extends SubsystemBase implements Loggable {
@@ -312,7 +308,6 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
   public void setToCoast(){
     m_driveTrain.setToCoast();
   }
-  @Log
   public double xMeters(){
     return m_odometry.getEstimatedPosition().getX();
   }

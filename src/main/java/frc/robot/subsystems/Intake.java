@@ -11,7 +11,6 @@ import com.ctre.phoenixpro.signals.NeutralModeValue;
 import com.ctre.phoenixpro.signals.ReverseLimitValue;
 import com.revrobotics.SparkMaxLimitSwitch;
 import edu.wpi.first.math.filter.Debouncer;
-import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.wpilibj2.command.*;
 import frc.robot.subsystems.Lid.LidPosition;
@@ -26,13 +25,9 @@ public class Intake extends SubsystemBase implements Loggable, Disableable, Enab
     private final SparkMaxLimitSwitch intakeHardStop = Lid.getInstance().getReverseLimitSwitch();
     private double speed = 0;
     private boolean haveGamePiece = false;
-    private final LinearFilter currentFilter = LinearFilter.movingAverage(10);
-    private final double A_LITLE_AMOUNT = 1;
     private TalonFXConfiguration motorConfig = new TalonFXConfiguration();
     @Config
     public double MAX_SPEED_RPS = 75;
-    @Log
-    private double filteredCurrent;
     private final Debouncer m_debouncer = new Debouncer(0.1, DebounceType.kRising);
     private static Intake instance;
     private Intake() {
@@ -77,7 +72,6 @@ public class Intake extends SubsystemBase implements Loggable, Disableable, Enab
     @Override
     public void periodic() {
         m_intakeMotor.setControl(new VelocityTorqueCurrentFOC(MAX_SPEED_RPS*speed, 0, 0, false));
-        filteredCurrent = currentFilter.calculate(getIntakeCurrent());
     }
 
     public void setIntake(double intakeSpeed) {
@@ -88,19 +82,12 @@ public class Intake extends SubsystemBase implements Loggable, Disableable, Enab
         speed = 0;
     }
 
-    @Log
     public double getMotorTemp() {
         return m_intakeMotor.getDeviceTemp().getValue();
     }
 
-    @Log.Graph
     public double getIntakeCurrent() {
         return m_intakeMotor.getStatorCurrent().getValue();
-    }
-
-    @Log
-    public double getVoltage() {
-        return m_intakeMotor.getSupplyVoltage().getValue();
     }
 
     /**
@@ -187,7 +174,6 @@ public class Intake extends SubsystemBase implements Loggable, Disableable, Enab
      * gets the velocity of the intake motor (rot/s)
      * @return velocity of the intake motor in rot/s
      */
-    @Log.Graph
   public double getVelocity() {
     return m_intakeMotor.getRotorVelocity().getValue();
   }

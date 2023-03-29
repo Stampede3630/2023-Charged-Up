@@ -1,6 +1,5 @@
 package frc.robot.util;
 
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 
 /** Second order kinematics swerve module state. */

@@ -20,7 +20,6 @@ public class LEDs extends SubsystemBase {
   private final int HUE_CHANGE_PER_SEC = 60;
   private final double CHASE_MOVE_PER_MS = 0.0333;
 
-  private final double STROBE_TIME_MS = 500;
   private double previousTime = System.currentTimeMillis();
   private final Color[][] chaseColors = {{new Color(0,0,255),new Color(255,255,0)},
   {new Color(0,0,0),new Color(255,55,0)}};
