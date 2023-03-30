@@ -107,7 +107,7 @@ public class RobotContainer {
   private final double[] akitPose = new double[3];
   private final double[] akitInitPose = new double[3];
 
-  @Config.ToggleButton()
+  @Config.ToggleButton(tabName = "nodeSelector")
   private boolean cancelAutoTurn;
 
 
@@ -179,7 +179,6 @@ public class RobotContainer {
       .withPosition(0, 3)
       .withSize(8, 3);
 
-
     otfBuilder = new SwerveAutoBuilder(
             s_SwerveDrive::getOdometryPose, // Pose2d supplier
             s_SwerveDrive::resetOdometry, // Pose2d consumer, used to reset odometry at the beginning of auto
@@ -201,7 +200,7 @@ public class RobotContainer {
       s_SwerveDrive.joystickDriveCommand(
           () -> xBox.getLeftY() * (sniperMode ? 0.6 : 1),
           () -> xBox.getLeftX() * (sniperMode ? 0.6 : 1),
-          () -> xBox.getRightX() * (sniperMode ? 1 : 1))
+          xBox::getRightX)
       .withName("DefaultDrive"));
 
           Logger.configureLoggingAndConfig(this, false);
@@ -288,8 +287,12 @@ public class RobotContainer {
     //-> intake trigger
     xBox.rightTrigger(.1).debounce(.1, DebounceType.kFalling)
         .onTrue(
-          Commands.runOnce(() -> {s_SwerveDrive.setHoldHeadingAngle(DriverStation.getAlliance() == Alliance.Red ? -Math.PI/2 : Math.PI/2); s_SwerveDrive.setHoldHeadingFlag(true);})
-            .unless(() -> pickupLocationChooser.getSelected() != PickupLocation.CHUTE || cancelAutoTurn)
+          new FunctionalCommand(() -> {
+            if (pickupLocationChooser.getSelected() == PickupLocation.CHUTE && !cancelAutoTurn) {
+              s_SwerveDrive.setHoldHeadingAngle(DriverStation.getAlliance() == Alliance.Red ? -Math.PI/2 : Math.PI/2);
+              s_SwerveDrive.setHoldHeadingFlag(true);
+            }
+          }, () -> {}, s -> {}, s_SwerveDrive::getAtGoal)
           .andThen(Commands.waitUntil(s_SwerveDrive::getAtGoal)
             .unless(() -> pickupLocationChooser.getSelected() != PickupLocation.CHUTE || cancelAutoTurn)
             .until(xBox.rightTrigger(.2).debounce(.2, DebounceType.kFalling).negate()))
