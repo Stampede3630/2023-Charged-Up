@@ -387,7 +387,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
 
   // }
 
-  @Config.ToggleSwitch(defaultValue = false)
+  @Config.ToggleSwitch(defaultValue = false, tabName = "nodeSelector")
   public void resetToGyro(boolean input){
     if(input){
       m_odometry.resetPosition(gyro.getRotation2d(), m_driveTrain.getModulePositions(), new Pose2d(robotPose.getTranslation(), new Rotation2d(0)));
