@@ -506,6 +506,8 @@ public class RobotContainer {
       } catch (Exception ignored) {}
     });
 
+    eventMap.entrySet().forEach(System.out::println);
+
     // load autos completely dynamically -- any autos in pathplanner folder will be added to selector
     List<File> files = List.of(
             Objects.requireNonNull(new File(Filesystem.getDeployDirectory(), "pathplanner")

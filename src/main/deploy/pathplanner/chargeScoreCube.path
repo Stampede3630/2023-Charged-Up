@@ -17,7 +17,7 @@
       "isStopPoint": false,
       "stopEvent": {
         "names": [
-          "autoScoreHigh"
+          "autoScoreHighCube"
         ],
         "executionBehavior": "sequential",
         "waitBehavior": "none",
@@ -26,11 +26,11 @@
     },
     {
       "anchorPoint": {
-        "x": 3.4949197626481125,
+        "x": 3.5379408147009497,
         "y": 2.739006980697326
       },
       "prevControl": {
-        "x": 2.437301710750944,
+        "x": 2.480322762803781,
         "y": 2.739006980697326
       },
       "nextControl": null,

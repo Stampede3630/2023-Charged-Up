@@ -349,9 +349,8 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
 
   private void limelightOdometry(String limelightName) {
     LimelightPose2d llPose = getLimelightPose(limelightName);
-    if (llPose.latency < 120 && llPose.getTranslation().getX() > 0 && llPose.getTranslation().getX() < 5.6) { // probably don't need to do this since it's limited to 1.5 sec anyways
+    if (llPose.latency < 120 && llPose.getTranslation().getX() > 0 && llPose.getTranslation().getX() < 5.6) {
       if (llPose.aprilTagAmount > 1) {
-        // Commands.print(">1 tag").schedule();
         double dist = llPose.minus(robotPose).getTranslation().getNorm();
         if (dist > .1) // reset the pose if we're off by more than 10 cm
            m_odometry.resetPosition(getRobotAngle(), m_driveTrain.getModulePositions(), llPose);
@@ -359,33 +358,11 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
           m_odometry.addVisionMeasurement(llPose, Timer.getFPGATimestamp() - llPose.latency, VecBuilder.fill(0.001, 0.001, Units.degreesToRadians(5)));
       }
       else if(llPose.aprilTagAmount == 1 && llPose.getTranslation().getX() < 3.0){
-        // Commands.print("1 tag").schedule(); //  if only 1 tag then do vision measurement with lower trust
         m_odometry.resetPosition(getRobotAngle(), m_driveTrain.getModulePositions(), llPose);
       }
     }
 
   }
-
-  // public LimelightPose2d limelightBotPoseBack(){
-
-  //   double[] myArray = {0, 0, 0, 0, 0, 0, 0, 6};
-  //   String allianceColorBotPose = DriverStation.getAlliance() == Alliance.Red ? "botpose_wpired" : "botpose_wpiblue";
-
-  //     myArray = NetworkTableInstance.getDefault().getTable("limelight-back").getEntry(allianceColorBotPose).getDoubleArray(myArray);
-    
-
-  //   double x = 0;
-  //   double y = 0;
-  //   double rot = 0;
-  //   if (myArray.length > 0){
-  //     x = myArray[0];
-  //     y = myArray[1];
-  //     rot = myArray[5];
-  //   }
-
-  //   return new LimelightPose2d(x, y, Rotation2d.fromDegrees(rot), myArray[6]/1000.0);
-
-  // }
 
   @Config.ToggleSwitch(defaultValue = false)
   public void resetToGyro(boolean input){
@@ -429,10 +406,12 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
       return balanced;
   }
 
+  @Log
   public double getRoll() {
     return gyro.getRoll();
   }
 
+  @Log
   public double getPitch() {
     return gyro.getPitch();
   }
