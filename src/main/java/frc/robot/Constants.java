@@ -67,7 +67,7 @@ public final class Constants {
 
   public static final class LidConstants{
     public static final int SPARK_MAX_ID = 19;
-    public static final double INITIALIZED_ANGLE = 100;
+    public static final double INITIALIZED_ANGLE = 30;
     public static final double CONVERSION_FACTOR = 360;
     public static final float FORWARD_LIMIT = 260.0f;
     public static final float REVERSE_LIMIT = 28.0f;

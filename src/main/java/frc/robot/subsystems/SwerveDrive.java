@@ -62,18 +62,23 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
   boolean aprilTagDetectedFront = false;
   boolean aprilTagDetectedBack = false;
 
+  @Log
   boolean balanced=false;
 
   @Log
   public Field2d m_field;
   public double[] akitPose = {0,0,0};
+  private double rollOffset;
+  private double pitchOffset;
   private static SwerveDrive instance;
 
   private SwerveDrive() {
     rotLimiter = new SlewRateLimiter(4.5*4*2); //max rate 9.52
+    xLimiter = new SlewRateLimiter(60, -1000000000, 0);
+    yLimiter = new SlewRateLimiter(60, -1000000000, 0);
     rollRotationController =new ProfiledPIDController(5.4/67, 0, 0, 
       new TrapezoidProfile.Constraints(.7,.7));
-    pitchRotationController = new ProfiledPIDController(5.4/67, 0, 0, 
+    pitchRotationController = new ProfiledPIDController(5.4/67-.02, 0, 5.4/680*1.5, 
       new TrapezoidProfile.Constraints(.7,.7));
     rotationController = new ProfiledPIDController(
       Preferences.getDouble("pKPRotationController", SwerveConstants.P_ROTATION_CONTROLLER),
@@ -164,8 +169,8 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
         // } else {
           setDriveSpeeds(
             new Translation2d(
-              convertToMetersPerSecond(x)*joystickDriveGovernor,
-              convertToMetersPerSecond(y)*joystickDriveGovernor), 
+              xLimiter.calculate(convertToMetersPerSecond(x)*joystickDriveGovernor),
+              yLimiter.calculate(convertToMetersPerSecond(y)*joystickDriveGovernor)), 
               holdHeadingEnabled  ? updateRotationController() : convertToRadiansPerSecond(rot)* joystickDriveGovernor,
             Preferences.getBoolean("pFieldRelative", Constants.DriverConstants.FIELD_RELATIVE));
         // }
@@ -349,16 +354,18 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
 
   private void limelightOdometry(String limelightName) {
     LimelightPose2d llPose = getLimelightPose(limelightName);
-    if (llPose.latency < 120 && llPose.getTranslation().getX() > 0 && llPose.getTranslation().getX() < 5.6) {
+    if (llPose.latency < 120 && llPose.getTranslation().getX() > 0 && llPose.getTranslation().getX() < 4.6) {
       if (llPose.aprilTagAmount > 1) {
         double dist = llPose.minus(robotPose).getTranslation().getNorm();
-        if (dist > .1) // reset the pose if we're off by more than 10 cm
-           m_odometry.resetPosition(getRobotAngle(), m_driveTrain.getModulePositions(), llPose);
-        else // otherwise if we're pretty close, add a visions measurement with a high trust
-          m_odometry.addVisionMeasurement(llPose, Timer.getFPGATimestamp() - llPose.latency, VecBuilder.fill(0.001, 0.001, Units.degreesToRadians(5)));
+        if (dist > .1){ // reset the pose if we're off by more than 10 cm
+          //  m_odometry.resetPosition(getRobotAngle(), m_driveTrain.getModulePositions(), llPose);
+       } else{
+         // m_odometry.addVisionMeasurement(llPose, Timer.getFPGATimestamp() - llPose.latency, VecBuilder.fill(0.001, 0.001, Units.degreesToRadians(5)));
+       } 
+       // otherwise if we're pretty close, add a visions measurement with a high trust
       }
       else if(llPose.aprilTagAmount == 1 && llPose.getTranslation().getX() < 3.0){
-        m_odometry.resetPosition(getRobotAngle(), m_driveTrain.getModulePositions(), llPose);
+        // m_odometry.resetPosition(getRobotAngle(), m_driveTrain.getModulePositions(), llPose);
       }
     }
 
@@ -372,34 +379,51 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
     }
   }
 
-  public double  trapRollAutoBalance(){
-    return rollRotationController.calculate(gyro.getRoll(), new State(0,0));
+  public void zeroRollPitch() {
+    rollOffset = -gyro.getRoll();
+    pitchOffset = -gyro.getPitch();
+
   }
 
+@Log
+  public double trapRollAutoBalance(){
+    return rollRotationController.calculate(gyro.getRoll() + rollOffset, new State(0,0));
+  }
+
+  @Log
   public double  trapPitchAutoBalance(){
-    return -pitchRotationController.calculate(gyro.getPitch(), new State(0,0));
+    return -pitchRotationController.calculate(gyro.getPitch() + pitchOffset, new State(0,0));
   }
 
   public void autoBalance(){
-    if((Math.abs(gyro.getPitch()) < 2) && (Math.abs(gyro.getRoll()) < 2)){
+    pitchRotationController.setTolerance(2);
+    rollRotationController.setTolerance(2);
+
+    if(pitchRotationController.atGoal() && rollRotationController.atGoal()){
       setDriveSpeeds(new Translation2d(0, 0), 0, false);
       m_driveTrain.activateDefensiveStop(getPose().getRotation());
       balanced = true;
     } else {
-      setDriveSpeeds(new Translation2d(trapPitchAutoBalance(),trapRollAutoBalance()), 0, false);
+      setDriveSpeeds(new Translation2d(
+        pitchRotationController.atGoal() ? 0 : trapPitchAutoBalance(),
+        rollRotationController.atGoal() ? 0 : trapRollAutoBalance()), 
+        0, false);
       balanced= false;
     }
+    
+    // MAKE SURE TO RUN THIS IN PRACTICE MODE
     if (DriverStation.getMatchTime() < 0.2) { // activate defensive if running out of time
       m_driveTrain.activateDefensiveStop(getPose().getRotation());
     }
   }
+
 
   public void activateDefensiveStop() {
     m_driveTrain.activateDefensiveStop(getPose().getRotation());
   }
 
   public Command autoBalanceCommand(){
-    return Commands.run(this::autoBalance).until(() -> balanced).andThen(Commands.run(this::activateDefensiveStop));
+    return Commands.run(this::autoBalance).asProxy();
   }
 
   public boolean isBalanced() {

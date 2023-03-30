@@ -244,7 +244,7 @@ private static Cannon instance;
     double angleToSet = cannonReference; // no change
     if (robotFacing == FacingPOI.COMMUNITY)
       angleToSet = 180-angle;
-    else if (robotFacing == FacingPOI.HUMAN_PLAYER)// hp or nothing
+    else //if (robotFacing == FacingPOI.HUMAN_PLAYER)// hp or nothing
       angleToSet = angle;
 
     setCannonAngle(angleToSet);

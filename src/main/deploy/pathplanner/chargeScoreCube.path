@@ -17,7 +17,8 @@
       "isStopPoint": false,
       "stopEvent": {
         "names": [
-          "autoScoreHighCube"
+          "autoScoreHighCube",
+          "zeroPitchRoll"
         ],
         "executionBehavior": "sequential",
         "waitBehavior": "none",
@@ -26,11 +27,11 @@
     },
     {
       "anchorPoint": {
-        "x": 3.5379408147009497,
+        "x": 3.4,
         "y": 2.739006980697326
       },
       "prevControl": {
-        "x": 2.480322762803781,
+        "x": 2.3423819481028314,
         "y": 2.739006980697326
       },
       "nextControl": null,

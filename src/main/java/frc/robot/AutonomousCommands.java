@@ -19,6 +19,10 @@ public class AutonomousCommands {
             instance = new AutonomousCommands();
         return instance;
     }
+
+    public Command zeroPitchRoll() {
+        return Commands.runOnce(s_SwerveDrive::zeroRollPitch);
+    }
     public Command autoBalance() {
         return s_SwerveDrive.autoBalanceCommand();
     }
@@ -26,7 +30,7 @@ public class AutonomousCommands {
         return Commands.runOnce(()->s_Lid.setLid(100.0))
                 .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(NodePosition.NodeGrid.HIGH_CENTER.getNodeCannonAngleLidDown())))
                 .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
-                .andThen(Commands.runOnce(()-> s_Cannon.setExtensionReference(23.5)).alongWith(Commands.print("extendo")))
+                .andThen(Commands.runOnce(()-> s_Cannon.setExtensionReference(18.5)).alongWith(Commands.print("extendo")))
                 .andThen(Commands.waitSeconds(0.2))
                 .andThen(Commands.waitUntil(s_Cannon::extensionErrorWithinRange))
                 .andThen(()->s_Intake.setIntake(0.4))
@@ -35,21 +39,21 @@ public class AutonomousCommands {
                 .andThen(s_Intake::leaveGamePiece)
                 .andThen(s_Cannon.setExtensionWait(() -> 1))
                 .andThen(Commands.runOnce(()-> s_Lid.setLid(60.0)))
-                .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(120.0)));
+                .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(90.0)));
     }
 
     public Command autoScoreHighCone() {
         return Commands.runOnce(()->s_Lid.setLid(NodePosition.NodeGrid.HIGH_LEFT.getNodeLidPositionLidDown()))
-                .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(NodePosition.NodeGrid.HIGH_LEFT.getNodeCannonAngleLidDown())))
+                .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(43.0)))
                 .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
-                .andThen(s_Cannon.setExtensionWait(NodePosition.NodeGrid.HIGH_LEFT::getExtension))
-                .andThen(()->s_Intake.setIntake(-1.0))
+                .andThen(s_Cannon.setExtensionWait(()->32.0))
+                .andThen(()->s_Intake.setIntake(-0.6))
                 .andThen(Commands.waitSeconds(0.5))
                 .andThen(Commands.runOnce(s_Intake::stopIntake))
                 .andThen(s_Intake::leaveGamePiece)
                 .andThen(s_Cannon.setExtensionWait(() -> 1))
                 .andThen(Commands.runOnce(()-> s_Lid.setLid(100)))
-                .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(177.0)));
+                .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(90.0)));
     }
 
     public Command autoScoreMidCone() {
@@ -63,7 +67,7 @@ public class AutonomousCommands {
                 .andThen(s_Intake::leaveGamePiece)
                 .andThen(s_Cannon.setExtensionWait(() -> 1))
                 .andThen(Commands.runOnce(()-> s_Lid.setLid(100)))
-                .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(177.0)));
+                .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(90.0)));
     }
 
     public Command autoScoreMidCube() { //works -ej 3/15
@@ -77,7 +81,7 @@ public class AutonomousCommands {
                 .andThen(s_Intake::leaveGamePiece)
                 .andThen(s_Cannon.setExtensionWait(() -> 1))
                 .andThen(Commands.runOnce(()-> s_Lid.setLid(100.0)))
-                .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(177.0)));
+                .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(90.0)));
     }
 
     public Command autoScoreLowCube() {
@@ -91,7 +95,7 @@ public class AutonomousCommands {
                 .andThen(s_Intake::leaveGamePiece)
                 .andThen(s_Cannon.setExtensionWait(() -> 1))
                 .andThen(Commands.runOnce(()-> s_Lid.setLid(100.0)))
-                .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(100.0)));
+                .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(90.0)));
     }
 
     public Command autoIntakeCube() { //works -ej 3/15
@@ -103,7 +107,7 @@ public class AutonomousCommands {
                         .andThen(Commands.waitSeconds(2.0)
                                 .deadlineWith(Commands.waitUntil(s_Intake::checkForCube))))
                 .andThen(Commands.runOnce(s_Intake::stopIntake))
-                .andThen(Commands.runOnce(()->s_Lid.setLid(100.0)))
+                .andThen(Commands.runOnce(()->s_Lid.setLid(90.0)))
                 .andThen(s_Cannon.setCannonAngleWait(() -> 90));
     }
 
@@ -116,6 +120,6 @@ public class AutonomousCommands {
                                 .andThen(Commands.waitSeconds(2.0)))
                         .deadlineWith(s_Intake.waitUntilHaveGamePiece(() -> false)))
                 .andThen(Commands.runOnce(s_Intake::stopIntake))
-                .andThen(Commands.runOnce(()->s_Lid.setLid(100.0)));
+                .andThen(Commands.runOnce(()->s_Lid.setLid(90.0)));
     }
 }

@@ -287,15 +287,10 @@ public class RobotContainer {
     //-> intake trigger
     xBox.rightTrigger(.1).debounce(.1, DebounceType.kFalling)
         .onTrue(
-          new FunctionalCommand(() -> {
-            if (pickupLocationChooser.getSelected() == PickupLocation.CHUTE && !cancelAutoTurn) {
-              s_SwerveDrive.setHoldHeadingAngle(DriverStation.getAlliance() == Alliance.Red ? -Math.PI/2 : Math.PI/2);
-              s_SwerveDrive.setHoldHeadingFlag(true);
-            }
-          }, () -> {}, s -> {}, s_SwerveDrive::getAtGoal)
-          .andThen(Commands.waitUntil(s_SwerveDrive::getAtGoal)
+          Commands.runOnce(() -> {s_SwerveDrive.setHoldHeadingAngle(DriverStation.getAlliance() == Alliance.Red ? -Math.PI/2 : Math.PI/2); s_SwerveDrive.setHoldHeadingFlag(true);})
             .unless(() -> pickupLocationChooser.getSelected() != PickupLocation.CHUTE || cancelAutoTurn)
-            .until(xBox.rightTrigger(.2).debounce(.2, DebounceType.kFalling).negate()))
+          .andThen(Commands.waitUntil(s_SwerveDrive::getAtGoal))
+            .until(xBox.rightTrigger(.2).debounce(.2, DebounceType.kFalling).negate())
           .andThen(
             Commands.either(
               s_Cannon.setCannonAngleWait(() -> intakeCannonAngle)
@@ -398,7 +393,7 @@ public class RobotContainer {
     } else if (pickupLocationChooser.getSelected()==PickupLocation.CHUTE) {     
       switch (gamePieceTypeChooser.getSelected()) {
         case CUBE:
-          intakeCannonAngle = 136.5;
+          intakeCannonAngle = 140.0;
           intakeLidAngle = 55.0;
           intakeSpeed = -1.0;
           intakeExtensionInches = 0.5;

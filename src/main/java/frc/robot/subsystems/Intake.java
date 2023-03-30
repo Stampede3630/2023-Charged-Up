@@ -180,11 +180,11 @@ public class Intake extends SubsystemBase implements Loggable, Disableable, Enab
   
   public Command waitUntilHaveGamePiece(BooleanSupplier isItACube) {
     if (isItACube.getAsBoolean()) {
-        return Commands.waitUntil(()-> Math.abs(getVelocity()) > 50)//.raceWith(Commands.waitSeconds(1)) // wait for spin up
+        return Commands.waitUntil(()-> Math.abs(getVelocity()) > 40)//.raceWith(Commands.waitSeconds(1)) // wait for spin up
             .andThen(Commands.waitUntil(() -> m_debouncer.calculate(isLimitSwitchPressed()))) // wait for stopped TODO adjust the numbers
             .andThen(Commands.runOnce(() -> haveGamePiece = true))  ;
     } else 
-        return Commands.waitUntil(()-> Math.abs(getVelocity()) > 50)//.raceWith(Commands.waitSeconds(1)) // wait for spin up
+        return Commands.waitUntil(()-> Math.abs(getVelocity()) > 40)//.raceWith(Commands.waitSeconds(1)) // wait for spin up
                 .andThen(Commands.waitUntil(() -> m_debouncer.calculate(Math.abs(getVelocity()) < 5))) // wait for stopped TODO adjust the numbers
                 .andThen(Commands.runOnce(() -> haveGamePiece = true))  ;
   }
