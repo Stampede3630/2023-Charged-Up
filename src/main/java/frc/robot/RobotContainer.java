@@ -179,7 +179,6 @@ public class RobotContainer {
       .withPosition(0, 3)
       .withSize(8, 3);
 
-
     otfBuilder = new SwerveAutoBuilder(
             s_SwerveDrive::getOdometryPose, // Pose2d supplier
             s_SwerveDrive::resetOdometry, // Pose2d consumer, used to reset odometry at the beginning of auto
@@ -201,7 +200,7 @@ public class RobotContainer {
       s_SwerveDrive.joystickDriveCommand(
           () -> xBox.getLeftY() * (sniperMode ? 0.6 : 1),
           () -> xBox.getLeftX() * (sniperMode ? 0.6 : 1),
-          () -> xBox.getRightX() * (sniperMode ? 1 : 1))
+          xBox::getRightX)
       .withName("DefaultDrive"));
 
           Logger.configureLoggingAndConfig(this, false);

@@ -180,6 +180,11 @@ private static Cannon instance;
 
   }
 
+  @Config.NumberSlider(min = -10, max = 10, blockIncrement = .25)
+  public void setCannonOffset(double input) {
+    Preferences.setDouble("CannonAngleOffset", input);
+  }
+
   /**
    * @return degrees per sec
    */
