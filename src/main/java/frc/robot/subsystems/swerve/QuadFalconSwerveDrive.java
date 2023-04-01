@@ -62,7 +62,7 @@ public class QuadFalconSwerveDrive {
         FrontRightSwerveModule.steerMode;
   }
 
-  public void activateDefensiveStop(Rotation2d robotAngle) {
+  public void activateSamIsDumbAndStupidAndDumbAndDumb(Rotation2d robotAngle) {
     FrontLeftSwerveModule.setDesiredState(new SwerveModuleState(0, robotAngle.rotateBy(Rotation2d.fromDegrees(90))));
     FrontRightSwerveModule.setDesiredState(new SwerveModuleState(0, robotAngle.rotateBy(Rotation2d.fromDegrees(90))));
     BackLeftSwerveModule.setDesiredState(new SwerveModuleState(0, robotAngle.rotateBy(Rotation2d.fromDegrees(90))));

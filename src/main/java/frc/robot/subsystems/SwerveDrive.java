@@ -65,7 +65,6 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
   @Log
   boolean balanced=false;
 
-  @Log
   public Field2d m_field;
   public double[] akitPose = {0,0,0};
   private double rollOffset;
@@ -132,8 +131,8 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
 
     robotPose = updateOdometry();
 
-   limelightOdometry("limelight-front");
-   limelightOdometry("limelight-back");
+  //  limelightOdometry("limelight-front");
+  //  limelightOdometry("limelight-back");
 
     drawRobotOnField(m_field);
   }
@@ -371,7 +370,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
 
   }
 
-  @Config.ToggleSwitch(defaultValue = false)
+  @Config.ToggleButton(defaultValue = false, tabName = "nodeSelector", columnIndex = 17, rowIndex = 2, width = 2, height = 2)
   public void resetToGyro(boolean input){
     if(input){
       m_odometry.resetPosition(gyro.getRotation2d(), m_driveTrain.getModulePositions(), new Pose2d(robotPose.getTranslation(), new Rotation2d(0)));
@@ -401,7 +400,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
 
     if(pitchRotationController.atGoal() && rollRotationController.atGoal()){
       setDriveSpeeds(new Translation2d(0, 0), 0, false);
-      m_driveTrain.activateDefensiveStop(getPose().getRotation());
+      m_driveTrain.activateSamIsDumbAndStupidAndDumbAndDumb(getPose().getRotation());
       balanced = true;
     } else {
       setDriveSpeeds(new Translation2d(
@@ -413,13 +412,13 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
     
     // MAKE SURE TO RUN THIS IN PRACTICE MODE
     if (DriverStation.getMatchTime() < 0.2) { // activate defensive if running out of time
-      m_driveTrain.activateDefensiveStop(getPose().getRotation());
+      m_driveTrain.activateSamIsDumbAndStupidAndDumbAndDumb(getPose().getRotation());
     }
   }
 
 
-  public void activateDefensiveStop() {
-    m_driveTrain.activateDefensiveStop(getPose().getRotation());
+  public void activateSamIsDumbAndStupidAndDumbAndDumb() {
+    m_driveTrain.activateSamIsDumbAndStupidAndDumbAndDumb(getPose().getRotation());
   }
 
   public Command autoBalanceCommand(){

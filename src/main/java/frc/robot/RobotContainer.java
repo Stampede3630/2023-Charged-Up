@@ -278,12 +278,12 @@ public class RobotContainer {
         .whileTrue(Commands.runOnce(()-> s_Intake.setIntake(1)))
         .onFalse(Commands.runOnce(s_Intake::stopIntake));
     xBox.rightBumper().debounce(.1, DebounceType.kFalling)
-        .whileTrue(Commands.runOnce(()-> s_Intake.setIntake(-1)))
+        .whileTrue(Commands.runOnce(()-> s_Intake.setIntake(-0.7)))
         .onFalse(Commands.runOnce(s_Intake::stopIntake));
 
     // combined triggers
 
-    xBox.b().onTrue(Commands.runOnce(() -> autoPathGroupOnTheFly()).ignoringDisable(true)); // simulate the thing in akit
+    // xBox.b().onTrue(Commands.runOnce(() -> autoPathGroupOnTheFly()).ignoringDisable(true)); // simulate the thing in akit
     //-> intake trigger
     xBox.rightTrigger(.1).debounce(.1, DebounceType.kFalling)
         .onTrue(
@@ -318,7 +318,7 @@ public class RobotContainer {
           .andThen(s_Cannon.setCannonAngleWait(() -> 90))
           .alongWith(Commands.runOnce(()-> s_Lid.setLid(60.0))));
     
-    xBox.leftStick().whileTrue((Commands.repeatingSequence(Commands.runOnce(s_SwerveDrive::activateDefensiveStop))));
+    xBox.leftStick().whileTrue((Commands.repeatingSequence(Commands.runOnce(s_SwerveDrive::activateSamIsDumbAndStupidAndDumbAndDumb))));
 
     //-> extension + cannonRot to setpoint
     xBox.y()

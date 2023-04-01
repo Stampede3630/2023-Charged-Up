@@ -19,6 +19,7 @@ import com.revrobotics.SparkMaxPIDController;
 import com.revrobotics.SparkMaxPIDController.ArbFFUnits;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
@@ -33,7 +34,6 @@ import io.github.oblarg.oblog.annotations.Log;
 public class Cannon extends SubsystemBase implements Loggable {
   /** Creates a new TheCannon. */
 public double extensionReference = ExtendoConstants.INITIALIZED_INCHES;
-@Log
 public double cannonReference = CannonConstants.INITIALIZED_ANGLE;
 
 private final CANSparkMax cannonRotLead = new CANSparkMax(CannonConstants.SPARK_MASTER_ID, MotorType.kBrushless);
@@ -126,11 +126,9 @@ private static Cannon instance;
     }
     if (getExtensionHardStop()){
       extensionEncoder.setPosition(0);
-      setExtensionReference(0);
     }
   }
   
-  @Log(tabName = "nodeSelector")
   public double getExtensionReference(){
     return extensionReference;
   }
@@ -210,7 +208,6 @@ private static Cannon instance;
         Math.toRadians(getCannonVelocity()));
   }
 
-  @Log
   public double getExtensionEncoder(){
     return extensionEncoder.getPosition();
   }
@@ -230,14 +227,14 @@ private static Cannon instance;
     return new FunctionalCommand(
       () -> setCannonAngle(angleGetter.getAsDouble()), 
       () -> {},
-      (success) -> {System.out.println("rotate done");}, 
+      (success) -> {System.out.println("rotate done " + angleGetter.getAsDouble() + " deg");}, 
       this::cannonErrorWithinRange);
   }
   public Command setExtensionWait(DoubleSupplier inchesGetter) {
     return new FunctionalCommand(
       () -> setExtensionReference(inchesGetter.getAsDouble()), 
       () -> {},
-      (success) -> {System.out.println("extend done");},
+      (success) -> {System.out.println("extend done " + inchesGetter.getAsDouble() + " inch(es)");},
       this::extensionErrorWithinRange);
   }
   public double setCannonAngleSides(FacingPOI robotFacing, double angle) {
