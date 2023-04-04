@@ -71,7 +71,7 @@ public final class Constants {
     public static final double CONVERSION_FACTOR = 360;
     public static final float FORWARD_LIMIT = 260.0f;
     public static final float REVERSE_LIMIT = 28.0f;
-    public static final double ZERO_OFFSET = 360 - 12.0-29 + 20+5-4;
+    public static final double ZERO_OFFSET = 109.0;
     public static final int  CURRENT_LIMIT = 10; 
     public static final double ERROR = 10;
 
@@ -89,7 +89,7 @@ public final class Constants {
   public static final class AutoConstants {
     public static final double t_KP = 15.0; 
     public static final double r_KP = 7.0;
-    public static final double MAX_VELOCITY = 2;
-    public static final double MAX_ACCELERATION = 2;
+    public static final double MAX_VELOCITY = 3.25; // 2.0
+    public static final double MAX_ACCELERATION = 2.2; // 2.0
   }
 }

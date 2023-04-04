@@ -39,37 +39,12 @@
       },
       "holonomicAngle": 0,
       "isReversal": false,
-      "velOverride": 2.0,
+      "velOverride": 3.25,
       "isLocked": false,
       "isStopPoint": true,
       "stopEvent": {
         "names": [],
         "executionBehavior": "parallel",
-        "waitBehavior": "none",
-        "waitTime": 0
-      }
-    },
-    {
-      "anchorPoint": {
-        "x": 3.308495203752483,
-        "y": 0.73135788489824
-      },
-      "prevControl": {
-        "x": 3.327892868575583,
-        "y": 0.7254399532572944
-      },
-      "nextControl": {
-        "x": 2.4624145133800113,
-        "y": 0.989484197215265
-      },
-      "holonomicAngle": 0.0,
-      "isReversal": false,
-      "velOverride": 2.0,
-      "isLocked": false,
-      "isStopPoint": true,
-      "stopEvent": {
-        "names": [],
-        "executionBehavior": "sequential",
         "waitBehavior": "none",
         "waitTime": 0
       }
@@ -103,15 +78,42 @@
     },
     {
       "anchorPoint": {
-        "x": 5.775035521448502,
-        "y": 0.9321227944781477
+        "x": 2.146926798325869,
+        "y": 2.0
       },
       "prevControl": {
-        "x": 3.5953022174380673,
-        "y": 0.3585087671069805
+        "x": 2.1899478503787067,
+        "y": 0.8460806903724735
+      },
+      "nextControl": {
+        "x": 2.1440496468050627,
+        "y": 2.0771715366817416
+      },
+      "holonomicAngle": 0.0,
+      "isReversal": false,
+      "velOverride": null,
+      "isLocked": false,
+      "isStopPoint": false,
+      "stopEvent": {
+        "names": [
+          "autoBalance"
+        ],
+        "executionBehavior": "sequential",
+        "waitBehavior": "none",
+        "waitTime": 0
+      }
+    },
+    {
+      "anchorPoint": {
+        "x": 3.4949197626481125,
+        "y": 2.0
+      },
+      "prevControl": {
+        "x": 3.036028540751179,
+        "y": 1.96462804374625
       },
       "nextControl": null,
-      "holonomicAngle": 0.0,
+      "holonomicAngle": 0,
       "isReversal": false,
       "velOverride": null,
       "isLocked": false,
@@ -126,15 +128,8 @@
       }
     }
   ],
-  "maxVelocity": 3.25,
+  "maxVelocity": null,
   "maxAcceleration": 2.0,
   "isReversed": null,
-  "markers": [
-    {
-      "position": 0.51,
-      "names": [
-        "autoIntakeCube"
-      ]
-    }
-  ]
+  "markers": []
 }

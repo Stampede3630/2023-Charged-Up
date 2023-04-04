@@ -186,8 +186,6 @@ public class Intake extends SubsystemBase implements Loggable, Disableable, Enab
     } else 
         return Commands.waitUntil(()-> Math.abs(getVelocity()) > 40)//.raceWith(Commands.waitSeconds(1)) // wait for spin up
                 .andThen(Commands.waitUntil(() -> m_debouncer.calculate(Math.abs(getVelocity()) < 5))) // wait for stopped TODO adjust the numbers
-                .andThen(Commands.runOnce(() -> haveGamePiece = true))  ;
+                .andThen(Commands.runOnce(() -> haveGamePiece = true));
   }
-
-
 }

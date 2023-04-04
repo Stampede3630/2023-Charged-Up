@@ -424,16 +424,20 @@ public class RobotContainer {
         //facing community, lid up, not able to get tipped cones
         switch (gamePieceTypeChooser.getSelected()) {
           case CUBE://unfavorable cubbe intake!! BOOOOOOO
-          intakeCannonAngle = 200.0;
+          intakeCannonAngle = 192.5;
           intakeLidAngle = 60.0;
           intakeSpeed = -1.0;
-          intakeExtensionInches = 2.5;
+          intakeExtensionInches = 1.0;
             break;
           case UPRIGHT_CONE://fill in
-            intakeCannonAngle = 6.16;
-            intakeLidAngle = 46.0;
-            intakeSpeed = 1.0;
-            intakeExtensionInches = 0.5;
+          intakeCannonAngle = 195.0;
+          intakeLidAngle = 140.0;
+          intakeSpeed = 1.0;
+          intakeExtensionInches = 1.0;
+            // intakeCannonAngle = 5.60;
+            // intakeLidAngle = 46.0;
+            // intakeSpeed = 1.0;
+            // intakeExtensionInches = 0.5;
             break;
           case TIPPED_CONE: // no longer impossible
             intakeCannonAngle = -10.99;
@@ -453,13 +457,13 @@ public class RobotContainer {
         //facing HPS or nothing, lid down
         switch (gamePieceTypeChooser.getSelected()) {
           case CUBE://Caleb 3/14/23
-            intakeCannonAngle = 200.0;
+            intakeCannonAngle = 192.5;
             intakeLidAngle = 60.0;
             intakeSpeed = -1.0;
-            intakeExtensionInches = 2.5;
+            intakeExtensionInches = 1.0;
             break;
           case UPRIGHT_CONE://Caleb 3/14/23
-            intakeCannonAngle = 196;
+            intakeCannonAngle = 195.0;
             intakeLidAngle = 140.0;
             intakeSpeed = 1.0;
             intakeExtensionInches = 1.0;
