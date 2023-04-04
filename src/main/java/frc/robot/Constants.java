@@ -89,7 +89,7 @@ public final class Constants {
   public static final class AutoConstants {
     public static final double t_KP = 15.0; 
     public static final double r_KP = 7.0;
-    public static final double MAX_VELOCITY = 3.25; // 2.0
-    public static final double MAX_ACCELERATION = 2.2; // 2.0
+    public static final double MAX_VELOCITY = 5.0; // 3.25
+    public static final double MAX_ACCELERATION = 2.7; // 2.0
   }
 }
