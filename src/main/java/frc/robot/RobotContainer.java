@@ -320,10 +320,15 @@ public class RobotContainer {
     
     xBox.leftStick().whileTrue((Commands.repeatingSequence(Commands.runOnce(s_SwerveDrive::activateSamIsDumbAndStupidAndDumbAndDumb))));
 
-    xBox.a().onTrue(Commands.runOnce(() -> {
-      pickupLocationChooser.setSelected(PickupLocation.GROUND);
-      gamePieceTypeChooser.setSelected(GamePieceType.CUBE);
-    }));
+    xBox.a() // TODO: bind this to the back left button
+      .onTrue(Commands.runOnce(() -> { // if the back left button is pressed, set to chute/cube
+        pickupLocationChooser.setSelected(PickupLocation.CHUTE);
+        gamePieceTypeChooser.setSelected(GamePieceType.CUBE);
+      }))
+      .onFalse(Commands.runOnce(() -> { // when done holding the back left button, set to ground/cube
+        pickupLocationChooser.setSelected(PickupLocation.GROUND);
+        gamePieceTypeChooser.setSelected(GamePieceType.CUBE);
+      }));
 
     //-> extension + cannonRot to setpoint
     xBox.y()
