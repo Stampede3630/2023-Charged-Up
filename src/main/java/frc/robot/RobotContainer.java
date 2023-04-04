@@ -249,6 +249,7 @@ public class RobotContainer {
       .debounce(.1)
       .onTrue(Commands.runOnce(() -> {sniperMode = true; s_SwerveDrive.setHoldHeadingAngle(0); s_SwerveDrive.setHoldHeadingFlag(true);}))
       .onFalse(Commands.runOnce(() -> {sniperMode = false; s_SwerveDrive.setHoldHeadingFlag(false);}));
+
     // new Trigger(() -> Math.abs(xBox.getRightX()) < .1)
     //     .and(s_SwerveDrive::getHoldHeadingFlag)
     //     .and(new Trigger(s_SwerveDrive::getAtGoal).negate())
@@ -283,7 +284,6 @@ public class RobotContainer {
 
     // combined triggers
 
-    // xBox.b().onTrue(Commands.runOnce(() -> autoPathGroupOnTheFly()).ignoringDisable(true)); // simulate the thing in akit
     //-> intake trigger
     xBox.rightTrigger(.1).debounce(.1, DebounceType.kFalling)
         .onTrue(
@@ -320,6 +320,11 @@ public class RobotContainer {
     
     xBox.leftStick().whileTrue((Commands.repeatingSequence(Commands.runOnce(s_SwerveDrive::activateSamIsDumbAndStupidAndDumbAndDumb))));
 
+    xBox.a().onTrue(Commands.runOnce(() -> {
+      pickupLocationChooser.setSelected(PickupLocation.GROUND);
+      gamePieceTypeChooser.setSelected(GamePieceType.CUBE);
+    }));
+
     //-> extension + cannonRot to setpoint
     xBox.y()
         .onTrue(Commands.runOnce(()-> {
@@ -353,11 +358,6 @@ public class RobotContainer {
           .unless(xBox.rightTrigger(.1)),
         s_Intake::haveGamePiece));
 
-    xBox.a().onTrue(new
-    ProxyCommand(()-> otfBuilder.followPath(autoPathGroupOnTheFly()))
-    .beforeStarting(new InstantCommand(()->s_SwerveDrive.setHoldHeadingFlag(false))));
-
-    // xBox.a().onTrue(Commands.runOnce(() -> autoPathGroupOnTheFly()));
     new Trigger(gamePieceTypeChooser::didValueChange).and(() -> !s_Intake.haveGamePiece())
       .onTrue(Commands.either(
         Commands.runOnce(s_LEDs::bePurple), 
