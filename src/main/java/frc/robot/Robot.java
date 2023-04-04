@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import java.util.Map;
+
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -36,6 +38,9 @@ public class Robot extends TimedRobot {
     matchTimeEntry = Shuffleboard.getTab("nodeSelector")
             .add("Match Time", "")
             .withWidget("Big Text View")
+            .withProperties(Map.of("Width", 50, "Height", 12))
+            .withPosition(17, 2)
+            .withSize(7, 3)
             .getEntry();
   }
 
