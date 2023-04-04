@@ -26,6 +26,35 @@ public class AutonomousCommands {
     public Command autoBalance() {
         return s_SwerveDrive.autoBalanceCommand();
     }
+
+    public Command prepareLowCube() {
+        return s_Cannon.setCannonAngleWait(() -> -7.5)
+                .andThen(Commands.runOnce(()->  s_Lid.setLid(80.0)))
+                .andThen(s_Cannon.setExtensionWait(() -> 1));
+    }
+
+    public Command prepareMidCube() {
+        return Commands.runOnce(()->s_Lid.setLid(100.0))
+                .andThen(s_Cannon.setCannonAngleWait(() -> 38))
+                .andThen(s_Cannon.setExtensionWait(() -> 2));
+    }
+
+    public Command prepareHighCube() {
+        return Commands.runOnce(()->s_Lid.setLid(100.0))
+                .andThen(s_Cannon.setCannonAngleWait(NodePosition.NodeGrid.HIGH_CENTER::getNodeCannonAngleLidDown))
+                .andThen(s_Cannon.setExtensionWait(() -> 20.5));
+    }
+
+    public Command scoreCube() {
+        return Commands.runOnce(()->s_Intake.setIntake(0.4))
+                .andThen(Commands.waitSeconds(0.5))
+                .andThen(Commands.runOnce(s_Intake::stopIntake))
+                .andThen(s_Intake::leaveGamePiece)
+                .andThen(s_Cannon.setExtensionWait(() -> 1))
+                .andThen(Commands.runOnce(()-> s_Lid.setLid(60.0)))
+                .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(90.0)));
+    }
+
     public Command autoScoreHighCube() { //works if running as NOT first command (for some reason) -ej 3/15
         return Commands.runOnce(()->s_Lid.setLid(100.0))
                 .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(NodePosition.NodeGrid.HIGH_CENTER.getNodeCannonAngleLidDown())))
