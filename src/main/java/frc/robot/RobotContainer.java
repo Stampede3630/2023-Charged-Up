@@ -318,17 +318,33 @@ public class RobotContainer {
           .andThen(s_Cannon.setCannonAngleWait(() -> 90))
           .alongWith(Commands.runOnce(()-> s_Lid.setLid(60.0))));
     
-    xBox.leftStick().whileTrue((Commands.repeatingSequence(Commands.runOnce(s_SwerveDrive::activateSamIsDumbAndStupidAndDumbAndDumb))));
+    xBox.a().whileTrue((Commands.repeatingSequence(Commands.runOnce(s_SwerveDrive::activateSamIsDumbAndStupidAndDumbAndDumb))));
 
-    xBox.a().debounce(.1, DebounceType.kBoth) // TODO: bind this to the back left button
-      .onTrue(Commands.runOnce(() -> { // if the back left button is pressed, set to chute/cube
-        pickupLocationChooser.setSelected(PickupLocation.CHUTE);
-        gamePieceTypeChooser.setSelected(GamePieceType.CUBE);
-      }))
-      .onFalse(Commands.runOnce(() -> { // when done holding the back left button, set to ground/cube
-        pickupLocationChooser.setSelected(PickupLocation.GROUND);
-        gamePieceTypeChooser.setSelected(GamePieceType.CUBE);
-      }));
+    xBox.leftStick().debounce(.1, DebounceType.kBoth) // do it when it goes true or goes false
+    .or(xBox.leftStick().debounce(.1, DebounceType.kBoth).negate()) // TODO: bind this to the back left button
+      .onTrue(
+        Commands.runOnce(() -> { // if the back left button is held, override the pickup location
+          switch (pickupLocationChooser.getSelected()) {
+            case SHELF: case CHUTE: pickupLocationChooser.setSelected(PickupLocation.GROUND); break;
+            case GROUND: pickupLocationChooser.setSelected(PickupLocation.CHUTE); break;
+          }
+        }).andThen(
+          new ConditionalCommand(
+                  Commands.runOnce(() -> {s_SwerveDrive.setHoldHeadingAngle(DriverStation.getAlliance() == Alliance.Red ? -Math.PI/2 : Math.PI/2); s_SwerveDrive.setHoldHeadingFlag(true);})
+                          .andThen(Commands.waitUntil(s_SwerveDrive::getAtGoal)
+                                            .until(xBox.rightTrigger(.2).debounce(.2, DebounceType.kFalling).negate())
+                          ).unless(() -> pickupLocationChooser.getSelected() != PickupLocation.CHUTE || cancelAutoTurn)
+                          .andThen(
+                                  Commands.either(
+                                                  s_Cannon.setCannonAngleWait(() -> intakeCannonAngle)
+                                                          .andThen(s_Cannon.setExtensionWait(() -> intakeExtensionInches)),
+                                                  s_Cannon.setExtensionWait(() -> intakeExtensionInches)
+                                                          .andThen(s_Cannon.setCannonAngleWait(() -> intakeCannonAngle)),
+                                                  () -> s_Cannon.getExtensionEncoder() < 10) // "dangerous" or not
+                                          .alongWith(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle)))),
+                  Commands.none(),
+                  xBox.rightTrigger(.1)) // only execute if right trigger is pressed
+        ));
 
     //-> extension + cannonRot to setpoint
     xBox.y()
@@ -369,6 +385,7 @@ public class RobotContainer {
         Commands.runOnce(s_LEDs::beYellow), 
         () -> gamePieceTypeChooser.getSelected().equals(GamePieceType.CUBE)))
       .onTrue(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle)));
+
   }
   
   public void setIntakeParameters() {
