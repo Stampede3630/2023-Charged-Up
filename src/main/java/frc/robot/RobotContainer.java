@@ -320,31 +320,37 @@ public class RobotContainer {
     
     xBox.a().whileTrue((Commands.repeatingSequence(Commands.runOnce(s_SwerveDrive::activateSamIsDumbAndStupidAndDumbAndDumb))));
 
-    xBox.leftStick().debounce(.1, DebounceType.kBoth) // do it when it goes true or goes false
-    .or(xBox.leftStick().debounce(.1, DebounceType.kBoth).negate()) // TODO: bind this to the back left button
-      .onTrue(
-        Commands.runOnce(() -> { // if the back left button is held, override the pickup location
-          switch (pickupLocationChooser.getSelected()) {
-            case SHELF: case CHUTE: pickupLocationChooser.setSelected(PickupLocation.GROUND); break;
-            case GROUND: pickupLocationChooser.setSelected(PickupLocation.CHUTE); break;
-          }
-        }).andThen(
-          new ConditionalCommand(
-                  Commands.runOnce(() -> {s_SwerveDrive.setHoldHeadingAngle(DriverStation.getAlliance() == Alliance.Red ? -Math.PI/2 : Math.PI/2); s_SwerveDrive.setHoldHeadingFlag(true);})
-                          .andThen(Commands.waitUntil(s_SwerveDrive::getAtGoal)
-                                            .until(xBox.rightTrigger(.2).debounce(.2, DebounceType.kFalling).negate())
-                          ).unless(() -> pickupLocationChooser.getSelected() != PickupLocation.CHUTE || cancelAutoTurn)
-                          .andThen(
-                                  Commands.either(
-                                                  s_Cannon.setCannonAngleWait(() -> intakeCannonAngle)
-                                                          .andThen(s_Cannon.setExtensionWait(() -> intakeExtensionInches)),
-                                                  s_Cannon.setExtensionWait(() -> intakeExtensionInches)
-                                                          .andThen(s_Cannon.setCannonAngleWait(() -> intakeCannonAngle)),
-                                                  () -> s_Cannon.getExtensionEncoder() < 10) // "dangerous" or not
-                                          .alongWith(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle)))),
-                  Commands.none(),
-                  xBox.rightTrigger(.1)) // only execute if right trigger is pressed
-        ));
+    xBox.leftStick().debounce(.1, DebounceType.kFalling)
+            .onTrue(Commands.runOnce(() -> { // if the back left button is held, override the pickup location
+              switch (pickupLocationChooser.getSelected()) {
+                case SHELF: case CHUTE: pickupLocationChooser.setSelected(PickupLocation.GROUND); break;
+                case GROUND: pickupLocationChooser.setSelected(PickupLocation.CHUTE); break;
+              }
+              setIntakeParameters();
+            }).andThen(
+              Commands.runOnce(() -> {s_SwerveDrive.setHoldHeadingAngle(DriverStation.getAlliance() == Alliance.Red ? -Math.PI/2 : Math.PI/2); s_SwerveDrive.setHoldHeadingFlag(true);})
+                      .unless(() -> pickupLocationChooser.getSelected() != PickupLocation.CHUTE || cancelAutoTurn)
+                      .andThen(Commands.waitUntil(s_SwerveDrive::getAtGoal))
+                      .until(xBox.leftStick().debounce(.2, DebounceType.kFalling).negate())
+                      .andThen(
+                              Commands.either(
+                                              s_Cannon.setCannonAngleWait(() -> intakeCannonAngle)
+                                                      .andThen(s_Cannon.setExtensionWait(() -> intakeExtensionInches)),
+                                              s_Cannon.setExtensionWait(() -> intakeExtensionInches)
+                                                      .andThen(s_Cannon.setCannonAngleWait(() -> intakeCannonAngle)),
+                                              () -> s_Cannon.getExtensionEncoder() < 10) // "dangerous" or not
+                                      .alongWith(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle)))
+                                      .andThen(Commands.runOnce(()-> s_Intake.setIntake(intakeSpeed)))
+                                      .andThen(s_Intake.waitUntilHaveGamePiece(() -> gamePieceTypeChooser.getSelected() == GamePieceType.CUBE)
+                                              .raceWith(Commands.waitUntil(xBox.leftStick().debounce(.2, DebounceType.kFalling).negate())))
+                                      .andThen(Commands.runOnce(s_Intake::stopIntake)))))
+            //.unless(s_Intake::haveGamePiece))
+            .onFalse(
+                    Commands.runOnce(s_Intake::stopIntake)
+                            .andThen(s_Cannon.setExtensionWait(() -> 1))
+                            .andThen(Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), 90)))
+                            .alongWith(Commands.runOnce(() -> s_SwerveDrive.setHoldHeadingFlag(false)))
+            );
 
     //-> extension + cannonRot to setpoint
     xBox.y()
@@ -376,7 +382,7 @@ public class RobotContainer {
         Commands.runOnce(()-> s_Cannon.setCannonAngleSides(robotFacing(), 90)),
         Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), 90))
           .alongWith(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle)))
-          .unless(xBox.rightTrigger(.1)),
+          .unless(xBox.rightTrigger(.1).or(xBox.leftStick())),
         s_Intake::haveGamePiece));
 
     new Trigger(gamePieceTypeChooser::didValueChange).and(() -> !s_Intake.haveGamePiece())
@@ -529,19 +535,27 @@ public class RobotContainer {
         eventMap.put(method.getName(), (Command) method.invoke(AutonomousCommands.getInstance()));
       } catch (Exception ignored) {}
     });
-
     eventMap.entrySet().forEach(System.out::println);
 
+    HashMap<String, PathConstraints> constraintsOverride = new HashMap<>();
+    constraintsOverride.put("highConeHighCube noCharge", new PathConstraints(5.0, 2.7));
+    constraintsOverride.put("highConeHighCubeChargedUpXX", new PathConstraints(5.0, 2.7));
     // load autos completely dynamically -- any autos in pathplanner folder will be added to selector
     List<File> files = List.of(
             Objects.requireNonNull(new File(Filesystem.getDeployDirectory(), "pathplanner")
                     .listFiles((dir, name) -> name.endsWith(".path"))));
     for (File file : files) {
       String pathName = file.getName().split("\\.")[0];
-      autoSelect.addOption(pathName, PathPlanner.loadPathGroup(pathName,
-        new PathConstraints(AutoConstants.MAX_VELOCITY, AutoConstants.MAX_ACCELERATION)));
+      autoSelect.addOption(pathName,
+              PathPlanner.loadPathGroup(pathName,
+                constraintsOverride.getOrDefault(pathName,
+                  new PathConstraints(AutoConstants.MAX_VELOCITY, AutoConstants.MAX_ACCELERATION))));
     }
-    autoSelect.setDefaultOption(files.get(0).getName().split("\\.")[0], PathPlanner.loadPathGroup(files.get(0).getName().split("\\.")[0], new PathConstraints(AutoConstants.MAX_VELOCITY, AutoConstants.MAX_ACCELERATION)));
+    autoSelect.setDefaultOption(files.get(0).getName().split("\\.")[0],
+            PathPlanner.loadPathGroup(files.get(0).getName().split("\\.")[0],
+                    constraintsOverride.getOrDefault(
+                            files.get(0).getName().split("\\.")[0],
+                            new PathConstraints(AutoConstants.MAX_VELOCITY, AutoConstants.MAX_ACCELERATION))));
   }
 
 
