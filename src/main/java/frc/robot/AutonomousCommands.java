@@ -129,8 +129,8 @@ public class AutonomousCommands {
     }
 
     public Command autoIntakeCube() { //works -ej 3/15
-        return s_Cannon.setCannonAngleWait(() -> 200)
-                .andThen(s_Cannon.setExtensionWait(() -> 2.5))
+        return s_Cannon.setCannonAngleWait(() -> 192.5)
+                .andThen(s_Cannon.setExtensionWait(() -> 1))
                 .andThen(Commands.runOnce(()->s_Lid.setLid(60.0)))
                 .andThen(Commands.runOnce(()-> s_Intake.setIntake(-1.0)))
                 .andThen(Commands.waitSeconds(.1))
