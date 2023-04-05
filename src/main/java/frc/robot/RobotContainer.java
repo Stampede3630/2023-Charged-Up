@@ -225,9 +225,9 @@ public class RobotContainer {
     new Trigger(DriverStation::isDisabled)
         .onTrue(Commands.waitSeconds(5)
             .andThen(Commands.repeatingSequence(Commands.runOnce(s_SwerveDrive::setToCoast)).ignoringDisable(true)
-              .alongWith((Commands.runOnce(s_Cannon::setCannonToCoast)).ignoringDisable(true))
+              .alongWith(Commands.runOnce(s_Cannon::setCannonToCoast).ignoringDisable(true))
               .alongWith(Commands.runOnce(() -> s_LEDs.setMode(LEDMode.RAINBOW)).ignoringDisable(true))
-              .alongWith(Commands.runOnce(s_Intake::onDisable)).ignoringDisable(true))
+              .alongWith(Commands.runOnce(s_Intake::onDisable).ignoringDisable(true)))
             .withName("SetToCoast"));
 
     new Trigger(DriverStation::isEnabled)
@@ -318,7 +318,7 @@ public class RobotContainer {
           .andThen(s_Cannon.setCannonAngleWait(() -> 90))
           .alongWith(Commands.runOnce(()-> s_Lid.setLid(60.0))));
     
-    xBox.a().whileTrue((Commands.repeatingSequence(Commands.runOnce(s_SwerveDrive::activateSamIsDumbAndStupidAndDumbAndDumb))));
+    xBox.a().debounce(.1, DebounceType.kFalling).whileTrue((Commands.repeatingSequence(Commands.runOnce(s_SwerveDrive::activateSamIsDumbAndStupidAndDumbAndDumb))));
 
     xBox.leftStick().debounce(.1, DebounceType.kFalling)
             .onTrue(Commands.runOnce(() -> { // if the back left button is held, override the pickup location
