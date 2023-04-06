@@ -130,11 +130,11 @@
     },
     {
       "anchorPoint": {
-        "x": 4.441382907810539,
+        "x": 4.2,
         "y": 2.036329797167645
       },
       "prevControl": {
-        "x": 5.273123247498731,
+        "x": 5.031740339688192,
         "y": 1.9933087451148075
       },
       "nextControl": null,
@@ -154,7 +154,7 @@
     }
   ],
   "maxVelocity": 5.4,
-  "maxAcceleration": 5.4,
+  "maxAcceleration": 3.0,
   "isReversed": null,
   "markers": [
     {
