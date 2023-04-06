@@ -485,7 +485,7 @@ public class RobotContainer {
         //facing HPS or nothing, lid down
         switch (gamePieceTypeChooser.getSelected()) {
           case CUBE://Caleb 3/14/23
-            intakeCannonAngle = 192.5;
+            intakeCannonAngle = 196.0;
             intakeLidAngle = 60.0;
             intakeSpeed = -1.0;
             intakeExtensionInches = 1.0;
