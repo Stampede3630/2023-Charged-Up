@@ -93,6 +93,7 @@ public class Robot extends TimedRobot {
     // continue until interrupted by another command, remove
     // this line or comment it out.
     // robotContainer.onEnableCommand().schedule();
+    CommandScheduler.getInstance().cancelAll();
     if (autonomousCommand != null) {
       autonomousCommand.cancel();
     }
