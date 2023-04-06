@@ -546,10 +546,11 @@ public class RobotContainer {
                     .listFiles((dir, name) -> name.endsWith(".path"))));
     for (File file : files) {
       String pathName = file.getName().split("\\.")[0];
+      PathConstraints constraints = constraintsOverride.getOrDefault(pathName,
+              new PathConstraints(AutoConstants.MAX_VELOCITY, AutoConstants.MAX_ACCELERATION));
       autoSelect.addOption(pathName,
               PathPlanner.loadPathGroup(pathName,
-                constraintsOverride.getOrDefault(pathName,
-                  new PathConstraints(AutoConstants.MAX_VELOCITY, AutoConstants.MAX_ACCELERATION))));
+                constraints));
     }
     autoSelect.setDefaultOption(files.get(0).getName().split("\\.")[0],
             PathPlanner.loadPathGroup(files.get(0).getName().split("\\.")[0],
