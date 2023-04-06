@@ -320,37 +320,37 @@ public class RobotContainer {
     
     xBox.a().debounce(.1, DebounceType.kFalling).whileTrue((Commands.repeatingSequence(Commands.runOnce(s_SwerveDrive::activateSamIsDumbAndStupidAndDumbAndDumb))));
 
-    xBox.leftStick().debounce(.1, DebounceType.kFalling)
-            .onTrue(Commands.runOnce(() -> { // if the back left button is held, override the pickup location
-              switch (pickupLocationChooser.getSelected()) {
-                case SHELF: case CHUTE: pickupLocationChooser.setSelected(PickupLocation.GROUND); break;
-                case GROUND: pickupLocationChooser.setSelected(PickupLocation.CHUTE); break;
-              }
-              setIntakeParameters();
-            }).andThen(
-              Commands.runOnce(() -> {s_SwerveDrive.setHoldHeadingAngle(DriverStation.getAlliance() == Alliance.Red ? -Math.PI/2 : Math.PI/2); s_SwerveDrive.setHoldHeadingFlag(true);})
-                      .unless(() -> pickupLocationChooser.getSelected() != PickupLocation.CHUTE || cancelAutoTurn)
-                      .andThen(Commands.waitUntil(s_SwerveDrive::getAtGoal))
-                      .until(xBox.leftStick().debounce(.2, DebounceType.kFalling).negate())
-                      .andThen(
-                              Commands.either(
-                                              s_Cannon.setCannonAngleWait(() -> intakeCannonAngle)
-                                                      .andThen(s_Cannon.setExtensionWait(() -> intakeExtensionInches)),
-                                              s_Cannon.setExtensionWait(() -> intakeExtensionInches)
-                                                      .andThen(s_Cannon.setCannonAngleWait(() -> intakeCannonAngle)),
-                                              () -> s_Cannon.getExtensionEncoder() < 10) // "dangerous" or not
-                                      .alongWith(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle)))
-                                      .andThen(Commands.runOnce(()-> s_Intake.setIntake(intakeSpeed)))
-                                      .andThen(s_Intake.waitUntilHaveGamePiece(() -> gamePieceTypeChooser.getSelected() == GamePieceType.CUBE)
-                                              .raceWith(Commands.waitUntil(xBox.leftStick().debounce(.2, DebounceType.kFalling).negate())))
-                                      .andThen(Commands.runOnce(s_Intake::stopIntake)))))
-            //.unless(s_Intake::haveGamePiece))
-            .onFalse(
-                    Commands.runOnce(s_Intake::stopIntake)
-                            .andThen(s_Cannon.setExtensionWait(() -> 1))
-                            .andThen(Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), 90)))
-                            .alongWith(Commands.runOnce(() -> s_SwerveDrive.setHoldHeadingFlag(false)))
-            );
+//    xBox.leftStick().debounce(.1, DebounceType.kFalling)
+//            .onTrue(Commands.runOnce(() -> { // if the back left button is held, override the pickup location
+//              switch (pickupLocationChooser.getSelected()) {
+//                case SHELF: case CHUTE: pickupLocationChooser.setSelected(PickupLocation.GROUND); break;
+//                case GROUND: pickupLocationChooser.setSelected(PickupLocation.CHUTE); break;
+//              }
+//              setIntakeParameters();
+//            }).andThen(
+//              Commands.runOnce(() -> {s_SwerveDrive.setHoldHeadingAngle(DriverStation.getAlliance() == Alliance.Red ? -Math.PI/2 : Math.PI/2); s_SwerveDrive.setHoldHeadingFlag(true);})
+//                      .unless(() -> pickupLocationChooser.getSelected() != PickupLocation.CHUTE || cancelAutoTurn)
+//                      .andThen(Commands.waitUntil(s_SwerveDrive::getAtGoal))
+//                      .until(xBox.leftStick().debounce(.2, DebounceType.kFalling).negate())
+//                      .andThen(
+//                              Commands.either(
+//                                              s_Cannon.setCannonAngleWait(() -> intakeCannonAngle)
+//                                                      .andThen(s_Cannon.setExtensionWait(() -> intakeExtensionInches)),
+//                                              s_Cannon.setExtensionWait(() -> intakeExtensionInches)
+//                                                      .andThen(s_Cannon.setCannonAngleWait(() -> intakeCannonAngle)),
+//                                              () -> s_Cannon.getExtensionEncoder() < 10) // "dangerous" or not
+//                                      .alongWith(Commands.runOnce(()-> s_Lid.setLid(intakeLidAngle)))
+//                                      .andThen(Commands.runOnce(()-> s_Intake.setIntake(intakeSpeed)))
+//                                      .andThen(s_Intake.waitUntilHaveGamePiece(() -> gamePieceTypeChooser.getSelected() == GamePieceType.CUBE)
+//                                              .raceWith(Commands.waitUntil(xBox.leftStick().debounce(.2, DebounceType.kFalling).negate())))
+//                                      .andThen(Commands.runOnce(s_Intake::stopIntake)))))
+//            //.unless(s_Intake::haveGamePiece))
+//            .onFalse(
+//                    Commands.runOnce(s_Intake::stopIntake)
+//                            .andThen(s_Cannon.setExtensionWait(() -> 1))
+//                            .andThen(Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), 90)))
+//                            .alongWith(Commands.runOnce(() -> s_SwerveDrive.setHoldHeadingFlag(false)))
+//            );
 
     //-> extension + cannonRot to setpoint
     xBox.y()
