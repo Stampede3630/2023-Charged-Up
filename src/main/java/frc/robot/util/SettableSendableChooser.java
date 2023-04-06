@@ -139,18 +139,7 @@ public class SettableSendableChooser<V> implements NTSendable, AutoCloseable {
         }
         builder.addStringProperty(
                 SELECTED,
-                () -> {
-                    m_mutex.lock();
-                    try {
-                        if (m_selected != null) {
-                            return m_selected;
-                        } else {
-                            return m_defaultChoice;
-                        }
-                    } finally {
-                        m_mutex.unlock();
-                    }
-                },
+                null,
                 val -> {
                     m_mutex.lock();
                     try {
