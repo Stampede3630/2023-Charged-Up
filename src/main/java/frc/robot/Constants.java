@@ -90,6 +90,6 @@ public final class Constants {
     public static final double t_KP = 15.0; 
     public static final double r_KP = 7.0;
     public static final double MAX_VELOCITY = 5.4; // 3.25
-    public static final double MAX_ACCELERATION = 5.4; // 2.0
+    public static final double MAX_ACCELERATION = 3.0; // 2.0
   }
 }

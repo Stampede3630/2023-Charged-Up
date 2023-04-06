@@ -75,7 +75,7 @@ public class AutonomousCommands {
         return Commands.runOnce(()->s_Lid.setLid(33.0))
                 .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(43.0)))
                 .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
-                .andThen(s_Cannon.setExtensionWait(()->33.5))
+                .andThen(s_Cannon.setExtensionWait(()->35.0))
                 .andThen(Commands.waitSeconds(0.4))
                 .andThen(()->s_Intake.setIntake(-0.6))
                 .andThen(Commands.waitSeconds(0.5))
@@ -128,21 +128,24 @@ public class AutonomousCommands {
                 .andThen(Commands.runOnce(()->s_Cannon.setCannonAngle(90.0)));
     }
 
-    public Command autoIntakeCube() { //works -ej 3/15
-        return s_Cannon.setCannonAngleWait(() -> 192.5)
-                .andThen(s_Cannon.setExtensionWait(() -> 1))
+    public Command autoIntakeCube() { //works -ej 3/15, changed 4/5
+        return s_Cannon.setCannonAngleWait(() -> 197.0)
+                .andThen(s_Cannon.setExtensionWait(() -> 2.5))
                 .andThen(Commands.runOnce(()->s_Lid.setLid(60.0)))
                 .andThen(Commands.runOnce(()-> s_Intake.setIntake(-1.0)))
-                .andThen(Commands.waitSeconds(.1))
-                .andThen(Commands.waitSeconds(2.0)
+                .andThen(Commands.waitSeconds(1.5))
+                /*                .andThen(Commands.waitSeconds(2.0)
                     .raceWith(Commands.waitUntil(s_Intake::checkForCube)))
-                .andThen(Commands.runOnce(s_Intake::stopIntake))
+                    .andThen(Commands.runOnce(s_Intake::stopIntake))
+                    ej + vv: we never move on to the step where we pull the arm back up so we're going with a timer only strategy
+                    also killing stop intake for more of a chance to maintain possesion of cube until scoring
+                    */ 
                 .andThen(Commands.runOnce(()->s_Lid.setLid(90.0)))
                 .andThen(s_Cannon.setCannonAngleWait(() -> 90));
     }
 
     public Command autoIntakeCone() {
-        return s_Cannon.setCannonAngleWait(() -> 193)
+        return s_Cannon.setCannonAngleWait(() -> 195.0)
                 .andThen(s_Cannon.setExtensionWait(() -> 1))
                 .andThen(Commands.runOnce(()->s_Lid.setLid(140.0)))
                 .andThen(Commands.runOnce(()-> s_Intake.setIntake(1.0))
@@ -150,6 +153,6 @@ public class AutonomousCommands {
                                 .andThen(Commands.waitSeconds(2.0)))
                         .deadlineWith(s_Intake.waitUntilHaveGamePiece(() -> false)))
                 .andThen(Commands.runOnce(s_Intake::stopIntake))
-                .andThen(Commands.runOnce(()->s_Lid.setLid(90.0)));
+                .andThen(Commands.runOnce(()->s_Lid.setLid(200.0)));
     }
 }
