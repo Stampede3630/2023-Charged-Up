@@ -75,7 +75,7 @@ public class AutonomousCommands {
         return Commands.runOnce(()->s_Lid.setLid(33.0))
                 .andThen(Commands.runOnce(()-> s_Cannon.setCannonAngle(43.0)))
                 .andThen(Commands.waitUntil(s_Cannon::cannonErrorWithinRange))
-                .andThen(s_Cannon.setExtensionWait(()->33.5))
+                .andThen(s_Cannon.setExtensionWait(()->35.0))
                 .andThen(Commands.waitSeconds(0.4))
                 .andThen(()->s_Intake.setIntake(-0.6))
                 .andThen(Commands.waitSeconds(0.5))
