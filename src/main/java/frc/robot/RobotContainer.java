@@ -538,8 +538,8 @@ public class RobotContainer {
     eventMap.entrySet().forEach(System.out::println);
 
     HashMap<String, PathConstraints> constraintsOverride = new HashMap<>();
-    constraintsOverride.put("highConeHighCube noCharge", new PathConstraints(5.0, 2.7));
-    constraintsOverride.put("highConeHighCubeChargedUpXX", new PathConstraints(5.0, 2.7));
+    constraintsOverride.put("highConeHighCube noCharge", new PathConstraints(5.4, 3.3));
+    constraintsOverride.put("highConeHighCubeChargedUpXX", new PathConstraints(5.4, 3.3));
     // load autos completely dynamically -- any autos in pathplanner folder will be added to selector
     List<File> files = List.of(
             Objects.requireNonNull(new File(Filesystem.getDeployDirectory(), "pathplanner")
