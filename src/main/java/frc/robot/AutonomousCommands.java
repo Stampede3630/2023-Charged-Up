@@ -133,7 +133,7 @@ public class AutonomousCommands {
                 .andThen(s_Cannon.setExtensionWait(() -> 1.0))
                 .andThen(Commands.runOnce(()->s_Lid.setLid(60.0)))
                 .andThen(Commands.runOnce(()-> s_Intake.setIntake(-1.0)))
-                .andThen(Commands.waitSeconds(1.5))
+                .andThen(Commands.waitSeconds(3.0))
                 /*                .andThen(Commands.waitSeconds(2.0)
                     .raceWith(Commands.waitUntil(s_Intake::checkForCube)))
                     .andThen(Commands.runOnce(s_Intake::stopIntake))

@@ -34,21 +34,33 @@ import io.github.oblarg.oblog.annotations.Log;
 public class Cannon extends SubsystemBase implements Loggable {
   /** Creates a new TheCannon. */
 public double extensionReference = ExtendoConstants.INITIALIZED_INCHES;
+@Log
 public double cannonReference = CannonConstants.INITIALIZED_ANGLE;
 
-private final CANSparkMax cannonRotLead = new CANSparkMax(CannonConstants.SPARK_MASTER_ID, MotorType.kBrushless);
-private final CANSparkMax cannonRotFollow = new CANSparkMax(CannonConstants.SPARK_FOLLOWER_ID, MotorType.kBrushless);
-private final CANSparkMax cannonExtension = new CANSparkMax(ExtendoConstants.SPARK_MAX_ID, MotorType.kBrushless);
+private final CANSparkMax cannonRotLead;
+private final CANSparkMax cannonRotFollow;
+private final CANSparkMax cannonExtension;
 
-private final AbsoluteEncoder cannonAbsolute = cannonRotLead.getAbsoluteEncoder(Type.kDutyCycle);
-private final RelativeEncoder extensionEncoder = cannonExtension.getEncoder();
-private final SparkMaxLimitSwitch extensionHardStop = cannonExtension.getReverseLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen);
+private final AbsoluteEncoder cannonAbsolute;
+private final RelativeEncoder extensionEncoder;
+private final SparkMaxLimitSwitch extensionHardStop;
 
-private final SparkMaxPIDController cannonRotLeadPID = cannonRotLead.getPIDController();
-private final SparkMaxPIDController cannonExtensionPID = cannonExtension.getPIDController();
+private final SparkMaxPIDController cannonRotLeadPID;
+private final SparkMaxPIDController cannonExtensionPID;
 private static Cannon instance;
 
   private Cannon() {
+    cannonRotLead  = new CANSparkMax(CannonConstants.SPARK_MASTER_ID, MotorType.kBrushless);
+    cannonRotFollow = new CANSparkMax(CannonConstants.SPARK_FOLLOWER_ID, MotorType.kBrushless);
+    cannonExtension = new CANSparkMax(ExtendoConstants.SPARK_MAX_ID, MotorType.kBrushless);
+
+    cannonAbsolute = cannonRotLead.getAbsoluteEncoder(Type.kDutyCycle);
+    extensionEncoder = cannonExtension.getEncoder();
+    extensionHardStop = cannonExtension.getReverseLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen);
+
+    cannonRotLeadPID = cannonRotLead.getPIDController();
+    cannonExtensionPID = cannonExtension.getPIDController();
+
     cannonAbsolute.setInverted(false);
     cannonAbsolute.setPositionConversionFactor(CannonConstants.CONVERSION_FACTOR);
     cannonAbsolute.setVelocityConversionFactor(CannonConstants.CONVERSION_FACTOR);

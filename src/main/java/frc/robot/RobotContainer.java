@@ -452,7 +452,7 @@ public class RobotContainer {
         //facing community, lid up, not able to get tipped cones
         switch (gamePieceTypeChooser.getSelected()) {
           case CUBE://unfavorable cubbe intake!! BOOOOOOO
-          intakeCannonAngle = 192.5;
+          intakeCannonAngle = 196.0;
           intakeLidAngle = 60.0;
           intakeSpeed = -1.0;
           intakeExtensionInches = 1.0;
@@ -538,8 +538,10 @@ public class RobotContainer {
     eventMap.entrySet().forEach(System.out::println);
 
     HashMap<String, PathConstraints> constraintsOverride = new HashMap<>();
-    constraintsOverride.put("highConeHighCube noCharge", new PathConstraints(5.4, 3.3));
+    constraintsOverride.put("highConeHighCube noCharge", new PathConstraints(3.25, 2.0));
     constraintsOverride.put("highConeHighCubeChargedUpXX", new PathConstraints(5.4, 3.3));
+    constraintsOverride.put("chargeScoreCube", new PathConstraints(1, 1));
+
     // load autos completely dynamically -- any autos in pathplanner folder will be added to selector
     List<File> files = List.of(
             Objects.requireNonNull(new File(Filesystem.getDeployDirectory(), "pathplanner")
