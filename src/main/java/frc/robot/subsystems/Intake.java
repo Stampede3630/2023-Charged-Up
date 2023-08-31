@@ -12,6 +12,7 @@ import com.ctre.phoenixpro.signals.ReverseLimitValue;
 import com.revrobotics.SparkMaxLimitSwitch;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
+import edu.wpi.first.wpilibj.motorcontrol.Talon;
 import edu.wpi.first.wpilibj2.command.*;
 import frc.robot.subsystems.Lid.LidPosition;
 import frc.robot.util.Disableable;
