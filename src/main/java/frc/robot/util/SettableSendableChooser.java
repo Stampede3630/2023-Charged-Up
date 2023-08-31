@@ -22,7 +22,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class SettableSendableChooser<V> extends SendableChooser<V> {
 
 }
-//public class SettableSendableChooser<V> implements NTSendable, AutoCloseable {
+// public class SettableSendableChooser<V> implements NTSendable, AutoCloseable {
 //    /** The key for the default value. */
 //    private static final String DEFAULT = "default";
 //    /** The key for the selected option. */
@@ -35,16 +35,16 @@ public class SettableSendableChooser<V> extends SendableChooser<V> {
 //    private static final String INSTANCE = ".instance";
 //    /** A map linking strings to the objects they represent. */
 //    private final Map<String, V> m_map = new LinkedHashMap<>();
-//
+
 //    private String m_defaultChoice = "";
 //    private final int m_instance;
 //    private static final AtomicInteger s_instances = new AtomicInteger();
-//
+
 //    public SettableSendableChooser() {
 //        m_instance = s_instances.getAndIncrement();
 //        SendableRegistry.add(this, "SendableChooser", m_instance);
 //    }
-//
+
 //    @Override
 //    public void close() {
 //        SendableRegistry.remove(this);
@@ -57,12 +57,12 @@ public class SettableSendableChooser<V> extends SendableChooser<V> {
 //            m_mutex.unlock();
 //        }
 //    }
-//
+
 //    public void setSelected(V value) {
 //        Optional<Map.Entry<String, V>> entry = m_map.entrySet().stream().filter(e -> e.getValue().equals(value)).findAny();
 //        entry.ifPresent(e -> m_selected = e.getKey());
 //    }
-//
+
 //    /**
 //     * Adds the given object to the list of options. On the Shuffleboard desktop, the
 //     * object will appear as the given name.
@@ -73,7 +73,7 @@ public class SettableSendableChooser<V> extends SendableChooser<V> {
 //    public void addOption(String name, V object) {
 //        m_map.put(name, object);
 //    }
-//
+
 //    /**
 //     * Adds the given object to the list of options and marks it as the default. Functionally, this is
 //     * very close to {@link #addOption(String, Object)} except that it will use this as the default
@@ -84,11 +84,11 @@ public class SettableSendableChooser<V> extends SendableChooser<V> {
 //     */
 //    public void setDefaultOption(String name, V object) {
 //        requireNonNullParam(name, "name", "setDefaultOption");
-//
+
 //        m_defaultChoice = name;
 //        addOption(name, object);
 //    }
-//
+
 //    /**
 //     * Returns the selected option. If there is none selected, it will return the default. If there is
 //     * none selected and no default, then it will return {@code null}.
@@ -107,11 +107,11 @@ public class SettableSendableChooser<V> extends SendableChooser<V> {
 //            m_mutex.unlock();
 //        }
 //    }
-//
+
 //    private String m_selected;
 //    private final List<StringPublisher> m_activePubs = new ArrayList<>();
 //    private final ReentrantLock m_mutex = new ReentrantLock();
-//
+
 //    @Override
 //    public void initSendable(NTSendableBuilder builder) {
 //        builder.setSmartDashboardType("String Chooser");
@@ -143,7 +143,18 @@ public class SettableSendableChooser<V> extends SendableChooser<V> {
 //        }
 //        builder.addStringProperty(
 //                SELECTED,
-//                null,
+//                () -> {
+//                 m_mutex.lock();
+//                 try {
+//                     if (m_selected != null) {
+//                         return m_selected;
+//                     } else {
+//                         return m_defaultChoice;
+//                     }
+//                 } finally {
+//                     m_mutex.unlock();
+//                 }
+//             },
 //                val -> {
 //                    m_mutex.lock();
 //                    try {
@@ -156,4 +167,4 @@ public class SettableSendableChooser<V> extends SendableChooser<V> {
 //                    }
 //                });
 //    }
-//}
+// }

@@ -351,7 +351,14 @@ public class RobotContainer {
 //                            .andThen(Commands.runOnce(() -> s_Cannon.setCannonAngleSides(robotFacing(), 90)))
 //                            .alongWith(Commands.runOnce(() -> s_SwerveDrive.setHoldHeadingFlag(false)))
 //            );
-
+// xBox.leftStick().debounce(.1, DebounceType.kFalling)
+//            .onTrue(Commands.runOnce(() -> { // if the back left button is held, override the pickup location
+//              switch (pickupLocationChooser.getSelected()) {
+//                case SHELF: case CHUTE: pickupLocationChooser.setSelected(PickupLocation.GROUND); break;
+//                case GROUND: pickupLocationChooser.setSelected(PickupLocation.CHUTE); break;
+//              }
+//              setIntakeParameters();
+//            }));
     //-> extension + cannonRot to setpoint
     xBox.y()
         .onTrue(Commands.runOnce(()-> {
