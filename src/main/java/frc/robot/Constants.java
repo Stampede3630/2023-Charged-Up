@@ -16,7 +16,7 @@ import edu.wpi.first.math.geometry.Translation2d;
  */
 public final class Constants {
   public static final class DriverConstants{
-    public static final double DRIVE_GOVERNOR = 1;
+    public static final double DRIVE_GOVERNOR = 1; //change this for newbie drivers!!!
     public static final boolean FIELD_RELATIVE = true;
     public static final boolean ACCELERATED_INPUTS = false;
   }
@@ -25,7 +25,7 @@ public final class Constants {
     public static final int SPARK_MASTER_ID = 4;
     public static final int SPARK_FOLLOWER_ID = 11;
 
-    public static final double KP = 0.02; //used to be 1/30.0
+    public static final double KP = 0.015; //used to be 1/30.0, 9/23/23 used to be 0.02 (caleb changed it)
     public static final double KI = 0;
     public static final double KD = 0.05; //used to be 0
     public static final double KS = 0.00;

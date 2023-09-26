@@ -97,7 +97,7 @@ public class RobotContainer {
   public double intakeLidAngle=Constants.LidConstants.INITIALIZED_ANGLE;
   @Log(tabName = "nodeSelector")
   public double intakeSpeed;
-
+ 
   public boolean facingOverrideButton;
 
   private double intakeExtensionInches;
