@@ -16,7 +16,7 @@ import edu.wpi.first.math.geometry.Translation2d;
  */
 public final class Constants {
   public static final class DriverConstants{
-    public static final double DRIVE_GOVERNOR = 1; //change this for newbie drivers!!!
+    public static final double DRIVE_GOVERNOR = 1; //change this for newbie drivers!!! 0-1 range
     public static final boolean FIELD_RELATIVE = true;
     public static final boolean ACCELERATED_INPUTS = false;
   }
